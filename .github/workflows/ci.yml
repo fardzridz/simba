@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Runner Linux: build/deploy OpenNext tidak dijamin di Windows (§9.8).
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Token desain selaras dengan dokumen
+        run: python3 build/build-tokens.py --check
+
+      - name: Kontras warna §2.1
+        run: python3 build/check-contrast.py
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit test
+        run: npm test
+
+      - name: Siapkan D1 lokal dari nol (migrasi + seed)
+        run: |
+          npx wrangler d1 migrations apply penugasan-db --local
+          npx wrangler d1 execute penugasan-db --local --file=./seed/seed.sql
+
+      - name: Build Next.js
+        run: npm run build
+
+      - name: Build worker (OpenNext)
+        run: npx opennextjs-cloudflare build

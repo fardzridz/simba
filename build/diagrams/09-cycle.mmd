@@ -1,0 +1,14 @@
+graph TD
+    A(["Product backlog & prioritisasi"]) --> B["Sprint planning: pecah story, estimasi SP, cek DoR"]
+    B --> C["Sprint backlog terkunci, 2 pekan"]
+    C --> D["Standup harian: progres, rencana, penghambat"]
+    D --> E["Pengembangan: branch fitur + unit test + integration test"]
+    E --> F["Pull request + CI: lint, typecheck, unit, integration, build"]
+    F --> G{"Lolos DoD §10.3?"}
+    G -->|tidak| E
+    G -->|ya| H["Deploy ke staging"]
+    H --> I["Sprint review: demo + UAT bersama instansi"]
+    I --> J["Retrospektif: perbaikan proses"]
+    J --> K{"Backlog tersisa?"}
+    K -->|ya| B
+    K -->|tidak| L(["Produksi: cadangan, migrasi, deploy, smoke test"])

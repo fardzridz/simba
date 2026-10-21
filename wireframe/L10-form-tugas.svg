@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" font-family="Inter, system-ui, sans-serif">
+  <title>L10 Buat Tugas, wireframe</title>
+  <rect width="1280" height="800" fill="#FFFFFF"/>
+  <text x="24" y="26" font-size="12" fill="#6B7280">WIREFRAME L10: Buat / Ubah Tugas</text>
+  <text x="1256" y="26" font-size="12" fill="#6B7280" text-anchor="end">data contoh (seed), bukan data nyata</text>
+
+  <rect x="0" y="40" width="220" height="760" fill="#191B27"/>
+  <text x="20" y="76" font-size="12" fill="#9CA3AF">[LOGO]</text>
+  <g transform="translate(28,114)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2.5h4.75v4.75H2.5z M8.75 2.5h4.75v4.75H8.75z M2.5 8.75h4.75v4.75H2.5z M8.75 8.75h4.75v4.75H8.75z"/></g>
+  <text x="52" y="127" font-size="13" fill="#9CA3AF">Dashboard</text>
+  <rect x="12" y="144" width="196" height="36" rx="8" fill="#B7091E"/>
+  <g transform="translate(28,154)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 2.5H4.25A1.25 1.25 0 0 0 3 3.75v8.5a1.25 1.25 0 0 0 1.25 1.25h7.5A1.25 1.25 0 0 0 13 12.25v-8.5A1.25 1.25 0 0 0 11.75 2.5H10.5 M6 2.5h4v1.75H6z M6 8h4 M6 10.75h2.5"/></g>
+  <text x="52" y="167" font-size="13" font-weight="500" fill="#FFFFFF">Tugas Divisi</text>
+  <g transform="translate(28,194)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5.75A1.5 1.5 0 0 1 4 4.25h2.5L8 6h4a1.5 1.5 0 0 1 1.5 1.5v3.75A1.5 1.5 0 0 1 12 12.75H4a1.5 1.5 0 0 1-1.5-1.5z"/></g>
+  <text x="52" y="207" font-size="13" fill="#9CA3AF">Katalog Dokumen</text>
+  <g transform="translate(28,234)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13h12 M3.5 13V8.5 M8 13V4.5 M12.5 13V6.5"/></g>
+  <text x="52" y="247" font-size="13" fill="#9CA3AF">Laporan</text>
+  <g transform="translate(28,274)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0-5.5-5.5 M2.5 3.5V6H5 M8 5.25v3l2 1.5"/></g>
+  <text x="52" y="287" font-size="13" fill="#9CA3AF">Log Aktivitas</text>
+  <g transform="translate(28,314)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.25 11.5V8a3.75 3.75 0 0 1 7.5 0v3.5 M3.25 11.5h9.5 M6.75 13.25a1.4 1.4 0 0 0 2.5 0"/></g>
+  <text x="52" y="327" font-size="13" fill="#9CA3AF">Notifikasi</text>
+<g transform="translate(28,354)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.5 4.5h11 M2.5 8h11 M2.5 11.5h11"/>
+    <circle cx="6" cy="4.5" r="1.6" fill="#9CA3AF"/>
+    <circle cx="10" cy="8" r="1.6" fill="#9CA3AF"/>
+    <circle cx="6.5" cy="11.5" r="1.6" fill="#9CA3AF"/>
+  </g>
+  <text x="52" y="367" font-size="13" fill="#9CA3AF">Pengaturan</text>
+  <g transform="translate(28,394)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z M8 8.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5z M4.4 12.4a4 4 0 0 1 7.2 0"/></g>
+  <text x="52" y="407" font-size="13" fill="#9CA3AF">Akun Saya</text>
+
+  <line x1="220" y1="96" x2="1280" y2="96" stroke="#E5E7EB"/>
+  <text x="244" y="78" font-size="20" font-weight="600" fill="#111827">Buat Tugas</text>
+  <text x="1204" y="72" font-size="12" fill="#6B7280" text-anchor="end">Admin Divisi</text>
+  <circle cx="1240" cy="68" r="16" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="1240" y="72" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">AH</text>
+  <text x="244" y="124" font-size="12" fill="#1D4ED8">Kembali ke Tugas Divisi</text>
+
+  <rect x="244" y="144" width="1012" height="632" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+
+  <!-- kolom kiri -->
+  <text x="276" y="196" font-size="12" font-weight="500" fill="#374151">Judul tugas</text>
+  <text x="372" y="196" font-size="12" fill="#B91C1C">wajib</text>
+  <rect x="276" y="206" width="440" height="40" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="292" y="231" font-size="13" fill="#374151">Laporan Hasil Pengawasan Wilayah A</text>
+
+  <text x="276" y="274" font-size="12" font-weight="500" fill="#374151">Deskripsi</text>
+  <rect x="276" y="284" width="440" height="96" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="292" y="309" font-size="13" fill="#374151">Laporan hasil pengawasan wilayah A beserta</text>
+  <text x="292" y="329" font-size="13" fill="#374151">dokumentasi lapangan dan berita acara.</text>
+
+  <text x="276" y="412" font-size="12" font-weight="500" fill="#374151">Kategori</text>
+  <rect x="276" y="422" width="212" height="40" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="292" y="447" font-size="13" fill="#374151">Kegiatan dan Laporan</text>
+  <text x="516" y="412" font-size="12" font-weight="500" fill="#374151">Prioritas</text>
+  <rect x="516" y="422" width="200" height="40" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="532" y="447" font-size="13" fill="#374151">Tinggi</text>
+
+  <text x="276" y="490" font-size="12" font-weight="500" fill="#374151">Tanggal mulai</text>
+  <rect x="276" y="500" width="212" height="40" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="292" y="525" font-size="13" fill="#374151">20 Okt 2026</text>
+
+  <text x="516" y="490" font-size="12" font-weight="500" fill="#374151">Tenggat</text>
+  <text x="584" y="490" font-size="12" fill="#B91C1C">wajib</text>
+  <rect x="516" y="500" width="200" height="40" rx="8" fill="#FFFFFF" stroke="#B91C1C"/>
+  <text x="532" y="525" font-size="13" fill="#374151">15 Okt 2026</text>
+  <text x="516" y="562" font-size="12" fill="#B91C1C">Tenggat tidak boleh lebih awal daripada tanggal mulai.</text>
+  <text x="276" y="562" font-size="12" fill="#6B7280">Tenggat diperlakukan sebagai 23:59:59 WIB.</text>
+  <text x="276" y="600" font-size="12" fill="#6B7280">Perubahan tenggat pada tugas yang sudah berjalan mewajibkan alasan dan tercatat di log.</text>
+
+  <!-- kolom kanan -->
+  <text x="780" y="196" font-size="12" font-weight="500" fill="#374151">Penerima</text>
+  <text x="836" y="196" font-size="12" fill="#B91C1C">wajib</text>
+  <text x="1220" y="196" font-size="12" fill="#1D4ED8" text-anchor="end">Pilih semua</text>
+  <rect x="780" y="206" width="440" height="32" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="796" y="227" font-size="12" fill="#6B7280">Cari nama anggota divisi</text>
+  <rect x="780" y="246" width="440" height="150" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <rect x="796" y="262" width="16" height="16" rx="4" fill="#B7091E"/>
+  <path d="M799 270 l4 4 l7 -8" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+  <text x="822" y="275" font-size="13" fill="#111827">Ahmad Fauzi</text>
+  <text x="1220" y="275" font-size="12" fill="#6B7280" text-anchor="end">Staf Pelaksana</text>
+  <rect x="796" y="298" width="16" height="16" rx="4" fill="#B7091E"/>
+  <path d="M799 306 l4 4 l7 -8" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+  <text x="822" y="311" font-size="13" fill="#111827">Siti Rahma</text>
+  <text x="1220" y="311" font-size="12" fill="#6B7280" text-anchor="end">Staf Pelaksana</text>
+  <rect x="796" y="334" width="16" height="16" rx="4" fill="#B7091E"/>
+  <path d="M799 342 l4 4 l7 -8" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+  <text x="822" y="347" font-size="13" fill="#111827">Budi Santoso</text>
+  <text x="1220" y="347" font-size="12" fill="#6B7280" text-anchor="end">Staf Pelaksana</text>
+  <text x="780" y="420" font-size="12" fill="#374151">3 pegawai dipilih</text>
+  <text x="1220" y="420" font-size="12" fill="#6B7280" text-anchor="end">Menampilkan 3 dari 8 anggota divisi.</text>
+  <line x1="780" y1="444" x2="1220" y2="444" stroke="#F3F4F6"/>
+
+  <text x="780" y="476" font-size="12" font-weight="500" fill="#374151">Nomor tugas</text>
+  <rect x="780" y="486" width="440" height="40" rx="8" fill="#F9FAFB" stroke="#D1D5DB"/>
+  <text x="796" y="511" font-size="13" font-family="JetBrains Mono, ui-monospace, monospace" fill="#374151">HUK/2026/10/007</text>
+  <text x="780" y="548" font-size="12" fill="#6B7280">Dibuat otomatis saat disimpan, satu nomor untuk satu tugas.</text>
+
+  <!-- aksi -->
+  <line x1="276" y1="656" x2="1220" y2="656" stroke="#E5E7EB"/>
+  <text x="276" y="686" font-size="12" fill="#6B7280">Menyimpan menambah satu penugasan untuk setiap penerima yang dipilih.</text>
+  <rect x="920" y="700" width="128" height="36" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="984" y="724" font-size="13" font-weight="600" fill="#374151" text-anchor="middle">Batal</text>
+  <rect x="1064" y="700" width="176" height="36" rx="8" fill="#B7091E"/>
+  <text x="1152" y="724" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">Simpan &amp; Tugaskan</text>
+</svg>

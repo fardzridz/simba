@@ -1,0 +1,8 @@
+graph LR
+    B["BELUM_DIKERJAKAN"] -->|pelaksana: mulai| P["SEDANG_DIKERJAKAN"]
+    P -->|pelaksana: kirim + lampiran| M["MENUNGGU_VERIFIKASI"]
+    M -->|admin: setujui| C["SELESAI"]
+    M -->|admin: minta revisi + catatan| P
+    B -->|admin: batalkan + alasan| X["DIBATALKAN"]
+    P -->|admin: batalkan + alasan| X
+    C -->|otomatis, include UC15| AR["Katalog dokumen final (1 baris per assignment)"]

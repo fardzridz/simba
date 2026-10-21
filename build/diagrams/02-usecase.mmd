@@ -1,0 +1,69 @@
+graph LR
+    U(("USER<br/>Staf"))
+    A(("ADMIN<br/>Divisi"))
+    SA(("SUPER<br/>ADMIN"))
+
+    subgraph M1["Modul Akun"]
+        UC01["UC01 Login & kelola profil"]
+        UC02["UC02 Kelola pengguna & peran"]
+        UC03["UC03 Kelola divisi"]
+        UC04["UC04 Kelola kategori"]
+        UC16["UC16 Kelola kontak & kanal notifikasi"]
+    end
+
+    subgraph M2["Modul Tugas"]
+        UC05["UC05 Lihat dashboard per peran"]
+        UC06["UC06 Buat / ubah / batalkan tugas"]
+        UC07["UC07 Tugaskan tugas ke pegawai"]
+        UC08["UC08 Lihat & filter daftar tugas"]
+        UC09["UC09 Kumpulkan tugas via modal"]
+        UC10["UC10 Review & verifikasi pengumpulan"]
+    end
+
+    subgraph M3["Modul Dokumen & Laporan"]
+        UC11["UC11 Jelajah & unduh dokumen final"]
+        UC12["UC12 Susun, cetak & ekspor laporan"]
+        UC13["UC13 Lihat log aktivitas"]
+        UC14["UC14 Terima notifikasi"]
+        UC15["UC15 Indeks dokumen final (include)"]
+    end
+
+    subgraph M4["Modul Pengaturan"]
+        UC17["UC17 Atur pengaturan divisi & sistem"]
+    end
+
+    U --> UC01
+    U --> UC05
+    U --> UC08
+    U --> UC09
+    U --> UC11
+    U --> UC14
+    U --> UC16
+
+    A --> UC01
+    A --> UC05
+    A --> UC06
+    A --> UC07
+    A --> UC08
+    A --> UC10
+    A --> UC11
+    A --> UC12
+    A --> UC13
+    A --> UC14
+    A --> UC16
+    A --> UC17
+
+    SA --> UC01
+    SA --> UC02
+    SA --> UC03
+    SA --> UC04
+    SA --> UC05
+    SA --> UC08
+    SA --> UC11
+    SA --> UC12
+    SA --> UC13
+    SA --> UC14
+    SA --> UC16
+    SA --> UC17
+
+    UC10 -.->|include| UC15

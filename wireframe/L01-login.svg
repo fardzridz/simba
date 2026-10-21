@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" font-family="Inter, system-ui, sans-serif">
+  <title>L01 Login, wireframe</title>
+  <rect width="1280" height="800" fill="#FCFCFC"/>
+  <text x="24" y="26" font-size="12" fill="#6B7280">WIREFRAME L01: Login</text>
+  <text x="1256" y="26" font-size="12" fill="#6B7280" text-anchor="end">data contoh (seed), bukan data nyata</text>
+
+  <!-- kartu login, terpusat, tanpa rangka sidebar: layar ini di luar rangka aplikasi -->
+  <rect x="430" y="150" width="420" height="470" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+
+  <!-- merek -->
+  <rect x="590" y="186" width="100" height="32" rx="8" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="640" y="207" font-size="12" fill="#374151" text-anchor="middle">[LOGO]</text>
+  <text x="640" y="248" font-size="20" font-weight="600" fill="#111827" text-anchor="middle">Portal Penugasan &amp; Dokumen</text>
+  <text x="640" y="272" font-size="12" fill="#6B7280" text-anchor="middle">[NAMA INSTANSI]. Akses terbatas untuk pegawai.</text>
+
+  <!-- kolom nama pengguna -->
+  <text x="470" y="322" font-size="12" font-weight="500" fill="#374151">Nama pengguna</text>
+  <rect x="470" y="332" width="340" height="40" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="486" y="357" font-size="13" fill="#374151">staf.hukum</text>
+
+  <!-- kolom kata sandi -->
+  <text x="470" y="404" font-size="12" font-weight="500" fill="#374151">Kata sandi</text>
+  <rect x="470" y="414" width="340" height="40" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="486" y="439" font-size="13" fill="#374151">••••••••••••</text>
+  <text x="794" y="439" font-size="12" fill="#6B7280" text-anchor="end">tampilkan</text>
+
+  <!-- titik fokus: satu tombol utama -->
+  <rect x="470" y="482" width="340" height="44" rx="8" fill="#B7091E"/>
+  <text x="640" y="510" font-size="15" font-weight="600" fill="#FFFFFF" text-anchor="middle">Masuk</text>
+
+  <text x="470" y="552" font-size="12" fill="#6B7280">5 percobaan gagal dalam 1 menit akan ditahan sementara.</text>
+  <text x="470" y="574" font-size="12" fill="#6B7280">Sesi berakhir otomatis setelah 8 jam tanpa aktivitas.</text>
+
+  <!-- jalur pemulihan tanpa tautan mati: kontak, bukan laman yang belum ada -->
+  <rect x="470" y="588" width="340" height="1" fill="#E5E7EB"/>
+  <text x="470" y="608" font-size="12" fill="#374151">Lupa kata sandi? Hubungi Super Admin untuk pengaturan ulang.</text>
+
+  <text x="640" y="660" font-size="12" fill="#6B7280" text-anchor="middle">Versi 0.1.0</text>
+</svg>

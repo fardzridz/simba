@@ -1,0 +1,9 @@
+graph TD
+    D1(["Pengguna klik Unduh"]) --> D2{"Sesi valid?"}
+    D2 -->|tidak| D3["Arahkan ke login"]
+    D2 -->|ya| D4{"resolveScope: assignment berada dalam scope?"}
+    D4 -->|tidak| D5["403 tanpa detail internal + log percobaan akses"]
+    D4 -->|ya| D6["Tandai attachment COMMITTED?"]
+    D6 -->|tidak| D5
+    D6 -->|ya| D7["Stream objek dari R2 ke klien dengan Content-Disposition attachment"]
+    D7 --> D8["Unduhan dicatat: attachment.downloaded"]

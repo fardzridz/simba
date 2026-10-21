@@ -1,0 +1,10 @@
+graph TD
+    C1(["Admin buka antrean Menunggu Verifikasi"]) --> C2["Pilih tugas, periksa catatan + buka lampiran lewat route unduh (scope diperiksa)"]
+    C2 --> C3{"Keputusan"}
+    C3 -->|Minta revisi| C4["Isi catatan revisi (wajib)"]
+    C4 --> C5["Status SEDANG_DIKERJAKAN, needs_revision=true, revision_count+1"]
+    C5 --> C6["Notifikasi ke pelaksana + log review"]
+    C3 -->|Setujui| C7["Status SELESAI, completed_at diisi"]
+    C7 --> C8["UC15: tulis 1 baris document_archive untuk assignment ini"]
+    C8 --> C9["Log aktivitas: task.completed + archive.created"]
+    C9 --> C10(["Dasbor & laporan terbarui"])

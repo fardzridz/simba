@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+
+# next.js / opennext build output
+.next/
+out/
+.open-next/
+.wrangler/
+build/node_modules/
+
+# env & secrets
+.env
+.env.local
+.dev.vars
+.dev.vars.*
+
+# wrangler local state (D1 & R2 emulation)
+.wrangler/state/
+
+# misc
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+
+# python cache
+__pycache__/
+*.py[cod]
+
+# temp scratch & office lock files
+.tmp-smoke/
+~$*
+

@@ -1,0 +1,192 @@
+erDiagram
+    DIVISIONS ||--o{ USERS : "beranggotakan"
+    DIVISIONS ||--o{ TASKS : "lingkup"
+    DIVISIONS ||--o{ DOCUMENT_ARCHIVE : "pemilik"
+    USERS ||--o{ TASKS : "dibuat oleh"
+    USERS ||--o{ TASK_ASSIGNMENTS : "menerima"
+    USERS ||--o{ TASK_SUBMISSIONS : "mengumpulkan"
+    USERS ||--o{ TASK_REVIEWS : "mereview"
+    CATEGORIES ||--o{ TASKS : "mengklasifikasi"
+    CATEGORIES ||--o{ DIVISIONS : "kategori default"
+    TASKS ||--o{ TASK_ASSIGNMENTS : "dibagikan ke"
+    TASK_ASSIGNMENTS ||--o{ TASK_SUBMISSIONS : "versi pengumpulan"
+    TASK_SUBMISSIONS ||--o{ ATTACHMENTS : "berkas"
+    TASK_SUBMISSIONS ||--o{ TASK_REVIEWS : "dinilai oleh"
+    TASK_ASSIGNMENTS ||--o| DOCUMENT_ARCHIVE : "finalisasi"
+    USERS ||--o{ NOTIFICATIONS : "menerima"
+    NOTIFICATIONS ||--o{ NOTIFICATION_DELIVERIES : "dikirim lewat"
+    USERS ||--o{ NOTIFICATION_PREFERENCES : "mengatur"
+    USERS ||--o{ OTP_CODES : "meminta"
+    USERS ||--o{ EMAIL_CHANGE_REQUESTS : "mengajukan"
+    USERS ||--o| APP_SETTINGS : "terakhir mengubah"
+    USERS ||--o{ ACTIVITY_LOGS : "aktor"
+
+    DIVISIONS {
+        text id PK
+        text name UK
+        text code UK
+        text contact_email
+        text default_category_id FK
+        text default_priority "RENDAH | SEDANG | TINGGI | MENDESAK"
+        integer is_active
+        integer created_at
+    }
+    USERS {
+        text id PK
+        text division_id FK
+        text username UK
+        text email UK
+        integer email_verified_at
+        text nip UK
+        text position
+        text wa_number UK
+        integer wa_verified_at
+        text full_name
+        text password_hash
+        text role "USER | ADMIN | SUPER_ADMIN"
+        integer is_active
+        integer last_login_at
+        integer created_at
+        integer updated_at
+    }
+    CATEGORIES {
+        text id PK
+        text name UK
+        integer is_active
+        integer created_at
+    }
+    TASKS {
+        text id PK
+        text division_id FK
+        text category_id FK
+        text task_number UK
+        text title
+        text description
+        text priority "RENDAH | SEDANG | TINGGI | MENDESAK"
+        text created_by FK
+        integer start_at
+        integer due_at
+        integer cancelled_at
+        text cancel_reason
+        integer created_at
+        integer updated_at
+    }
+    TASK_ASSIGNMENTS {
+        text id PK
+        text task_id FK
+        text user_id FK
+        text status "BELUM_DIKERJAKAN | SEDANG_DIKERJAKAN | MENUNGGU_VERIFIKASI | SELESAI | DIBATALKAN"
+        integer needs_revision
+        integer revision_count
+        integer started_at
+        integer submitted_at
+        integer completed_at
+        integer cancelled_at
+        integer created_at
+        integer updated_at
+    }
+    TASK_SUBMISSIONS {
+        text id PK
+        text assignment_id FK
+        integer version
+        text notes
+        text state "PENDING | COMMITTED"
+        text idempotency_key UK
+        text submitted_by FK
+        integer created_at
+    }
+    ATTACHMENTS {
+        text id PK
+        text submission_id FK
+        text original_name
+        text stored_key UK
+        text mime_type
+        integer size_bytes
+        text checksum_sha256
+        text state "PENDING | COMMITTED"
+        text uploaded_by FK
+        integer created_at
+    }
+    TASK_REVIEWS {
+        text id PK
+        text submission_id FK
+        text reviewer_id FK
+        text decision "APPROVED | REVISION_REQUIRED"
+        text feedback
+        integer created_at
+    }
+    DOCUMENT_ARCHIVE {
+        text id PK
+        text assignment_id FK
+        text submission_id FK
+        text task_id FK
+        text division_id FK
+        text title
+        integer archived_at
+    }
+    NOTIFICATIONS {
+        text id PK
+        text user_id FK
+        text type
+        text entity_type
+        text entity_id
+        text message
+        integer read_at
+        integer created_at
+    }
+    NOTIFICATION_DELIVERIES {
+        text id PK
+        text notification_id FK
+        text channel "EMAIL | WHATSAPP"
+        text status "PENDING | SENDING | SENT | FAILED"
+        integer attempts
+        integer next_attempt_at
+        text last_error
+        text provider_ref
+        integer sent_at
+    }
+    NOTIFICATION_PREFERENCES {
+        text user_id FK
+        text channel "EMAIL | WHATSAPP"
+        integer enabled
+    }
+    OTP_CODES {
+        text id PK
+        text user_id FK
+        text target
+        text purpose "WA_VERIFY"
+        text code_hash
+        integer attempts
+        integer expires_at
+        integer consumed_at
+        integer created_at
+    }
+    EMAIL_CHANGE_REQUESTS {
+        text id PK
+        text user_id FK
+        text new_email
+        text token_hash UK
+        integer expires_at
+        integer consumed_at
+        integer created_at
+    }
+    APP_SETTINGS {
+        integer id PK "selalu 1"
+        integer max_file_bytes
+        integer max_files_per_submission
+        text allowed_types "JSON array"
+        integer due_soon_days
+        text updated_by FK
+        integer updated_at
+    }
+    ACTIVITY_LOGS {
+        text id PK
+        text actor_id FK
+        text action
+        text entity_type
+        text entity_id
+        text prev_value
+        text new_value
+        text ip_address
+        integer created_at
+    }

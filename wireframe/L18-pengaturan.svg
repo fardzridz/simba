@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" font-family="Inter, system-ui, sans-serif">
+  <title>L18 Pengaturan, tab Divisi</title>
+  <rect width="1280" height="800" fill="#FFFFFF"/>
+  <text x="24" y="26" font-size="12" fill="#6B7280">WIREFRAME L18: Pengaturan, tab Divisi</text>
+  <text x="1256" y="26" font-size="12" fill="#6B7280" text-anchor="end">data contoh (seed), bukan data nyata</text>
+
+  <!-- sidebar -->
+  <rect x="0" y="40" width="220" height="760" fill="#191B27"/>
+  <text x="20" y="76" font-size="12" fill="#9CA3AF">[LOGO]</text>
+  <g transform="translate(28,114)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2.5h4.75v4.75H2.5z M8.75 2.5h4.75v4.75H8.75z M2.5 8.75h4.75v4.75H2.5z M8.75 8.75h4.75v4.75H8.75z"/></g>
+  <text x="52" y="127" font-size="13" fill="#9CA3AF">Dashboard</text>
+  <g transform="translate(28,154)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 2.5H4.25A1.25 1.25 0 0 0 3 3.75v8.5a1.25 1.25 0 0 0 1.25 1.25h7.5A1.25 1.25 0 0 0 13 12.25v-8.5A1.25 1.25 0 0 0 11.75 2.5H10.5 M6 2.5h4v1.75H6z M6 8h4 M6 10.75h2.5"/></g>
+  <text x="52" y="167" font-size="13" fill="#9CA3AF">Tugas Divisi</text>
+  <g transform="translate(28,194)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5.75A1.5 1.5 0 0 1 4 4.25h2.5L8 6h4a1.5 1.5 0 0 1 1.5 1.5v3.75A1.5 1.5 0 0 1 12 12.75H4a1.5 1.5 0 0 1-1.5-1.5z"/></g>
+  <text x="52" y="207" font-size="13" fill="#9CA3AF">Katalog Dokumen</text>
+  <g transform="translate(28,234)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13h12 M3.5 13V8.5 M8 13V4.5 M12.5 13V6.5"/></g>
+  <text x="52" y="247" font-size="13" fill="#9CA3AF">Laporan</text>
+  <g transform="translate(28,274)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0-5.5-5.5 M2.5 3.5V6H5 M8 5.25v3l2 1.5"/></g>
+  <text x="52" y="287" font-size="13" fill="#9CA3AF">Log Aktivitas</text>
+  <g transform="translate(28,314)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.25 11.5V8a3.75 3.75 0 0 1 7.5 0v3.5 M3.25 11.5h9.5 M6.75 13.25a1.4 1.4 0 0 0 2.5 0"/></g>
+  <text x="52" y="327" font-size="13" fill="#9CA3AF">Notifikasi</text>
+  <rect x="12" y="344" width="196" height="36" rx="8" fill="#B7091E"/>
+  <g transform="translate(28,354)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.5 4.5h11 M2.5 8h11 M2.5 11.5h11"/>
+    <circle cx="6" cy="4.5" r="1.6" fill="#B7091E"/>
+    <circle cx="10" cy="8" r="1.6" fill="#B7091E"/>
+    <circle cx="6.5" cy="11.5" r="1.6" fill="#B7091E"/>
+  </g>
+  <text x="52" y="367" font-size="13" font-weight="500" fill="#FFFFFF">Pengaturan</text>
+  <g transform="translate(28,394)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z M8 8.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5z M4.4 12.4a4 4 0 0 1 7.2 0"/></g>
+  <text x="52" y="407" font-size="13" fill="#9CA3AF">Akun Saya</text>
+
+  <!-- top bar -->
+  <line x1="220" y1="96" x2="1280" y2="96" stroke="#E5E7EB"/>
+  <text x="244" y="78" font-size="20" font-weight="600" fill="#111827">Pengaturan</text>
+  <g transform="translate(1084,60)" fill="none" stroke="#374151" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.25 11.5V8a3.75 3.75 0 0 1 7.5 0v3.5 M3.25 11.5h9.5 M6.75 13.25a1.4 1.4 0 0 0 2.5 0"/></g>
+  <circle cx="1102" cy="62" r="9" fill="#B7091E"/>
+  <text x="1102" y="66" font-size="12" fill="#FFFFFF" text-anchor="middle">9+</text>
+  <text x="1200" y="72" font-size="12" fill="#6B7280" text-anchor="end">Admin Divisi</text>
+  <circle cx="1240" cy="68" r="16" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="1240" y="72" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">AH</text>
+
+  <text x="244" y="124" font-size="12" fill="#6B7280">Kontak divisi dan nilai awal form tugas.</text>
+
+  <!-- tab -->
+  <text x="244" y="154" font-size="13" font-weight="600" fill="#111827">Divisi</text>
+  <rect x="244" y="160" width="42" height="2" fill="#B7091E"/>
+  <line x1="244" y1="166" x2="1256" y2="166" stroke="#E5E7EB"/>
+
+  <!-- identitas divisi -->
+  <rect x="244" y="182" width="494" height="350" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="260" y="210" font-size="15" font-weight="600" fill="#111827">Identitas divisi</text>
+  <text x="722" y="210" font-size="12" fill="#6B7280" text-anchor="end">Hanya divisi ini</text>
+  <line x1="260" y1="222" x2="722" y2="222" stroke="#E5E7EB"/>
+
+  <text x="260" y="246" font-size="12" fill="#374151">Nama divisi</text>
+  <rect x="260" y="254" width="462" height="36" rx="6" fill="#F3F4F6" stroke="#E5E7EB"/>
+  <text x="272" y="277" font-size="13" fill="#374151">Hukum &amp; Sengketa</text>
+
+  <text x="260" y="314" font-size="12" fill="#374151">Kode divisi</text>
+  <rect x="260" y="322" width="140" height="36" rx="6" fill="#F3F4F6" stroke="#E5E7EB"/>
+  <text x="272" y="345" font-size="13" fill="#374151">HUK</text>
+  <text x="416" y="346" font-size="12" fill="#6B7280">3 huruf kapital, dipakai pada nomor tugas.</text>
+
+  <text x="260" y="382" font-size="12" fill="#374151">Kepala divisi</text>
+  <rect x="260" y="390" width="462" height="36" rx="6" fill="#F3F4F6" stroke="#E5E7EB"/>
+  <text x="272" y="413" font-size="13" fill="#374151">Ahmad Fauzi</text>
+
+  <text x="260" y="450" font-size="12" fill="#374151">Kontak divisi</text>
+  <rect x="260" y="458" width="462" height="36" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="272" y="481" font-size="13" fill="#111827">hukum@bawaslu-pasuruan.go.id</text>
+
+  <text x="260" y="516" font-size="12" fill="#6B7280">Identitas diubah di Kelola Master; kontak menjadi Reply-To email divisi.</text>
+
+  <!-- nilai awal -->
+  <rect x="762" y="182" width="494" height="350" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="778" y="210" font-size="15" font-weight="600" fill="#111827">Nilai awal form tugas</text>
+  <text x="1240" y="210" font-size="12" fill="#6B7280" text-anchor="end">Per divisi</text>
+  <line x1="778" y1="222" x2="1240" y2="222" stroke="#E5E7EB"/>
+
+  <text x="778" y="250" font-size="12" fill="#374151">Kategori default</text>
+  <rect x="778" y="258" width="462" height="36" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="790" y="281" font-size="13" fill="#111827">Berkas perkara</text>
+
+  <text x="778" y="324" font-size="12" fill="#374151">Prioritas default</text>
+  <rect x="778" y="332" width="462" height="36" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="790" y="355" font-size="13" fill="#111827">Sedang</text>
+  <path d="M1216 347 l6 6 l6 -6" stroke="#6B7280" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+  <text x="778" y="398" font-size="12" fill="#6B7280">Dipakai saat Admin membuka form tugas baru.</text>
+  <text x="778" y="418" font-size="12" fill="#6B7280">Nilai tetap bisa diubah per tugas.</text>
+
+  <rect x="778" y="440" width="462" height="64" rx="8" fill="#F9FAFB" stroke="#D1D5DB"/>
+  <text x="794" y="464" font-size="12" fill="#374151">Kategori nonaktif tidak muncul di pilihan form.</text>
+  <text x="794" y="484" font-size="12" fill="#6B7280">Tenggat selalu disimpan sampai 23:59:59 WIB.</text>
+
+  <!-- aksi -->
+  <text x="244" y="568" font-size="12" fill="#6B7280">Perubahan berlaku setelah disimpan.</text>
+  <rect x="936" y="552" width="128" height="36" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="1000" y="576" font-size="13" font-weight="600" fill="#374151" text-anchor="middle">Batal</text>
+  <rect x="1080" y="552" width="176" height="36" rx="8" fill="#B7091E"/>
+  <text x="1168" y="576" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">Simpan Pengaturan</text>
+
+  <text x="244" y="632" font-size="12" fill="#374151">Tab Sistem hanya tampil untuk Super Admin.</text>
+  <text x="244" y="654" font-size="12" fill="#374151">Nilai awal hanya mengisi form; tidak mengubah tugas yang sudah ada.</text>
+  <text x="244" y="676" font-size="12" fill="#6B7280">Setiap simpan menulis log berisi nilai lama dan baru.</text>
+  <text x="244" y="698" font-size="12" fill="#6B7280">Batas berkas dan ambang tenggat diatur Super Admin di tab Sistem.</text>
+</svg>

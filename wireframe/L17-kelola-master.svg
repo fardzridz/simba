@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" font-family="Inter, system-ui, sans-serif">
+  <title>L17 Kelola Master, wireframe</title>
+  <rect width="1280" height="800" fill="#FFFFFF"/>
+  <text x="24" y="26" font-size="12" fill="#6B7280">WIREFRAME L17: Kelola Master</text>
+  <text x="1256" y="26" font-size="12" fill="#6B7280" text-anchor="end">data contoh (seed), bukan data nyata</text>
+
+  <rect x="0" y="40" width="220" height="760" fill="#191B27"/>
+  <text x="20" y="76" font-size="12" fill="#9CA3AF">[LOGO]</text>
+  <g transform="translate(28,114)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2.5h4.75v4.75H2.5z M8.75 2.5h4.75v4.75H8.75z M2.5 8.75h4.75v4.75H2.5z M8.75 8.75h4.75v4.75H8.75z"/></g>
+  <text x="52" y="127" font-size="13" fill="#9CA3AF">Dashboard</text>
+  <g transform="translate(28,154)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 2.5H4.25A1.25 1.25 0 0 0 3 3.75v8.5a1.25 1.25 0 0 0 1.25 1.25h7.5A1.25 1.25 0 0 0 13 12.25v-8.5A1.25 1.25 0 0 0 11.75 2.5H10.5 M6 2.5h4v1.75H6z M6 8h4 M6 10.75h2.5"/></g>
+  <text x="52" y="167" font-size="13" fill="#9CA3AF">Semua Tugas</text>
+  <g transform="translate(28,194)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5.75A1.5 1.5 0 0 1 4 4.25h2.5L8 6h4a1.5 1.5 0 0 1 1.5 1.5v3.75A1.5 1.5 0 0 1 12 12.75H4a1.5 1.5 0 0 1-1.5-1.5z"/></g>
+  <text x="52" y="207" font-size="13" fill="#9CA3AF">Katalog Dokumen</text>
+  <g transform="translate(28,234)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13h12 M3.5 13V8.5 M8 13V4.5 M12.5 13V6.5"/></g>
+  <text x="52" y="247" font-size="13" fill="#9CA3AF">Laporan</text>
+  <g transform="translate(28,274)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0-5.5-5.5 M2.5 3.5V6H5 M8 5.25v3l2 1.5"/></g>
+  <text x="52" y="287" font-size="13" fill="#9CA3AF">Log Aktivitas</text>
+  <rect x="12" y="304" width="196" height="36" rx="8" fill="#B7091E"/>
+  <g transform="translate(28,314)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8.25a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z M2 13.5a4 4 0 0 1 8 0 M10.75 3.6a2.4 2.4 0 0 1 0 4.3 M14 13.5a4.4 4.4 0 0 0-2-3.55"/></g>
+  <text x="52" y="327" font-size="13" font-weight="500" fill="#FFFFFF">Kelola Master</text>
+  <g transform="translate(28,354)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.25 11.5V8a3.75 3.75 0 0 1 7.5 0v3.5 M3.25 11.5h9.5 M6.75 13.25a1.4 1.4 0 0 0 2.5 0"/></g>
+  <text x="52" y="367" font-size="13" fill="#9CA3AF">Notifikasi</text>
+<g transform="translate(28,394)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.5 4.5h11 M2.5 8h11 M2.5 11.5h11"/>
+    <circle cx="6" cy="4.5" r="1.6" fill="#9CA3AF"/>
+    <circle cx="10" cy="8" r="1.6" fill="#9CA3AF"/>
+    <circle cx="6.5" cy="11.5" r="1.6" fill="#9CA3AF"/>
+  </g>
+  <text x="52" y="407" font-size="13" fill="#9CA3AF">Pengaturan</text>
+  <g transform="translate(28,434)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z M8 8.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5z M4.4 12.4a4 4 0 0 1 7.2 0"/></g>
+  <text x="52" y="447" font-size="13" fill="#9CA3AF">Akun Saya</text>
+
+  <line x1="220" y1="96" x2="1280" y2="96" stroke="#E5E7EB"/>
+  <text x="244" y="78" font-size="20" font-weight="600" fill="#111827">Kelola Master</text>
+  <text x="1204" y="72" font-size="12" fill="#6B7280" text-anchor="end">Super Admin</text>
+  <circle cx="1240" cy="68" r="16" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="1240" y="72" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">SA</text>
+
+  <!-- tab -->
+  <text x="244" y="132" font-size="13" font-weight="600" fill="#111827">Pengguna</text>
+  <text x="352" y="132" font-size="13" fill="#6B7280">Divisi</text>
+  <text x="432" y="132" font-size="13" fill="#6B7280">Kategori</text>
+  <rect x="244" y="138" width="76" height="2" fill="#B7091E"/>
+  <line x1="244" y1="140" x2="1256" y2="140" stroke="#E5E7EB"/>
+  <rect x="1080" y="112" width="176" height="36" rx="8" fill="#B7091E"/>
+  <text x="1168" y="136" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">Tambah Pengguna</text>
+  <text x="244" y="168" font-size="12" fill="#6B7280">48 pengguna, 5 divisi, 8 kategori pada data contoh. Tabel menampilkan 5 akun seed pengembangan.</text>
+
+  <!-- filter -->
+  <rect x="244" y="184" width="1012" height="44" rx="8" fill="#F9FAFB" stroke="#D1D5DB"/>
+  <rect x="260" y="194" width="200" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="272" y="213" font-size="12" fill="#6B7280">Cari nama, NIP, atau nama pengguna</text>
+  <rect x="472" y="194" width="160" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="484" y="213" font-size="12" fill="#374151">Peran: semua</text>
+  <rect x="644" y="194" width="160" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="656" y="213" font-size="12" fill="#374151">Status: semua</text>
+  <rect x="816" y="194" width="170" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="828" y="213" font-size="12" fill="#374151">Divisi: semua</text>
+  <text x="1240" y="213" font-size="12" fill="#1D4ED8" text-anchor="end">Hapus filter</text>
+
+  <!-- tabel pengguna -->
+  <rect x="244" y="248" width="1012" height="468" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="244" y="248" width="1012" height="36" rx="10" fill="#F9FAFB"/>
+  <rect x="244" y="266" width="1012" height="18" fill="#F9FAFB"/>
+  <line x1="244" y1="284" x2="1256" y2="284" stroke="#D1D5DB"/>
+  <text x="260" y="270" font-size="12" font-weight="500" fill="#374151">Nama, NIP &amp; Pengguna</text>
+  <text x="410" y="270" font-size="12" font-weight="500" fill="#374151">Divisi</text>
+  <text x="600" y="270" font-size="12" font-weight="500" fill="#374151">Peran</text>
+  <text x="720" y="270" font-size="12" font-weight="500" fill="#374151">Status</text>
+  <text x="830" y="270" font-size="12" font-weight="500" fill="#374151">Terakhir Masuk</text>
+  <text x="1240" y="270" font-size="12" font-weight="500" fill="#374151" text-anchor="end">Aksi</text>
+
+  <!-- baris 1 -->
+  <text x="260" y="307" font-size="13" fill="#111827">Super Admin</text>
+  <text x="260" y="325" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">super.admin</text>
+  <text x="260" y="341" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">197805122006041002</text>
+  <text x="410" y="322" font-size="12" fill="#374151">Sekretariat</text>
+  <text x="600" y="322" font-size="12" fill="#374151">Super Admin</text>
+  <rect x="720" y="309" width="72" height="22" rx="6" fill="#DCFCE7"/><g transform="translate(728,314) scale(0.75)" fill="none" stroke="#15803D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 5"/></g>
+  <text x="744" y="324" font-size="12" font-weight="500" fill="#15803D">Aktif</text>
+  <text x="830" y="322" font-size="12" fill="#374151">17 Okt 2026 08:05</text>
+  <text x="1000" y="322" font-size="12" fill="#1D4ED8">Ubah</text>
+  <text x="1064" y="322" font-size="12" fill="#1D4ED8">Reset</text>
+  <text x="1240" y="322" font-size="12" fill="#B91C1C" text-anchor="end">Nonaktifkan</text>
+  <line x1="260" y1="360" x2="1240" y2="360" stroke="#E5E7EB"/>
+
+  <!-- baris 2 -->
+  <text x="260" y="383" font-size="13" fill="#111827">Admin Hukum &amp; Sengketa</text>
+  <text x="260" y="401" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">admin.hukum</text>
+  <text x="260" y="417" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">198203142009011005</text>
+  <text x="410" y="398" font-size="12" fill="#374151">Hukum &amp; Sengketa</text>
+  <text x="600" y="398" font-size="12" fill="#374151">Admin Divisi</text>
+  <rect x="720" y="385" width="72" height="22" rx="6" fill="#DCFCE7"/><g transform="translate(728,390) scale(0.75)" fill="none" stroke="#15803D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 5"/></g>
+  <text x="744" y="400" font-size="12" font-weight="500" fill="#15803D">Aktif</text>
+  <text x="830" y="398" font-size="12" fill="#374151">17 Okt 2026 07:52</text>
+  <text x="1000" y="398" font-size="12" fill="#1D4ED8">Ubah</text>
+  <text x="1064" y="398" font-size="12" fill="#1D4ED8">Reset</text>
+  <text x="1240" y="398" font-size="12" fill="#B91C1C" text-anchor="end">Nonaktifkan</text>
+  <line x1="260" y1="436" x2="1240" y2="436" stroke="#E5E7EB"/>
+
+  <!-- baris 3 -->
+  <text x="260" y="459" font-size="13" fill="#111827">Admin Pengawasan</text>
+  <text x="260" y="477" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">admin.pengawasan</text>
+  <text x="260" y="493" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">198711052012031007</text>
+  <text x="410" y="474" font-size="12" fill="#374151">Pengawasan</text>
+  <text x="600" y="474" font-size="12" fill="#374151">Admin Divisi</text>
+  <rect x="720" y="461" width="72" height="22" rx="6" fill="#DCFCE7"/><g transform="translate(728,466) scale(0.75)" fill="none" stroke="#15803D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 5"/></g>
+  <text x="744" y="476" font-size="12" font-weight="500" fill="#15803D">Aktif</text>
+  <text x="830" y="474" font-size="12" fill="#374151">16 Okt 2026 16:20</text>
+  <text x="1000" y="474" font-size="12" fill="#1D4ED8">Ubah</text>
+  <text x="1064" y="474" font-size="12" fill="#1D4ED8">Reset</text>
+  <text x="1240" y="474" font-size="12" fill="#B91C1C" text-anchor="end">Nonaktifkan</text>
+  <line x1="260" y1="512" x2="1240" y2="512" stroke="#E5E7EB"/>
+
+  <!-- baris 4 -->
+  <text x="260" y="535" font-size="13" fill="#111827">Staf Hukum &amp; Sengketa</text>
+  <text x="260" y="553" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">staf.hukum</text>
+  <text x="260" y="569" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">199004222015041003</text>
+  <text x="410" y="550" font-size="12" fill="#374151">Hukum &amp; Sengketa</text>
+  <text x="600" y="550" font-size="12" fill="#374151">Staf</text>
+  <rect x="720" y="537" width="72" height="22" rx="6" fill="#DCFCE7"/><g transform="translate(728,542) scale(0.75)" fill="none" stroke="#15803D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 5"/></g>
+  <text x="744" y="552" font-size="12" font-weight="500" fill="#15803D">Aktif</text>
+  <text x="830" y="550" font-size="12" fill="#374151">17 Okt 2026 09:05</text>
+  <text x="1000" y="550" font-size="12" fill="#1D4ED8">Ubah</text>
+  <text x="1064" y="550" font-size="12" fill="#1D4ED8">Reset</text>
+  <text x="1240" y="550" font-size="12" fill="#B91C1C" text-anchor="end">Nonaktifkan</text>
+  <line x1="260" y1="588" x2="1240" y2="588" stroke="#E5E7EB"/>
+
+  <!-- baris 5 -->
+  <text x="260" y="611" font-size="13" fill="#111827">Staf Pengawasan</text>
+  <text x="260" y="629" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">staf.pengawasan</text>
+  <text x="260" y="645" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">-</text>
+  <text x="410" y="626" font-size="12" fill="#374151">Pengawasan</text>
+  <text x="600" y="626" font-size="12" fill="#374151">Staf</text>
+  <rect x="720" y="613" width="72" height="22" rx="6" fill="#DCFCE7"/><g transform="translate(728,618) scale(0.75)" fill="none" stroke="#15803D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 5"/></g>
+  <text x="744" y="628" font-size="12" font-weight="500" fill="#15803D">Aktif</text>
+  <text x="830" y="626" font-size="12" fill="#374151">15 Okt 2026 14:02</text>
+  <text x="1000" y="626" font-size="12" fill="#1D4ED8">Ubah</text>
+  <text x="1064" y="626" font-size="12" fill="#1D4ED8">Reset</text>
+  <text x="1240" y="626" font-size="12" fill="#B91C1C" text-anchor="end">Nonaktifkan</text>
+  <line x1="260" y1="664" x2="1240" y2="664" stroke="#E5E7EB"/>
+
+  <text x="260" y="694" font-size="12" fill="#6B7280">Menampilkan 1 sampai 5 dari 48 pengguna</text>
+  <rect x="1096" y="676" width="28" height="28" rx="6" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="1110" y="695" font-size="12" fill="#374151" text-anchor="middle">1</text>
+  <rect x="1132" y="676" width="28" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="1146" y="695" font-size="12" fill="#374151" text-anchor="middle">2</text>
+  <rect x="1168" y="676" width="28" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="1182" y="695" font-size="12" fill="#374151" text-anchor="middle">3</text>
+  <rect x="1204" y="676" width="36" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="1222" y="695" font-size="12" fill="#374151" text-anchor="middle">25</text>
+
+  <text x="244" y="748" font-size="12" fill="#374151">NIP opsional: pegawai non-PNS tidak punya NIP. NIP kosong disimpan NULL, bukan string kosong.</text>
+  <text x="244" y="770" font-size="12" fill="#6B7280">Akun beriwayat dinonaktifkan, bukan dihapus. Divisi dan kategori memakai pola tab dan tabel yang sama.</text>
+
+  <!-- dialog konfirmasi reset kata sandi -->
+  <rect x="244" y="96" width="1012" height="680" fill="#FCFCFC" fill-opacity="0.75"/>
+  <rect x="760" y="280" width="360" height="200" rx="10" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="784" y="316" font-size="15" font-weight="600" fill="#111827">Reset Kata Sandi</text>
+  <text x="784" y="348" font-size="13" fill="#374151">Pengguna: staf.hukum</text>
+  <text x="784" y="374" font-size="12" fill="#374151">Sesi pengguna akan diakhiri setelah kata sandi direset.</text>
+  <text x="784" y="396" font-size="12" fill="#6B7280">Tindakan ini tercatat di log aktivitas.</text>
+  <rect x="790" y="424" width="120" height="36" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="850" y="448" font-size="13" font-weight="600" fill="#374151" text-anchor="middle">Batal</text>
+  <rect x="922" y="424" width="174" height="36" rx="8" fill="#B7091E"/>
+  <text x="1009" y="448" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">Reset Kata Sandi</text>
+</svg>

@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" font-family="Inter, system-ui, sans-serif">
+  <title>L13 Katalog Dokumen Final, wireframe</title>
+  <rect width="1280" height="800" fill="#FFFFFF"/>
+  <text x="24" y="26" font-size="12" fill="#6B7280">WIREFRAME L13: Katalog Dokumen Final</text>
+  <text x="1256" y="26" font-size="12" fill="#6B7280" text-anchor="end">data contoh (seed), bukan data nyata</text>
+
+  <rect x="0" y="40" width="220" height="760" fill="#191B27"/>
+  <text x="20" y="76" font-size="12" fill="#9CA3AF">[LOGO]</text>
+  <g transform="translate(28,114)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2.5h4.75v4.75H2.5z M8.75 2.5h4.75v4.75H8.75z M2.5 8.75h4.75v4.75H2.5z M8.75 8.75h4.75v4.75H8.75z"/></g>
+  <text x="52" y="127" font-size="13" fill="#9CA3AF">Dashboard</text>
+  <g transform="translate(28,154)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 2.5H4.25A1.25 1.25 0 0 0 3 3.75v8.5a1.25 1.25 0 0 0 1.25 1.25h7.5A1.25 1.25 0 0 0 13 12.25v-8.5A1.25 1.25 0 0 0 11.75 2.5H10.5 M6 2.5h4v1.75H6z M6 8h4 M6 10.75h2.5"/></g>
+  <text x="52" y="167" font-size="13" fill="#9CA3AF">Tugas Divisi</text>
+  <rect x="12" y="184" width="196" height="36" rx="8" fill="#B7091E"/>
+  <g transform="translate(28,194)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5.75A1.5 1.5 0 0 1 4 4.25h2.5L8 6h4a1.5 1.5 0 0 1 1.5 1.5v3.75A1.5 1.5 0 0 1 12 12.75H4a1.5 1.5 0 0 1-1.5-1.5z"/></g>
+  <text x="52" y="207" font-size="13" font-weight="500" fill="#FFFFFF">Katalog Dokumen</text>
+  <g transform="translate(28,234)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13h12 M3.5 13V8.5 M8 13V4.5 M12.5 13V6.5"/></g>
+  <text x="52" y="247" font-size="13" fill="#9CA3AF">Laporan</text>
+  <g transform="translate(28,274)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0-5.5-5.5 M2.5 3.5V6H5 M8 5.25v3l2 1.5"/></g>
+  <text x="52" y="287" font-size="13" fill="#9CA3AF">Log Aktivitas</text>
+  <g transform="translate(28,314)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.25 11.5V8a3.75 3.75 0 0 1 7.5 0v3.5 M3.25 11.5h9.5 M6.75 13.25a1.4 1.4 0 0 0 2.5 0"/></g>
+  <text x="52" y="327" font-size="13" fill="#9CA3AF">Notifikasi</text>
+<g transform="translate(28,354)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.5 4.5h11 M2.5 8h11 M2.5 11.5h11"/>
+    <circle cx="6" cy="4.5" r="1.6" fill="#9CA3AF"/>
+    <circle cx="10" cy="8" r="1.6" fill="#9CA3AF"/>
+    <circle cx="6.5" cy="11.5" r="1.6" fill="#9CA3AF"/>
+  </g>
+  <text x="52" y="367" font-size="13" fill="#9CA3AF">Pengaturan</text>
+  <g transform="translate(28,394)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z M8 8.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5z M4.4 12.4a4 4 0 0 1 7.2 0"/></g>
+  <text x="52" y="407" font-size="13" fill="#9CA3AF">Akun Saya</text>
+
+  <line x1="220" y1="96" x2="1280" y2="96" stroke="#E5E7EB"/>
+  <text x="244" y="78" font-size="20" font-weight="600" fill="#111827">Katalog Dokumen Final</text>
+  <text x="1204" y="72" font-size="12" fill="#6B7280" text-anchor="end">Admin Divisi</text>
+  <circle cx="1240" cy="68" r="16" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="1240" y="72" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">AH</text>
+  <text x="244" y="124" font-size="12" fill="#6B7280">Dokumen final divisi Hukum &amp; Sengketa. Satu tugas, satu baris dokumen.</text>
+
+  <!-- filter -->
+  <rect x="244" y="144" width="1012" height="44" rx="8" fill="#F9FAFB" stroke="#D1D5DB"/>
+  <rect x="260" y="154" width="200" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="272" y="173" font-size="12" fill="#6B7280">Cari nomor atau judul</text>
+  <rect x="472" y="154" width="250" height="28" rx="6" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="484" y="173" font-size="12" fill="#374151">Divisi: Hukum &amp; Sengketa (terkunci)</text>
+  <rect x="748" y="154" width="160" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="760" y="173" font-size="12" fill="#374151">Kategori: semua</text>
+  <rect x="920" y="154" width="160" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="932" y="173" font-size="12" fill="#374151">Arsip: 90 hari</text>
+  <text x="1240" y="173" font-size="12" fill="#1D4ED8" text-anchor="end">Hapus filter</text>
+
+  <!-- tabel katalog -->
+  <rect x="244" y="208" width="640" height="568" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="244" y="208" width="640" height="36" rx="10" fill="#F9FAFB"/>
+  <rect x="244" y="226" width="640" height="18" fill="#F9FAFB"/>
+  <line x1="244" y1="244" x2="884" y2="244" stroke="#D1D5DB"/>
+  <text x="260" y="230" font-size="12" font-weight="500" fill="#374151">Nomor Tugas</text>
+  <text x="385" y="230" font-size="12" font-weight="500" fill="#374151">Judul Dokumen</text>
+  <text x="610" y="230" font-size="12" font-weight="500" fill="#374151">Diarsipkan</text>
+  <text x="740" y="230" font-size="12" font-weight="500" fill="#374151">Berkas</text>
+  <text x="868" y="230" font-size="12" font-weight="500" fill="#374151" text-anchor="end">Aksi</text>
+
+  <text x="260" y="267" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/002</text>
+  <text x="385" y="267" font-size="13" fill="#111827">Dokumen C1 Pleno</text>
+  <text x="610" y="267" font-size="12" fill="#374151">17 Okt 2026</text>
+  <text x="740" y="267" font-size="12" fill="#374151">1 berkas</text>
+  <text x="868" y="276" font-size="12" fill="#1D4ED8" text-anchor="end">Unduh</text>
+  <line x1="260" y1="300" x2="868" y2="300" stroke="#E5E7EB"/>
+
+  <text x="260" y="323" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/09/021</text>
+  <text x="385" y="323" font-size="13" fill="#111827">Dokumentasi Kegiatan</text>
+  <text x="610" y="323" font-size="12" fill="#374151">2 Okt 2026</text>
+  <text x="740" y="323" font-size="12" fill="#374151">3 berkas</text>
+  <text x="868" y="332" font-size="12" fill="#1D4ED8" text-anchor="end">Unduh</text>
+  <line x1="260" y1="356" x2="868" y2="356" stroke="#E5E7EB"/>
+
+  <text x="260" y="379" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/09/014</text>
+  <text x="385" y="379" font-size="13" fill="#111827">Rekap Berita Acara Rapat</text>
+  <text x="610" y="379" font-size="12" fill="#374151">28 Sep 2026</text>
+  <text x="740" y="379" font-size="12" fill="#374151">2 berkas</text>
+  <text x="868" y="388" font-size="12" fill="#1D4ED8" text-anchor="end">Unduh</text>
+  <line x1="260" y1="412" x2="868" y2="412" stroke="#E5E7EB"/>
+
+  <text x="260" y="435" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/08/009</text>
+  <text x="385" y="435" font-size="13" fill="#111827">Laporan Bulanan Agustus</text>
+  <text x="610" y="435" font-size="12" fill="#374151">4 Sep 2026</text>
+  <text x="740" y="435" font-size="12" fill="#374151">1 berkas</text>
+  <text x="868" y="444" font-size="12" fill="#1D4ED8" text-anchor="end">Unduh</text>
+  <line x1="260" y1="468" x2="868" y2="468" stroke="#E5E7EB"/>
+
+  <text x="260" y="491" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/08/004</text>
+  <text x="385" y="491" font-size="13" fill="#111827">Berkas Sengketa A</text>
+  <text x="610" y="491" font-size="12" fill="#374151">22 Agu 2026</text>
+  <text x="740" y="491" font-size="12" fill="#374151">4 berkas</text>
+  <text x="868" y="500" font-size="12" fill="#1D4ED8" text-anchor="end">Unduh</text>
+  <line x1="260" y1="524" x2="868" y2="524" stroke="#E5E7EB"/>
+
+  <text x="260" y="547" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/07/017</text>
+  <text x="385" y="547" font-size="13" fill="#111827">Surat Tugas Pengawasan</text>
+  <text x="610" y="547" font-size="12" fill="#374151">9 Agu 2026</text>
+  <text x="740" y="547" font-size="12" fill="#374151">1 berkas</text>
+  <text x="868" y="556" font-size="12" fill="#1D4ED8" text-anchor="end">Unduh</text>
+  <line x1="260" y1="580" x2="868" y2="580" stroke="#E5E7EB"/>
+
+  <text x="260" y="603" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/07/011</text>
+  <text x="385" y="603" font-size="13" fill="#111827">Dokumentasi Pleno Juli</text>
+  <text x="610" y="603" font-size="12" fill="#374151">31 Jul 2026</text>
+  <text x="740" y="603" font-size="12" fill="#374151">2 berkas</text>
+  <text x="868" y="612" font-size="12" fill="#1D4ED8" text-anchor="end">Unduh</text>
+  <line x1="260" y1="636" x2="868" y2="636" stroke="#E5E7EB"/>
+
+  <text x="260" y="659" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/06/006</text>
+  <text x="385" y="659" font-size="13" fill="#111827">Rekap Kepatuhan Semester I</text>
+  <text x="610" y="659" font-size="12" fill="#374151">14 Jul 2026</text>
+  <text x="740" y="659" font-size="12" fill="#374151">5 berkas</text>
+  <text x="868" y="668" font-size="12" fill="#1D4ED8" text-anchor="end">Unduh</text>
+
+  <text x="260" y="722" font-size="12" fill="#6B7280">Menampilkan 1 sampai 8 dari 92 dokumen</text>
+  <rect x="700" y="708" width="28" height="28" rx="6" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="714" y="727" font-size="12" fill="#374151" text-anchor="middle">1</text>
+  <rect x="736" y="708" width="28" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="750" y="727" font-size="12" fill="#374151" text-anchor="middle">2</text>
+  <rect x="772" y="708" width="28" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="786" y="727" font-size="12" fill="#374151" text-anchor="middle">3</text>
+  <rect x="808" y="708" width="60" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="838" y="727" font-size="12" fill="#374151" text-anchor="middle">50/hal</text>
+
+  <!-- panel samping detail dokumen -->
+  <rect x="900" y="208" width="356" height="568" rx="10" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="918" y="236" font-size="15" font-weight="600" fill="#111827">Detail Dokumen</text>
+  <text x="1238" y="236" font-size="12" fill="#1D4ED8" text-anchor="end">Tutup</text>
+  <line x1="918" y1="252" x2="1238" y2="252" stroke="#E5E7EB"/>
+
+  <text x="918" y="280" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/002</text>
+  <text x="918" y="306" font-size="13" fill="#111827">Rekap Berita Acara Rapat</text>
+  <text x="918" y="338" font-size="12" fill="#374151">Kategori: Persuratan</text>
+  <text x="918" y="360" font-size="12" fill="#374151">Divisi: Hukum &amp; Sengketa</text>
+  <text x="918" y="382" font-size="12" fill="#374151">Penerima: Ahmad Fauzi</text>
+  <text x="918" y="404" font-size="12" fill="#374151">Diarsipkan: 3 Okt 2026 10:12 WIB</text>
+  <text x="918" y="426" font-size="12" fill="#374151">Versi submission: Versi 1 (disetujui)</text>
+  <line x1="918" y1="450" x2="1238" y2="450" stroke="#F3F4F6"/>
+
+  <text x="918" y="474" font-size="12" font-weight="500" fill="#374151">Berkas</text>
+  <text x="918" y="500" font-size="13" fill="#111827">rekap-berita-acara.pdf</text>
+  <text x="918" y="518" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">2,1 MB  c13a90f7</text>
+  <text x="1238" y="500" font-size="12" fill="#1D4ED8" text-anchor="end">Unduh</text>
+  <text x="918" y="546" font-size="13" fill="#111827">lampiran-daftar-hadir.xlsx</text>
+  <text x="918" y="564" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">340 KB  9b41e2c8</text>
+  <text x="1238" y="546" font-size="12" fill="#1D4ED8" text-anchor="end">Unduh</text>
+
+  <rect x="918" y="592" width="320" height="36" rx="8" fill="#B7091E"/>
+  <text x="1078" y="616" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">Unduh Semua</text>
+  <text x="918" y="656" font-size="12" fill="#374151">Satu tugas punya satu baris arsip. Revisi tidak</text>
+  <text x="918" y="676" font-size="12" fill="#374151">menambah baris baru, hanya menambah versi.</text>
+  <text x="918" y="706" font-size="12" fill="#1D4ED8">Lihat tugas asal</text>
+  <text x="918" y="736" font-size="12" fill="#6B7280">Cakupan unduhan diperiksa pada setiap permintaan.</text>
+</svg>

@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="860" viewBox="0 0 1240 860" role="img" font-family="Inter, system-ui, sans-serif">
+  <title>Reflow ponsel: L06, L08, L03</title>
+  <rect width="1240" height="860" fill="#FFFFFF"/>
+  <text x="24" y="26" font-size="12" fill="#6B7280">WIREFRAME reflow ponsel: L06 Tugas Saya, L08 Modal, L03 Dashboard Staf</text>
+  <text x="1216" y="26" font-size="12" fill="#6B7280" text-anchor="end">data contoh (seed), bukan data nyata</text>
+
+  <text x="30" y="44" font-size="13" font-weight="600" fill="#111827">L06 Tugas Saya, ponsel 390x780</text>
+  <text x="435" y="44" font-size="13" font-weight="600" fill="#111827">L08 Modal Kumpulkan, ponsel</text>
+  <text x="840" y="44" font-size="13" font-weight="600" fill="#111827">L03 Dashboard Staf, ponsel</text>
+
+  <!-- frame 1 -->
+  <rect x="30" y="60" width="370" height="780" rx="16" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <line x1="30" y1="116" x2="400" y2="116" stroke="#E5E7EB"/>
+  <line x1="46" y1="98" x2="70" y2="98" stroke="#374151" stroke-width="2"/>
+  <line x1="46" y1="106" x2="70" y2="106" stroke="#374151" stroke-width="2"/>
+  <text x="78" y="108" font-size="12" fill="#374151">Menu</text>
+  <text x="215" y="108" font-size="13" font-weight="600" fill="#111827" text-anchor="middle">Tugas Saya</text>
+  <circle cx="376" cy="102" r="13" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="376" y="107" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">SH</text>
+
+  <rect x="42" y="128" width="346" height="44" rx="8" fill="#F9FAFB" stroke="#D1D5DB"/>
+  <text x="58" y="155" font-size="13" font-weight="600" fill="#374151">Filter</text>
+  <text x="372" y="155" font-size="12" fill="#6B7280" text-anchor="end">3 filter aktif</text>
+
+  <rect x="42" y="184" width="346" height="176" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="58" y="210" font-size="13" font-weight="600" fill="#111827">Laporan Hasil Pengawasan Wilayah A</text>
+  <text x="58" y="228" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/007</text>
+  <text x="58" y="250" font-size="12" fill="#374151">Tenggat 18 Okt 2026, sisa 1 hari</text>
+  <rect x="58" y="260" width="133" height="22" rx="6" fill="#DBEAFE"/><g transform="translate(66,265) scale(0.75)" fill="none" stroke="#1D4ED8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z M6.5 5.75l3.75 2.25-3.75 2.25z"/></g>
+  <text x="82" y="275" font-size="12" font-weight="500" fill="#1D4ED8">Sedang Dikerjakan</text>
+  <rect x="58" y="288" width="102" height="22" rx="6" fill="#FEE2E2"/><g transform="translate(66,293) scale(0.75)" fill="none" stroke="#B91C1C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.75 2.5l2.75 2.75-8 8H2.75v-2.75z M9.5 3.75l2.75 2.75"/></g>
+  <text x="82" y="303" font-size="12" font-weight="500" fill="#B91C1C">Perlu Revisi</text>
+  <rect x="58" y="316" width="314" height="44" rx="8" fill="#B7091E"/>
+  <text x="215" y="344" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">Kumpulkan Tugas</text>
+
+  <rect x="42" y="372" width="346" height="176" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="58" y="398" font-size="13" font-weight="600" fill="#111827">Dokumen C1 Pleno</text>
+  <text x="58" y="416" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/009</text>
+  <text x="58" y="438" font-size="12" fill="#B45309">Tenggat hari ini 17:00 WIB</text>
+  <rect x="58" y="448" width="133" height="22" rx="6" fill="#DBEAFE"/><g transform="translate(66,453) scale(0.75)" fill="none" stroke="#1D4ED8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z M6.5 5.75l3.75 2.25-3.75 2.25z"/></g>
+  <text x="82" y="463" font-size="12" font-weight="500" fill="#1D4ED8">Sedang Dikerjakan</text>
+  <rect x="58" y="504" width="314" height="44" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="215" y="532" font-size="13" font-weight="600" fill="#374151" text-anchor="middle">Kumpulkan Tugas</text>
+
+  <rect x="42" y="560" width="346" height="176" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="58" y="586" font-size="13" font-weight="600" fill="#111827">Rekap Berita Acara Rapat</text>
+  <text x="58" y="604" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/002</text>
+  <text x="58" y="626" font-size="12" fill="#374151">Tenggat 20 Okt 2026, sisa 3 hari</text>
+  <rect x="58" y="636" width="143" height="22" rx="6" fill="#FEF3C7"/><g transform="translate(66,641) scale(0.75)" fill="none" stroke="#B45309" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 2.5h7 M4.5 13.5h7 M5.5 2.5v1.75L8 8l2.5-3.75V2.5 M5.5 13.5v-1.75L8 8l2.5 3.75v1.75"/></g>
+  <text x="82" y="651" font-size="12" font-weight="500" fill="#B45309">Menunggu Verifikasi</text>
+  <rect x="58" y="664" width="314" height="44" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="215" y="692" font-size="13" font-weight="600" fill="#374151" text-anchor="middle">Lihat Berkas</text>
+
+  <text x="42" y="754" font-size="12" fill="#6B7280">Tabel jadi tiga kolom prioritas, sisanya ke baris kedua.</text>
+  <text x="42" y="774" font-size="12" fill="#6B7280">Tanpa gulir mendatar, target sentuh 44 px lebih.</text>
+  <text x="42" y="794" font-size="12" fill="#6B7280">Aksi utama selebar kartu penuh.</text>
+
+  <!-- frame 2 -->
+  <rect x="435" y="60" width="370" height="780" rx="16" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <line x1="435" y1="116" x2="805" y2="116" stroke="#E5E7EB"/>
+  <line x1="451" y1="98" x2="475" y2="98" stroke="#374151" stroke-width="2"/>
+  <line x1="451" y1="106" x2="475" y2="106" stroke="#374151" stroke-width="2"/>
+  <text x="483" y="108" font-size="12" fill="#374151">Menu</text>
+  <text x="620" y="108" font-size="13" font-weight="600" fill="#111827" text-anchor="middle">Tugas Saya</text>
+  <rect x="435" y="116" width="370" height="724" fill="#F3F4F6"/>
+  <rect x="447" y="132" width="346" height="60" rx="10" fill="#E5E7EB"/>
+  <rect x="447" y="204" width="346" height="60" rx="10" fill="#E5E7EB"/>
+  <rect x="447" y="276" width="346" height="60" rx="10" fill="#E5E7EB"/>
+
+  <rect x="443" y="350" width="354" height="480" rx="16" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <rect x="595" y="364" width="50" height="4" rx="2" fill="#D1D5DB"/>
+  <text x="461" y="398" font-size="15" font-weight="600" fill="#111827">Kumpulkan Tugas</text>
+  <text x="461" y="420" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/009</text>
+  <text x="461" y="450" font-size="12" font-weight="500" fill="#374151">Catatan (opsional)</text>
+  <text x="779" y="450" font-size="12" fill="#6B7280" text-anchor="end">0/2000</text>
+  <rect x="461" y="458" width="318" height="64" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="473" y="492" font-size="12" fill="#6B7280">Tulis catatan bila perlu</text>
+  <rect x="461" y="534" width="318" height="64" rx="8" fill="#F9FAFB" stroke="#D1D5DB" stroke-dasharray="4 4"/>
+  <text x="473" y="562" font-size="12" fill="#374151">Seret berkas ke sini atau pilih berkas.</text>
+  <text x="473" y="582" font-size="12" fill="#6B7280">PDF, DOC, XLS, JPG. Maks 5 berkas, 10 MB.</text>
+  <rect x="461" y="612" width="318" height="44" rx="8" fill="#B7091E"/>
+  <text x="620" y="640" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">Kirim Pengumpulan</text>
+  <rect x="461" y="664" width="318" height="44" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="620" y="692" font-size="13" font-weight="600" fill="#374151" text-anchor="middle">Batal</text>
+  <text x="461" y="736" font-size="12" fill="#6B7280">Modal menjadi lembar penuh dari bawah, satu kolom.</text>
+  <text x="461" y="758" font-size="12" fill="#6B7280">Tombol tutup tetap ada karena Esc tidak tersedia di ponsel.</text>
+  <text x="461" y="786" font-size="12" fill="#6B7280">Tombol kirim terkunci selama mengunggah.</text>
+
+  <!-- frame 3 -->
+  <rect x="840" y="60" width="370" height="780" rx="16" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <line x1="840" y1="116" x2="1210" y2="116" stroke="#E5E7EB"/>
+  <line x1="856" y1="98" x2="880" y2="98" stroke="#374151" stroke-width="2"/>
+  <line x1="856" y1="106" x2="880" y2="106" stroke="#374151" stroke-width="2"/>
+  <text x="888" y="108" font-size="12" fill="#374151">Menu</text>
+  <text x="1025" y="108" font-size="13" font-weight="600" fill="#111827" text-anchor="middle">Dashboard</text>
+  <circle cx="1186" cy="102" r="13" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="1186" y="107" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">SH</text>
+
+  <rect x="852" y="128" width="169" height="76" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="866" y="152" font-size="12" fill="#6B7280">Aktif</text>
+  <text x="866" y="184" font-size="28" font-weight="600" fill="#111827">5</text>
+  <rect x="1031" y="128" width="169" height="76" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="1045" y="152" font-size="12" fill="#6B7280">Perlu Revisi</text>
+  <text x="1045" y="184" font-size="28" font-weight="600" fill="#B91C1C">1</text>
+
+  <rect x="852" y="214" width="169" height="76" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="866" y="238" font-size="12" fill="#6B7280">Terlambat</text>
+  <text x="866" y="270" font-size="28" font-weight="600" fill="#B91C1C">1</text>
+  <rect x="1031" y="214" width="169" height="76" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="1045" y="238" font-size="12" fill="#6B7280">Total Penugasan</text>
+  <text x="1045" y="270" font-size="28" font-weight="600" fill="#111827">16</text>
+
+  <rect x="852" y="300" width="169" height="76" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="866" y="324" font-size="12" fill="#6B7280">Selesai</text>
+  <text x="866" y="356" font-size="28" font-weight="600" fill="#111827">12</text>
+  <rect x="1031" y="300" width="169" height="76" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="1045" y="324" font-size="12" fill="#6B7280">Tepat Waktu</text>
+  <text x="1045" y="356" font-size="28" font-weight="600" fill="#111827">10</text>
+
+  <rect x="852" y="392" width="346" height="220" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="868" y="420" font-size="15" font-weight="600" fill="#111827">Perlu Tindakan</text>
+  <line x1="868" y1="432" x2="1182" y2="432" stroke="#E5E7EB"/>
+  <rect x="868" y="444" width="102" height="22" rx="6" fill="#FEE2E2"/><g transform="translate(876,449) scale(0.75)" fill="none" stroke="#B91C1C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.75 2.5l2.75 2.75-8 8H2.75v-2.75z M9.5 3.75l2.75 2.75"/></g>
+  <text x="892" y="459" font-size="12" font-weight="500" fill="#B91C1C">Perlu Revisi</text>
+  <text x="868" y="490" font-size="13" fill="#111827">Laporan Hasil Pengawasan Wilayah A</text>
+  <text x="868" y="512" font-size="12" fill="#374151">Catatan admin: tanda tangan saksi</text>
+  <text x="868" y="532" font-size="12" fill="#374151">belum lengkap.</text>
+  <rect x="868" y="546" width="314" height="44" rx="8" fill="#B7091E"/>
+  <text x="1025" y="574" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">Kumpulkan Tugas</text>
+
+  <rect x="852" y="628" width="346" height="76" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="868" y="654" font-size="15" font-weight="600" fill="#111827">Aktif per Status</text>
+  <text x="868" y="682" font-size="12" fill="#374151">Belum Dikerjakan 2, Sedang Dikerjakan 1</text>
+
+  <text x="852" y="736" font-size="12" fill="#6B7280">Kartu KPI menjadi dua kolom, angka tetap bersatuan.</text>
+  <text x="852" y="758" font-size="12" fill="#6B7280">Satu tombol utama per layar tetap dipertahankan.</text>
+  <text x="852" y="786" font-size="12" fill="#6B7280">Judul halaman ikut mengecil, tidak hanya dipotong.</text>
+</svg>

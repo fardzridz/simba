@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200" role="img" font-family="Inter, system-ui, sans-serif">
+  <title>Ilustrasi keadaan galat: satu kartu berkas gagal masuk kembali ke slot rak</title>
+  <desc>Dipakai pada keadaan galat daftar dan katalog. Alasan: yang terjadi pada keadaan ini adalah berkas gagal masuk ke rak, jadi yang digambar adalah kartu yang jatuh di luar slotnya dengan jejak jalur yang batal. Aksen tunggal #B7091E tetap pada label berkasnya.</desc>
+
+  <rect x="176" y="32" width="128" height="100" rx="6" fill="#191B27"/>
+  <line x1="194" y1="82" x2="286" y2="82" stroke="#FFFFFF" stroke-width="2"/>
+  <rect x="198" y="50" width="26" height="30" rx="2" fill="#FFFFFF"/>
+  <rect x="204" y="44" width="12" height="8" rx="2" fill="#E5E7EB"/>
+  <rect x="234" y="50" width="26" height="30" rx="2" fill="none" stroke="#E5E7EB" stroke-width="2" stroke-dasharray="5 4"/>
+
+  <path d="M182 122 L150 138 L120 132" fill="none" stroke="#D1D5DB" stroke-width="2" stroke-dasharray="6 5"/>
+
+  <g transform="rotate(-13 100 152)">
+    <rect x="52" y="120" width="96" height="64" rx="4" fill="#FFFFFF" stroke="#111827" stroke-width="2"/>
+    <line x1="66" y1="138" x2="134" y2="138" stroke="#D1D5DB" stroke-width="6" stroke-linecap="round"/>
+    <line x1="66" y1="154" x2="110" y2="154" stroke="#D1D5DB" stroke-width="6" stroke-linecap="round"/>
+    <rect x="66" y="164" width="40" height="14" rx="3" fill="#B7091E"/>
+  </g>
+
+  <rect x="0" y="180" width="320" height="6" fill="#191B27"/>
+</svg>

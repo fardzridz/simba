@@ -1,0 +1,8 @@
+graph TD
+    A1([Admin buka menu Tugas]) --> A2["Klik Tambah Tugas"]
+    A2 --> A3["Isi: judul, deskripsi, kategori, prioritas, tanggal mulai, tenggat, penerima (1 atau banyak)"]
+    A3 --> A4{"Validasi server lolos?"}
+    A4 -->|tidak| A5["Tampilkan pesan per kolom"] --> A3
+    A4 -->|ya| A6["env.DB.batch(): simpan task + nomor tugas otomatis + task_assignments"]
+    A6 --> A7["Tugas tampil di daftar Admin dan daftar penerima"]
+    A6 --> A8["Log aktivitas: task.created"]

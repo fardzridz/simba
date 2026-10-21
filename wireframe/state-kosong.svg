@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="420" viewBox="0 0 1240 420" role="img" font-family="Inter, system-ui, sans-serif">
+  <title>Keadaan kosong, tiga sebab</title>
+  <rect width="1240" height="420" fill="#FFFFFF"/>
+  <text x="24" y="26" font-size="12" fill="#6B7280">WIREFRAME keadaan kosong: belum ada data, hasil filter nol, tanpa akses</text>
+  <text x="1216" y="26" font-size="12" fill="#6B7280" text-anchor="end">data contoh (seed), bukan data nyata</text>
+
+  <rect x="20" y="80" width="380" height="300" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="36" y="106" font-size="12" font-weight="600" fill="#374151">Belum ada data</text>
+  <rect x="150" y="130" width="120" height="56" rx="8" fill="#F3F4F6"/>
+  <text x="210" y="226" font-size="15" font-weight="600" fill="#111827" text-anchor="middle">Belum ada tugas untukmu</text>
+  <text x="210" y="250" font-size="13" fill="#374151" text-anchor="middle">Tugas yang ditugaskan admin</text>
+  <text x="210" y="270" font-size="13" fill="#374151" text-anchor="middle">akan muncul di sini.</text>
+  <rect x="120" y="292" width="180" height="36" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="210" y="316" font-size="13" font-weight="600" fill="#374151" text-anchor="middle">Muat ulang</text>
+  <text x="36" y="360" font-size="12" fill="#6B7280">Sebab: akun baru belum pernah menerima penugasan.</text>
+
+  <rect x="430" y="80" width="380" height="300" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="446" y="106" font-size="12" font-weight="600" fill="#374151">Hasil filter nol</text>
+  <rect x="560" y="130" width="120" height="56" rx="8" fill="#F3F4F6"/>
+  <text x="620" y="226" font-size="15" font-weight="600" fill="#111827" text-anchor="middle">Belum ada tugas pada filter ini</text>
+  <text x="620" y="250" font-size="13" fill="#374151" text-anchor="middle">Hapus filter untuk melihat</text>
+  <text x="620" y="270" font-size="13" fill="#374151" text-anchor="middle">semua tugasmu.</text>
+  <rect x="530" y="292" width="180" height="36" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="620" y="316" font-size="13" font-weight="600" fill="#374151" text-anchor="middle">Hapus filter</text>
+  <text x="446" y="360" font-size="12" fill="#6B7280">Sebab: data ada, tetapi tersaring habis oleh filter aktif.</text>
+
+  <rect x="840" y="80" width="380" height="300" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="856" y="106" font-size="12" font-weight="600" fill="#374151">Tanpa akses</text>
+  <rect x="970" y="130" width="120" height="56" rx="8" fill="#F3F4F6"/>
+  <text x="1030" y="226" font-size="15" font-weight="600" fill="#111827" text-anchor="middle">Tidak ada data yang bisa dilihat</text>
+  <text x="1030" y="250" font-size="13" fill="#374151" text-anchor="middle">Akunmu tidak punya cakupan</text>
+  <text x="1030" y="270" font-size="13" fill="#374151" text-anchor="middle">pada data ini.</text>
+  <rect x="940" y="292" width="180" height="36" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="1030" y="316" font-size="13" font-weight="600" fill="#374151" text-anchor="middle">Kembali ke Dashboard</text>
+  <text x="856" y="360" font-size="12" fill="#6B7280">Permintaan di luar cakupan memakai layar state-403.svg.</text>
+</svg>

@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" font-family="Inter, system-ui, sans-serif">
+  <title>L08 Modal Kumpulkan Tugas, enam state</title>
+  <rect width="1280" height="800" fill="#FFFFFF"/>
+  <text x="24" y="26" font-size="12" fill="#6B7280">WIREFRAME L08: Modal Kumpulkan Tugas, 6 state</text>
+  <text x="1256" y="26" font-size="12" fill="#6B7280" text-anchor="end">data contoh (seed), bukan data nyata</text>
+
+  <!-- panel 1: idle -->
+  <rect x="40" y="56" width="400" height="330" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="56" y="82" font-size="12" font-weight="600" fill="#374151">#1 idle</text>
+  <rect x="56" y="94" width="368" height="252" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="72" y="120" font-size="13" font-weight="600" fill="#111827">Kumpulkan Tugas</text>
+  <text x="72" y="140" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/009</text>
+  <text x="72" y="162" font-size="12" font-weight="500" fill="#374151">Catatan (opsional)</text>
+  <text x="408" y="162" font-size="12" fill="#6B7280" text-anchor="end">0/2000</text>
+  <rect x="72" y="170" width="336" height="44" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="84" y="196" font-size="12" fill="#6B7280">Tulis catatan bila perlu</text>
+  <rect x="72" y="222" width="336" height="38" rx="6" fill="#F9FAFB" stroke="#D1D5DB" stroke-dasharray="4 4"/>
+  <text x="84" y="240" font-size="12" fill="#374151">Seret berkas ke sini atau pilih berkas</text>
+  <text x="84" y="254" font-size="12" fill="#6B7280">PDF, DOC, XLS, JPG. Maks 5 berkas, 10 MB per berkas.</text>
+  <text x="72" y="282" font-size="12" fill="#6B7280">Belum ada berkas terpilih.</text>
+  <rect x="72" y="308" width="152" height="28" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="148" y="327" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">Batal</text>
+  <rect x="232" y="308" width="176" height="28" rx="8" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="320" y="327" font-size="12" font-weight="600" fill="#6B7280" text-anchor="middle">Kirim Pengumpulan</text>
+  <text x="56" y="366" font-size="12" fill="#6B7280">Catatan kosong, belum ada berkas. Kirim terkunci.</text>
+
+  <!-- panel 2: validating -->
+  <rect x="472" y="56" width="400" height="330" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="488" y="82" font-size="12" font-weight="600" fill="#374151">#2 validating</text>
+  <rect x="488" y="94" width="368" height="252" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="504" y="120" font-size="13" font-weight="600" fill="#111827">Kumpulkan Tugas</text>
+  <text x="504" y="140" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/009</text>
+  <text x="504" y="162" font-size="12" font-weight="500" fill="#374151">Catatan (opsional)</text>
+  <text x="840" y="162" font-size="12" fill="#6B7280" text-anchor="end">128/2000</text>
+  <rect x="504" y="170" width="336" height="44" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="516" y="196" font-size="12" fill="#374151">Berkas C1 pleno dan berita acara.</text>
+  <rect x="504" y="222" width="336" height="38" rx="6" fill="#F9FAFB" stroke="#D1D5DB" stroke-dasharray="4 4"/>
+  <text x="516" y="240" font-size="12" fill="#374151">dokumen-c1-pleno.pdf. Siap diunggah.</text>
+  <text x="516" y="256" font-size="12" fill="#B91C1C">berkas-besar.pdf 14,2 MB. Ditolak, melebihi 10 MB.</text>
+  <rect x="504" y="308" width="152" height="28" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="580" y="327" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">Batal</text>
+  <rect x="664" y="308" width="176" height="28" rx="8" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="752" y="327" font-size="12" font-weight="600" fill="#6B7280" text-anchor="middle">Memeriksa berkas</text>
+  <text x="488" y="366" font-size="12" fill="#6B7280">Periksa tipe, jumlah, ukuran sebelum mengunggah.</text>
+
+  <!-- panel 3: uploading -->
+  <rect x="904" y="56" width="400" height="330" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="920" y="82" font-size="12" font-weight="600" fill="#374151">#3 uploading</text>
+  <rect x="920" y="94" width="368" height="252" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="936" y="120" font-size="13" font-weight="600" fill="#111827">Kumpulkan Tugas</text>
+  <text x="936" y="140" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/009</text>
+  <text x="936" y="162" font-size="12" font-weight="500" fill="#374151">Catatan (opsional)</text>
+  <text x="1272" y="162" font-size="12" fill="#6B7280" text-anchor="end">128/2000</text>
+  <rect x="936" y="170" width="336" height="44" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="948" y="196" font-size="12" fill="#374151">Berkas C1 pleno dan berita acara.</text>
+  <text x="936" y="234" font-size="12" fill="#374151">dokumen-c1-pleno.pdf</text>
+  <text x="1272" y="234" font-size="12" fill="#374151" text-anchor="end">100%</text>
+  <rect x="936" y="240" width="336" height="8" rx="4" fill="#F3F4F6"/>
+  <rect x="936" y="240" width="336" height="8" rx="4" fill="#B7091E"/>
+  <text x="936" y="270" font-size="12" fill="#374151">berita-acara-pleno.pdf</text>
+  <text x="1272" y="270" font-size="12" fill="#374151" text-anchor="end">62%</text>
+  <rect x="936" y="276" width="336" height="8" rx="4" fill="#F3F4F6"/>
+  <rect x="936" y="276" width="208" height="8" rx="4" fill="#B7091E"/>
+  <rect x="936" y="308" width="152" height="28" rx="8" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="1012" y="327" font-size="12" font-weight="600" fill="#6B7280" text-anchor="middle">Batal</text>
+  <rect x="1096" y="308" width="176" height="28" rx="8" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="1184" y="327" font-size="12" font-weight="600" fill="#6B7280" text-anchor="middle">Mengunggah 2 dari 3</text>
+  <text x="920" y="366" font-size="12" fill="#6B7280">Progres per berkas. Tombol kirim terkunci.</text>
+
+  <!-- panel 4: committing -->
+  <rect x="40" y="406" width="400" height="330" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="56" y="432" font-size="12" font-weight="600" fill="#374151">#4 committing</text>
+  <rect x="56" y="444" width="368" height="252" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="72" y="470" font-size="13" font-weight="600" fill="#111827">Kumpulkan Tugas</text>
+  <text x="72" y="490" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/009</text>
+  <text x="72" y="512" font-size="12" font-weight="500" fill="#374151">Catatan (opsional)</text>
+  <text x="408" y="512" font-size="12" fill="#6B7280" text-anchor="end">128/2000</text>
+  <rect x="72" y="520" width="336" height="44" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="84" y="546" font-size="12" fill="#374151">Berkas C1 pleno dan berita acara.</text>
+  <text x="72" y="584" font-size="12" fill="#374151">dokumen-c1-pleno.pdf. Terunggah.</text>
+  <text x="72" y="604" font-size="12" fill="#374151">berita-acara-pleno.pdf. Terunggah.</text>
+  <text x="72" y="624" font-size="12" fill="#6B7280">Menulis submission, lampiran, status, log dalam satu batch.</text>
+  <rect x="72" y="658" width="152" height="28" rx="8" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="148" y="677" font-size="12" font-weight="600" fill="#6B7280" text-anchor="middle">Batal</text>
+  <rect x="232" y="658" width="176" height="28" rx="8" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="320" y="677" font-size="12" font-weight="600" fill="#6B7280" text-anchor="middle">Menyimpan...</text>
+  <text x="56" y="716" font-size="12" fill="#6B7280">Tombol terkunci. Esc tidak menutup modal saat ini.</text>
+
+  <!-- panel 5: done -->
+  <rect x="472" y="406" width="400" height="330" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="488" y="432" font-size="12" font-weight="600" fill="#374151">#5 done</text>
+  <rect x="488" y="444" width="368" height="252" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="504" y="470" font-size="13" font-weight="600" fill="#111827">Kumpulkan Tugas</text>
+  <text x="504" y="490" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/009</text>
+  <rect x="504" y="504" width="336" height="44" rx="8" fill="#DCFCE7"/>
+  <text x="516" y="524" font-size="12" font-weight="500" fill="#15803D">Pengumpulan tersimpan sebagai Versi 1.</text>
+  <text x="516" y="540" font-size="12" fill="#15803D">Status tugas menjadi Menunggu Verifikasi.</text>
+  <text x="504" y="572" font-size="12" fill="#374151">dokumen-c1-pleno.pdf. Tersimpan.</text>
+  <text x="504" y="592" font-size="12" fill="#374151">berita-acara-pleno.pdf. Tersimpan.</text>
+  <text x="504" y="620" font-size="12" fill="#6B7280">Pemberitahuan dikirim ke admin divisi, lihat L16.</text>
+  <text x="504" y="662" font-size="12" fill="#6B7280">Modal menutup sendiri. Tidak ada tombol lain.</text>
+  <text x="488" y="716" font-size="12" fill="#6B7280">Baris tabel berubah setelah commit berhasil.</text>
+
+  <!-- panel 6: rolled_back -->
+  <rect x="904" y="406" width="400" height="330" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="920" y="432" font-size="12" font-weight="600" fill="#374151">#6 rolled_back</text>
+  <rect x="920" y="444" width="368" height="252" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="936" y="470" font-size="13" font-weight="600" fill="#111827">Kumpulkan Tugas</text>
+  <text x="936" y="490" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/009</text>
+  <rect x="936" y="504" width="336" height="44" rx="8" fill="#FEE2E2"/>
+  <text x="948" y="524" font-size="12" font-weight="500" fill="#B91C1C">Pengumpulan gagal disimpan.</text>
+  <text x="948" y="540" font-size="12" fill="#B91C1C">Tidak ada perubahan pada tugas ini.</text>
+  <text x="936" y="572" font-size="12" fill="#374151">dokumen-c1-pleno.pdf. Terunggah, belum tersimpan.</text>
+  <text x="936" y="592" font-size="12" fill="#374151">berita-acara-pleno.pdf. Terunggah, belum tersimpan.</text>
+  <text x="936" y="620" font-size="12" fill="#6B7280">Berkas sisa dibersihkan otomatis setelah 24 jam.</text>
+  <rect x="936" y="658" width="152" height="28" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="1012" y="677" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">Tutup</text>
+  <rect x="1096" y="658" width="176" height="28" rx="8" fill="#B7091E"/>
+  <text x="1184" y="677" font-size="12" font-weight="600" fill="#FFFFFF" text-anchor="middle">Coba Lagi</text>
+  <text x="920" y="716" font-size="12" fill="#6B7280">Coba lagi memakai kunci idempotensi yang sama.</text>
+</svg>

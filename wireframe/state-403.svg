@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" font-family="Inter, system-ui, sans-serif">
+  <title>Akses ditolak 403, wireframe</title>
+  <rect width="1280" height="800" fill="#FFFFFF"/>
+  <text x="24" y="26" font-size="12" fill="#6B7280">WIREFRAME keadaan 403: tanpa akses</text>
+  <text x="1256" y="26" font-size="12" fill="#6B7280" text-anchor="end">data contoh (seed), bukan data nyata</text>
+
+  <rect x="0" y="40" width="220" height="760" fill="#191B27"/>
+  <text x="20" y="76" font-size="12" fill="#9CA3AF">[LOGO]</text>
+  <g transform="translate(28,114)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2.5h4.75v4.75H2.5z M8.75 2.5h4.75v4.75H8.75z M2.5 8.75h4.75v4.75H2.5z M8.75 8.75h4.75v4.75H8.75z"/></g>
+  <text x="52" y="127" font-size="13" fill="#9CA3AF">Dashboard</text>
+  <rect x="12" y="144" width="196" height="36" rx="8" fill="#B7091E"/>
+  <g transform="translate(28,154)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 2.5H4.25A1.25 1.25 0 0 0 3 3.75v8.5a1.25 1.25 0 0 0 1.25 1.25h7.5A1.25 1.25 0 0 0 13 12.25v-8.5A1.25 1.25 0 0 0 11.75 2.5H10.5 M6 2.5h4v1.75H6z M6 8h4 M6 10.75h2.5"/></g>
+  <text x="52" y="167" font-size="13" font-weight="500" fill="#FFFFFF">Tugas Saya</text>
+  <g transform="translate(28,194)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5.75A1.5 1.5 0 0 1 4 4.25h2.5L8 6h4a1.5 1.5 0 0 1 1.5 1.5v3.75A1.5 1.5 0 0 1 12 12.75H4a1.5 1.5 0 0 1-1.5-1.5z"/></g>
+  <text x="52" y="207" font-size="13" fill="#9CA3AF">Katalog Dokumen</text>
+  <g transform="translate(28,234)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.25 11.5V8a3.75 3.75 0 0 1 7.5 0v3.5 M3.25 11.5h9.5 M6.75 13.25a1.4 1.4 0 0 0 2.5 0"/></g>
+  <text x="52" y="247" font-size="13" fill="#9CA3AF">Notifikasi</text>
+  <g transform="translate(28,274)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z M8 8.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5z M4.4 12.4a4 4 0 0 1 7.2 0"/></g>
+  <text x="52" y="287" font-size="13" fill="#9CA3AF">Akun Saya</text>
+
+  <line x1="220" y1="96" x2="1280" y2="96" stroke="#E5E7EB"/>
+  <text x="244" y="78" font-size="20" font-weight="600" fill="#111827">Tugas Saya</text>
+  <text x="1204" y="72" font-size="12" fill="#6B7280" text-anchor="end">Staf</text>
+  <circle cx="1240" cy="68" r="16" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="1240" y="72" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">SH</text>
+
+  <rect x="430" y="300" width="420" height="220" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="640" y="348" font-size="15" font-weight="600" fill="#111827" text-anchor="middle">Akses ditolak</text>
+  <text x="640" y="378" font-size="13" fill="#374151" text-anchor="middle">Data ini di luar cakupan akunmu.</text>
+  <text x="640" y="398" font-size="13" fill="#374151" text-anchor="middle">Percobaan akses ini tercatat di log aktivitas.</text>
+  <text x="640" y="428" font-size="12" fill="#6B7280" text-anchor="middle">Hubungi admin divisimu bila menurutmu ini keliru.</text>
+  <rect x="550" y="452" width="180" height="36" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="640" y="476" font-size="13" font-weight="600" fill="#374151" text-anchor="middle">Kembali ke Dashboard</text>
+
+  <text x="244" y="580" font-size="12" fill="#6B7280">Yang tidak ditampilkan pada halaman ini: nama pemilik data, nomor tugas, jumlah baris, dan pesan galat teknis.</text>
+  <text x="244" y="604" font-size="12" fill="#6B7280">Cakupan diperiksa di server untuk setiap permintaan, termasuk setiap unduhan berkas.</text>
+</svg>

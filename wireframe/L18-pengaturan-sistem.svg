@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" font-family="Inter, system-ui, sans-serif">
+  <title>L18 Pengaturan, tab Sistem</title>
+  <rect width="1280" height="800" fill="#FFFFFF"/>
+  <text x="24" y="26" font-size="12" fill="#6B7280">WIREFRAME L18: Pengaturan, tab Sistem</text>
+  <text x="1256" y="26" font-size="12" fill="#6B7280" text-anchor="end">data contoh (seed), bukan data nyata</text>
+
+  <!-- sidebar -->
+  <rect x="0" y="40" width="220" height="760" fill="#191B27"/>
+  <text x="20" y="76" font-size="12" fill="#9CA3AF">[LOGO]</text>
+  <g transform="translate(28,114)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2.5h4.75v4.75H2.5z M8.75 2.5h4.75v4.75H8.75z M2.5 8.75h4.75v4.75H2.5z M8.75 8.75h4.75v4.75H8.75z"/></g>
+  <text x="52" y="127" font-size="13" fill="#9CA3AF">Dashboard</text>
+  <g transform="translate(28,154)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 2.5H4.25A1.25 1.25 0 0 0 3 3.75v8.5a1.25 1.25 0 0 0 1.25 1.25h7.5A1.25 1.25 0 0 0 13 12.25v-8.5A1.25 1.25 0 0 0 11.75 2.5H10.5 M6 2.5h4v1.75H6z M6 8h4 M6 10.75h2.5"/></g>
+  <text x="52" y="167" font-size="13" fill="#9CA3AF">Semua Tugas</text>
+  <g transform="translate(28,194)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5.75A1.5 1.5 0 0 1 4 4.25h2.5L8 6h4a1.5 1.5 0 0 1 1.5 1.5v3.75A1.5 1.5 0 0 1 12 12.75H4a1.5 1.5 0 0 1-1.5-1.5z"/></g>
+  <text x="52" y="207" font-size="13" fill="#9CA3AF">Katalog Dokumen</text>
+  <g transform="translate(28,234)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13h12 M3.5 13V8.5 M8 13V4.5 M12.5 13V6.5"/></g>
+  <text x="52" y="247" font-size="13" fill="#9CA3AF">Laporan</text>
+  <g transform="translate(28,274)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0-5.5-5.5 M2.5 3.5V6H5 M8 5.25v3l2 1.5"/></g>
+  <text x="52" y="287" font-size="13" fill="#9CA3AF">Log Aktivitas</text>
+  <g transform="translate(28,314)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8.25a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z M2 13.5a4 4 0 0 1 8 0 M10.75 3.6a2.4 2.4 0 0 1 0 4.3 M14 13.5a4.4 4.4 0 0 0-2-3.55"/></g>
+  <text x="52" y="327" font-size="13" fill="#9CA3AF">Kelola Master</text>
+  <g transform="translate(28,354)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.25 11.5V8a3.75 3.75 0 0 1 7.5 0v3.5 M3.25 11.5h9.5 M6.75 13.25a1.4 1.4 0 0 0 2.5 0"/></g>
+  <text x="52" y="367" font-size="13" fill="#9CA3AF">Notifikasi</text>
+  <rect x="12" y="384" width="196" height="36" rx="8" fill="#B7091E"/>
+  <g transform="translate(28,394)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.5 4.5h11 M2.5 8h11 M2.5 11.5h11"/>
+    <circle cx="6" cy="4.5" r="1.6" fill="#B7091E"/>
+    <circle cx="10" cy="8" r="1.6" fill="#B7091E"/>
+    <circle cx="6.5" cy="11.5" r="1.6" fill="#B7091E"/>
+  </g>
+  <text x="52" y="407" font-size="13" font-weight="500" fill="#FFFFFF">Pengaturan</text>
+  <g transform="translate(28,434)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z M8 8.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5z M4.4 12.4a4 4 0 0 1 7.2 0"/></g>
+  <text x="52" y="447" font-size="13" fill="#9CA3AF">Akun Saya</text>
+
+  <!-- top bar -->
+  <line x1="220" y1="96" x2="1280" y2="96" stroke="#E5E7EB"/>
+  <text x="244" y="78" font-size="20" font-weight="600" fill="#111827">Pengaturan</text>
+  <g transform="translate(1084,60)" fill="none" stroke="#374151" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.25 11.5V8a3.75 3.75 0 0 1 7.5 0v3.5 M3.25 11.5h9.5 M6.75 13.25a1.4 1.4 0 0 0 2.5 0"/></g>
+  <circle cx="1102" cy="62" r="9" fill="#B7091E"/>
+  <text x="1102" y="66" font-size="12" fill="#FFFFFF" text-anchor="middle">9+</text>
+  <text x="1200" y="72" font-size="12" fill="#6B7280" text-anchor="end">Super Admin</text>
+  <circle cx="1240" cy="68" r="16" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="1240" y="72" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">SA</text>
+
+  <text x="244" y="124" font-size="12" fill="#6B7280">Kebijakan berkas dan ambang tenggat untuk seluruh institusi.</text>
+
+  <!-- tab -->
+  <text x="244" y="154" font-size="13" fill="#6B7280">Divisi</text>
+  <text x="336" y="154" font-size="13" font-weight="600" fill="#111827">Sistem</text>
+  <rect x="336" y="160" width="42" height="2" fill="#B7091E"/>
+  <line x1="244" y1="166" x2="1256" y2="166" stroke="#E5E7EB"/>
+
+  <!-- kebijakan berkas -->
+  <rect x="244" y="182" width="494" height="350" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="260" y="210" font-size="15" font-weight="600" fill="#111827">Kebijakan berkas</text>
+  <text x="722" y="210" font-size="12" fill="#6B7280" text-anchor="end">Seluruh institusi</text>
+  <line x1="260" y1="222" x2="722" y2="222" stroke="#E5E7EB"/>
+
+  <text x="260" y="248" font-size="12" fill="#374151">Ukuran maksimum per berkas</text>
+  <rect x="260" y="256" width="462" height="36" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="272" y="279" font-size="13" fill="#111827">10 MB</text>
+  <path d="M698 271 l6 6 l6 -6" stroke="#6B7280" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+  <text x="260" y="318" font-size="12" fill="#374151">Jumlah berkas per pengumpulan</text>
+  <rect x="260" y="326" width="120" height="36" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="272" y="349" font-size="13" fill="#111827">5</text>
+  <text x="400" y="350" font-size="12" fill="#6B7280">Termasuk semua lampiran.</text>
+
+  <text x="260" y="386" font-size="12" fill="#374151">Tipe berkas yang diterima</text>
+  <rect x="260" y="394" width="56" height="28" rx="6" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <path d="M270 408 l4 4 l7 -8" stroke="#374151" stroke-width="2" fill="none"/>
+  <text x="290" y="413" font-size="12" fill="#374151">PDF</text>
+  <rect x="324" y="394" width="60" height="28" rx="6" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <path d="M334 408 l4 4 l7 -8" stroke="#374151" stroke-width="2" fill="none"/>
+  <text x="354" y="413" font-size="12" fill="#374151">DOC</text>
+  <rect x="392" y="394" width="68" height="28" rx="6" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <path d="M402 408 l4 4 l7 -8" stroke="#374151" stroke-width="2" fill="none"/>
+  <text x="422" y="413" font-size="12" fill="#374151">DOCX</text>
+  <rect x="468" y="394" width="60" height="28" rx="6" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <path d="M478 408 l4 4 l7 -8" stroke="#374151" stroke-width="2" fill="none"/>
+  <text x="498" y="413" font-size="12" fill="#374151">XLS</text>
+
+  <rect x="260" y="426" width="68" height="28" rx="6" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <path d="M270 440 l4 4 l7 -8" stroke="#374151" stroke-width="2" fill="none"/>
+  <text x="290" y="445" font-size="12" fill="#374151">XLSX</text>
+  <rect x="336" y="426" width="58" height="28" rx="6" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <path d="M346 440 l4 4 l7 -8" stroke="#374151" stroke-width="2" fill="none"/>
+  <text x="366" y="445" font-size="12" fill="#374151">JPG</text>
+  <rect x="402" y="426" width="64" height="28" rx="6" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <path d="M412 440 l4 4 l7 -8" stroke="#374151" stroke-width="2" fill="none"/>
+  <text x="432" y="445" font-size="12" fill="#374151">JPEG</text>
+  <rect x="474" y="426" width="58" height="28" rx="6" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <path d="M484 440 l4 4 l7 -8" stroke="#374151" stroke-width="2" fill="none"/>
+  <text x="504" y="445" font-size="12" fill="#374151">PNG</text>
+
+  <text x="260" y="480" font-size="12" fill="#6B7280">Klik chip untuk menyalakan atau mematikan tipe.</text>
+  <text x="260" y="500" font-size="12" fill="#6B7280">Berkas di luar daftar ditolak server, bukan hanya di klien.</text>
+
+  <!-- ambang tenggat -->
+  <rect x="762" y="182" width="494" height="350" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="778" y="210" font-size="15" font-weight="600" fill="#111827">Ambang tenggat dekat</text>
+  <text x="1240" y="210" font-size="12" fill="#6B7280" text-anchor="end">Seluruh institusi</text>
+  <line x1="778" y1="222" x2="1240" y2="222" stroke="#E5E7EB"/>
+
+  <text x="778" y="248" font-size="12" fill="#374151">Sisa waktu dianggap dekat</text>
+  <rect x="778" y="256" width="120" height="36" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="790" y="279" font-size="13" fill="#111827">3</text>
+  <text x="910" y="280" font-size="12" fill="#6B7280">hari</text>
+  <text x="778" y="324" font-size="12" fill="#6B7280">Dipakai pada label Tugas Mendekati Tenggat dan tanda di tabel.</text>
+  <text x="778" y="344" font-size="12" fill="#6B7280">Batas 1 sampai 30 hari. Nilai di luar itu ditolak server.</text>
+
+  <rect x="778" y="372" width="462" height="100" rx="8" fill="#F9FAFB" stroke="#D1D5DB"/>
+  <text x="794" y="400" font-size="12" fill="#374151">Pengumpulan setelah tenggat tetap diterima.</text>
+  <text x="794" y="420" font-size="12" fill="#6B7280">Statusnya ditandai terlambat pada tabel dan laporan.</text>
+  <text x="794" y="440" font-size="12" fill="#6B7280">Tenggat disimpan sampai 23:59:59 WIB.</text>
+  <text x="794" y="460" font-size="12" fill="#6B7280">Ambang ini tidak mengubah status tugas.</text>
+
+  <!-- aksi -->
+  <text x="244" y="568" font-size="12" fill="#6B7280">Perubahan berlaku untuk seluruh divisi setelah disimpan.</text>
+  <rect x="936" y="552" width="128" height="36" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="1000" y="576" font-size="13" font-weight="600" fill="#374151" text-anchor="middle">Batal</text>
+  <rect x="1080" y="552" width="176" height="36" rx="8" fill="#B7091E"/>
+  <text x="1168" y="576" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">Simpan Pengaturan</text>
+
+  <text x="244" y="632" font-size="12" fill="#374151">Tab ini hanya dibuka Super Admin. Admin Divisi tidak melihat tab Sistem.</text>
+  <text x="244" y="654" font-size="12" fill="#374151">Batas atas ukuran berkas 10 MB mengikuti batas aplikasi; setelan hanya dapat menurunkan.</text>
+  <text x="244" y="676" font-size="12" fill="#6B7280">Perubahan tidak berlaku surut untuk berkas dan tugas yang sudah ada.</text>
+  <text x="244" y="698" font-size="12" fill="#6B7280">Setiap simpan menulis log berisi nilai lama dan baru.</text>
+</svg>

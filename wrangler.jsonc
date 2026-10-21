@@ -1,0 +1,43 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "penugasan-divisi",
+  "main": "custom-worker.ts",
+  "compatibility_date": "2026-10-16",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "penugasan-divisi"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "penugasan-db",
+      "database_id": "GANTI_DENGAN_ID_D1",
+      "migrations_dir": "drizzle/migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "penugasan-files"
+    }
+  ],
+  "triggers": {
+    "crons": ["* * * * *", "0 20 * * *"]
+  },
+  "limits": {
+    "cpu_ms": 30000
+  },
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "APP_ENV": "development"
+  }
+}

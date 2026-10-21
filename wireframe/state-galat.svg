@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="420" viewBox="0 0 1240 420" role="img" font-family="Inter, system-ui, sans-serif">
+  <title>Keadaan galat, tiga pola</title>
+  <rect width="1240" height="420" fill="#FFFFFF"/>
+  <text x="24" y="26" font-size="12" fill="#6B7280">WIREFRAME keadaan galat: gagal muat, gagal simpan, gagal unggah per berkas</text>
+  <text x="1216" y="26" font-size="12" fill="#6B7280" text-anchor="end">data contoh (seed), bukan data nyata</text>
+
+  <rect x="20" y="80" width="380" height="300" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="36" y="106" font-size="12" font-weight="600" fill="#374151">Gagal muat daftar</text>
+  <rect x="36" y="122" width="348" height="88" rx="8" fill="#FEE2E2"/>
+  <text x="52" y="150" font-size="13" font-weight="600" fill="#B91C1C">Daftar tugas gagal dimuat</text>
+  <text x="52" y="172" font-size="12" fill="#B91C1C">Periksa sambungan lalu muat ulang.</text>
+  <text x="52" y="192" font-size="12" fill="#B91C1C">Filter yang aktif tidak berubah.</text>
+  <rect x="36" y="222" width="140" height="36" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="106" y="246" font-size="13" font-weight="600" fill="#374151" text-anchor="middle">Coba lagi</text>
+  <text x="36" y="286" font-size="12" fill="#374151">Satu tombol, satu tindakan. Tidak ada pengulangan otomatis.</text>
+  <text x="36" y="310" font-size="12" fill="#6B7280">Tabel tetap menampilkan data lama bila ada, ditandai kadaluwarsa.</text>
+  <text x="36" y="334" font-size="12" fill="#6B7280">Pesan galat tidak menyebut detail teknis internal.</text>
+  <text x="36" y="358" font-size="12" fill="#6B7280">Galat diumumkan lewat aria-live polite saat muncul.</text>
+
+  <rect x="430" y="80" width="380" height="300" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="446" y="106" font-size="12" font-weight="600" fill="#374151">Gagal simpan pada formulir</text>
+  <rect x="446" y="122" width="348" height="52" rx="8" fill="#FEE2E2"/>
+  <text x="462" y="146" font-size="12" font-weight="500" fill="#B91C1C">Tugas gagal disimpan.</text>
+  <text x="462" y="166" font-size="12" fill="#B91C1C">Belum ada pemberitahuan yang terkirim ke penerima.</text>
+  <text x="446" y="200" font-size="12" font-weight="500" fill="#374151">Penerima</text>
+  <rect x="446" y="210" width="348" height="40" rx="8" fill="#FFFFFF" stroke="#B91C1C"/>
+  <text x="462" y="235" font-size="13" fill="#374151">Belum ada penerima dipilih</text>
+  <text x="446" y="270" font-size="12" fill="#B91C1C">Pilih minimal satu penerima sebelum menyimpan.</text>
+  <rect x="446" y="286" width="150" height="36" rx="8" fill="#B7091E"/>
+  <text x="521" y="310" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">Simpan &amp; Tugaskan</text>
+  <text x="446" y="350" font-size="12" fill="#6B7280">Galat bentuk ini dijelaskan per kolom, bukan satu kalimat umum.</text>
+  <text x="446" y="374" font-size="12" fill="#6B7280">Data yang sudah diisi tidak dihapus.</text>
+
+  <rect x="840" y="80" width="380" height="300" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="856" y="106" font-size="12" font-weight="600" fill="#374151">Gagal unggah per berkas</text>
+  <text x="856" y="134" font-size="12" fill="#374151">dokumen-c1-pleno.pdf</text>
+  <text x="1188" y="134" font-size="12" fill="#15803D" text-anchor="end">Selesai</text>
+  <line x1="856" y1="148" x2="1188" y2="148" stroke="#E5E7EB"/>
+  <text x="856" y="172" font-size="12" fill="#374151">berkas-besar.pdf 14,2 MB</text>
+  <text x="1188" y="172" font-size="12" fill="#B91C1C" text-anchor="end">Gagal</text>
+  <text x="856" y="192" font-size="12" fill="#B91C1C">Berkas melebihi 10 MB. Perkecil lalu unggah ulang.</text>
+  <rect x="856" y="206" width="120" height="32" rx="8" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="916" y="226" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">Coba lagi</text>
+  <line x1="856" y1="252" x2="1188" y2="252" stroke="#E5E7EB"/>
+  <text x="856" y="276" font-size="12" fill="#374151">berita-acara-pleno.pdf</text>
+  <text x="1188" y="276" font-size="12" fill="#B45309" text-anchor="end">Menunggu</text>
+  <text x="856" y="308" font-size="12" fill="#6B7280">Berkas lain tetap diproses, satu kegagalan tidak membatalkan.</text>
+  <text x="856" y="332" font-size="12" fill="#6B7280">Pesan menyebut nama berkas dan alasannya, bukan ikon merah.</text>
+  <text x="856" y="356" font-size="12" fill="#6B7280">Setelah 24 jam berkas sisa dibersihkan otomatis.</text>
+</svg>

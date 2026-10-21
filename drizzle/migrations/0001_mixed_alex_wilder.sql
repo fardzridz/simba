@@ -1,0 +1,1 @@
+CREATE INDEX `activity_logs_action_ip_idx` ON `activity_logs` (`action`,`ip_address`,`created_at`);

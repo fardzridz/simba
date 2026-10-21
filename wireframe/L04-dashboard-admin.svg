@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" font-family="Inter, system-ui, sans-serif">
+  <title>L04 Dashboard Admin Divisi, wireframe</title>
+  <rect width="1280" height="800" fill="#FFFFFF"/>
+  <text x="24" y="26" font-size="12" fill="#6B7280">WIREFRAME L04: Dashboard Admin Divisi</text>
+  <text x="1256" y="26" font-size="12" fill="#6B7280" text-anchor="end">data contoh (seed), bukan data nyata</text>
+
+  <!-- sidebar admin -->
+  <rect x="0" y="40" width="220" height="760" fill="#191B27"/>
+  <text x="20" y="76" font-size="12" fill="#9CA3AF">[LOGO]</text>
+  <rect x="12" y="104" width="196" height="36" rx="8" fill="#B7091E"/>
+  <g transform="translate(28,114)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2.5h4.75v4.75H2.5z M8.75 2.5h4.75v4.75H8.75z M2.5 8.75h4.75v4.75H2.5z M8.75 8.75h4.75v4.75H8.75z"/></g>
+  <text x="52" y="127" font-size="13" font-weight="500" fill="#FFFFFF">Dashboard</text>
+  <g transform="translate(28,154)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 2.5H4.25A1.25 1.25 0 0 0 3 3.75v8.5a1.25 1.25 0 0 0 1.25 1.25h7.5A1.25 1.25 0 0 0 13 12.25v-8.5A1.25 1.25 0 0 0 11.75 2.5H10.5 M6 2.5h4v1.75H6z M6 8h4 M6 10.75h2.5"/></g>
+  <text x="52" y="167" font-size="13" fill="#9CA3AF">Tugas Divisi</text>
+  <g transform="translate(28,194)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5.75A1.5 1.5 0 0 1 4 4.25h2.5L8 6h4a1.5 1.5 0 0 1 1.5 1.5v3.75A1.5 1.5 0 0 1 12 12.75H4a1.5 1.5 0 0 1-1.5-1.5z"/></g>
+  <text x="52" y="207" font-size="13" fill="#9CA3AF">Katalog Dokumen</text>
+  <g transform="translate(28,234)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13h12 M3.5 13V8.5 M8 13V4.5 M12.5 13V6.5"/></g>
+  <text x="52" y="247" font-size="13" fill="#9CA3AF">Laporan</text>
+  <g transform="translate(28,274)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0-5.5-5.5 M2.5 3.5V6H5 M8 5.25v3l2 1.5"/></g>
+  <text x="52" y="287" font-size="13" fill="#9CA3AF">Log Aktivitas</text>
+  <g transform="translate(28,314)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.25 11.5V8a3.75 3.75 0 0 1 7.5 0v3.5 M3.25 11.5h9.5 M6.75 13.25a1.4 1.4 0 0 0 2.5 0"/></g>
+  <text x="52" y="327" font-size="13" fill="#9CA3AF">Notifikasi</text>
+<g transform="translate(28,354)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.5 4.5h11 M2.5 8h11 M2.5 11.5h11"/>
+    <circle cx="6" cy="4.5" r="1.6" fill="#9CA3AF"/>
+    <circle cx="10" cy="8" r="1.6" fill="#9CA3AF"/>
+    <circle cx="6.5" cy="11.5" r="1.6" fill="#9CA3AF"/>
+  </g>
+  <text x="52" y="367" font-size="13" fill="#9CA3AF">Pengaturan</text>
+  <g transform="translate(28,394)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z M8 8.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5z M4.4 12.4a4 4 0 0 1 7.2 0"/></g>
+  <text x="52" y="407" font-size="13" fill="#9CA3AF">Akun Saya</text>
+
+  <!-- top bar -->
+  <line x1="220" y1="96" x2="1280" y2="96" stroke="#E5E7EB"/>
+  <text x="244" y="78" font-size="20" font-weight="600" fill="#111827">Dashboard Divisi</text>
+  <g transform="translate(1158,52)" fill="none" stroke="#374151" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.25 11.5V8a3.75 3.75 0 0 1 7.5 0v3.5 M3.25 11.5h9.5 M6.75 13.25a1.4 1.4 0 0 0 2.5 0"/></g>
+  <circle cx="1176" cy="54" r="9" fill="#B7091E"/>
+  <text x="1176" y="58" font-size="12" fill="#FFFFFF" text-anchor="middle">6</text>
+  <text x="1204" y="72" font-size="12" fill="#6B7280" text-anchor="end">Admin Divisi</text>
+  <circle cx="1240" cy="68" r="16" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="1240" y="72" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">AH</text>
+  <text x="244" y="124" font-size="12" fill="#6B7280">Divisi Hukum &amp; Sengketa. Angka dihitung server, disegarkan maksimal 60 detik.</text>
+
+  <!-- pita KPI: kelompok aktif dan riwayat dipisah -->
+  <text x="244" y="152" font-size="12" font-weight="500" fill="#6B7280">AKTIF</text>
+  <rect x="244" y="164" width="189" height="84" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="260" y="188" font-size="12" fill="#6B7280">Anggota</text>
+  <text x="260" y="222" font-size="28" font-weight="600" fill="#111827">8</text>
+  <text x="417" y="222" font-size="12" fill="#6B7280" text-anchor="end">orang</text>
+
+  <rect x="449" y="164" width="189" height="84" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="465" y="188" font-size="12" fill="#6B7280">Penugasan Aktif</text>
+  <text x="465" y="222" font-size="28" font-weight="600" fill="#111827">14</text>
+  <text x="622" y="222" font-size="12" fill="#6B7280" text-anchor="end">penugasan</text>
+
+  <rect x="654" y="164" width="189" height="84" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="670" y="188" font-size="12" fill="#6B7280">Menunggu Verifikasi</text>
+  <text x="670" y="222" font-size="28" font-weight="600" fill="#111827">6</text>
+  <text x="827" y="222" font-size="12" fill="#6B7280" text-anchor="end">penugasan</text>
+
+  <rect x="859" y="164" width="189" height="84" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="875" y="188" font-size="12" fill="#6B7280">Perlu Revisi</text>
+  <text x="875" y="222" font-size="28" font-weight="600" fill="#B91C1C">3</text>
+  <text x="1032" y="222" font-size="12" fill="#6B7280" text-anchor="end">penugasan</text>
+
+  <rect x="1064" y="164" width="189" height="84" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="1080" y="188" font-size="12" fill="#6B7280">Terlambat</text>
+  <text x="1080" y="222" font-size="28" font-weight="600" fill="#B91C1C">4</text>
+  <text x="1237" y="222" font-size="12" fill="#6B7280" text-anchor="end">penugasan</text>
+
+  <text x="244" y="276" font-size="12" font-weight="500" fill="#6B7280">RIWAYAT</text>
+  <rect x="244" y="288" width="189" height="84" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="260" y="312" font-size="12" fill="#6B7280">Dokumen Final</text>
+  <text x="260" y="346" font-size="28" font-weight="600" fill="#111827">92</text>
+  <text x="417" y="346" font-size="12" fill="#6B7280" text-anchor="end">penugasan</text>
+
+  <rect x="1064" y="288" width="189" height="84" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="1080" y="312" font-size="12" fill="#6B7280">Tunggu Review Tertua</text>
+  <text x="1080" y="346" font-size="28" font-weight="600" fill="#111827">2</text>
+  <text x="1237" y="346" font-size="12" fill="#6B7280" text-anchor="end">hari 4 jam</text>
+
+  <!-- beban kerja -->
+  <rect x="244" y="392" width="494" height="300" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="260" y="420" font-size="15" font-weight="600" fill="#111827">Beban Kerja (aktif / total)</text>
+  <line x1="260" y1="436" x2="722" y2="436" stroke="#E5E7EB"/>
+  <circle cx="272" cy="466" r="14" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="272" y="470" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">AF</text>
+  <text x="296" y="462" font-size="13" fill="#111827">Ahmad Fauzi</text>
+  <text x="296" y="480" font-size="12" fill="#6B7280">4 aktif, 3 selesai, 1 menunggu verifikasi</text>
+  <rect x="246" y="496" width="490" height="1" fill="#F3F4F6"/>
+
+  <circle cx="272" cy="522" r="14" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="272" y="526" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">SR</text>
+  <text x="296" y="518" font-size="13" fill="#111827">Siti Rahma</text>
+  <text x="296" y="536" font-size="12" fill="#B91C1C">2 aktif, 2 perlu revisi</text>
+  <rect x="246" y="552" width="490" height="1" fill="#F3F4F6"/>
+
+  <circle cx="272" cy="578" r="14" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="272" y="582" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">BS</text>
+  <text x="296" y="574" font-size="13" fill="#111827">Budi Santoso</text>
+  <text x="296" y="592" font-size="12" fill="#6B7280">1 aktif, 3 selesai</text>
+
+  <text x="260" y="648" font-size="12" fill="#6B7280">Menampilkan 3 dari 8 staf</text>
+  <text x="722" y="648" font-size="12" fill="#1D4ED8" text-anchor="end">Lihat semua di Tugas Divisi</text>
+
+  <!-- tenggat -->
+  <rect x="762" y="392" width="494" height="300" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="778" y="420" font-size="15" font-weight="600" fill="#111827">Tenggat &amp; Keterlambatan</text>
+  <line x1="778" y1="436" x2="1240" y2="436" stroke="#E5E7EB"/>
+
+  <rect x="778" y="452" width="91" height="22" rx="6" fill="#B91C1C"/><g transform="translate(786,457) scale(0.75)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.25l6.25 10.75H1.75z M8 6.5v3.25 M8 11.75v.01"/></g>
+  <text x="802" y="467" font-size="12" font-weight="500" fill="#FFFFFF">Terlambat</text>
+  <text x="869" y="468" font-size="13" fill="#111827">Berkas Sengketa A</text>
+  <text x="1240" y="468" font-size="12" fill="#B91C1C" text-anchor="end">1 hari</text>
+  <text x="869" y="486" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/004</text>
+  <rect x="764" y="502" width="490" height="1" fill="#F3F4F6"/>
+
+  <rect x="778" y="510" width="91" height="22" rx="6" fill="#B91C1C"/><g transform="translate(786,515) scale(0.75)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.25l6.25 10.75H1.75z M8 6.5v3.25 M8 11.75v.01"/></g>
+  <text x="802" y="525" font-size="12" font-weight="500" fill="#FFFFFF">Terlambat</text>
+  <text x="869" y="526" font-size="13" fill="#111827">Rekap BA Pleno</text>
+  <text x="1240" y="526" font-size="12" fill="#B91C1C" text-anchor="end">3 jam</text>
+  <text x="869" y="544" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/011</text>
+  <rect x="764" y="560" width="490" height="1" fill="#F3F4F6"/>
+
+  <rect x="778" y="568" width="117" height="22" rx="6" fill="#FEF3C7"/><g transform="translate(786,573) scale(0.75)" fill="none" stroke="#B45309" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z M8 5.25V8l2 1.5"/></g>
+  <text x="802" y="583" font-size="12" font-weight="500" fill="#B45309">Tenggat Dekat</text>
+  <text x="895" y="584" font-size="13" fill="#111827">Pengawasan Pleno</text>
+  <text x="1240" y="584" font-size="12" fill="#B45309" text-anchor="end">4 jam</text>
+  <text x="895" y="602" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/013</text>
+  <rect x="764" y="618" width="490" height="1" fill="#F3F4F6"/>
+
+  <rect x="778" y="626" width="117" height="22" rx="6" fill="#FEF3C7"/><g transform="translate(786,631) scale(0.75)" fill="none" stroke="#B45309" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z M8 5.25V8l2 1.5"/></g>
+  <text x="802" y="641" font-size="12" font-weight="500" fill="#B45309">Tenggat Dekat</text>
+  <text x="895" y="642" font-size="13" fill="#111827">Laporan Bulanan</text>
+  <text x="1240" y="642" font-size="12" fill="#B45309" text-anchor="end">1 hari</text>
+  <text x="778" y="676" font-size="12" fill="#6B7280">Ambang tenggat dekat: 3 hari sebelum tenggat.</text>
+
+  <!-- antrean review, titik fokus -->
+  <rect x="244" y="712" width="1012" height="64" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <text x="260" y="740" font-size="15" font-weight="600" fill="#111827">Antrean Review</text>
+  <text x="380" y="740" font-size="13" fill="#374151">6 penugasan menunggu verifikasi, tunggu terlama 2 hari 4 jam</text>
+  <rect x="1096" y="726" width="144" height="36" rx="8" fill="#B7091E"/>
+  <text x="1168" y="750" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">Tinjau Sekarang</text>
+</svg>

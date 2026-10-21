@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" font-family="Inter, system-ui, sans-serif">
+  <title>L15 Log Aktivitas, wireframe</title>
+  <rect width="1280" height="800" fill="#FFFFFF"/>
+  <text x="24" y="26" font-size="12" fill="#6B7280">WIREFRAME L15: Log Aktivitas</text>
+  <text x="1256" y="26" font-size="12" fill="#6B7280" text-anchor="end">data contoh (seed), bukan data nyata</text>
+
+  <rect x="0" y="40" width="220" height="760" fill="#191B27"/>
+  <text x="20" y="76" font-size="12" fill="#9CA3AF">[LOGO]</text>
+  <g transform="translate(28,114)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2.5h4.75v4.75H2.5z M8.75 2.5h4.75v4.75H8.75z M2.5 8.75h4.75v4.75H2.5z M8.75 8.75h4.75v4.75H8.75z"/></g>
+  <text x="52" y="127" font-size="13" fill="#9CA3AF">Dashboard</text>
+  <g transform="translate(28,154)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 2.5H4.25A1.25 1.25 0 0 0 3 3.75v8.5a1.25 1.25 0 0 0 1.25 1.25h7.5A1.25 1.25 0 0 0 13 12.25v-8.5A1.25 1.25 0 0 0 11.75 2.5H10.5 M6 2.5h4v1.75H6z M6 8h4 M6 10.75h2.5"/></g>
+  <text x="52" y="167" font-size="13" fill="#9CA3AF">Tugas Divisi</text>
+  <g transform="translate(28,194)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5.75A1.5 1.5 0 0 1 4 4.25h2.5L8 6h4a1.5 1.5 0 0 1 1.5 1.5v3.75A1.5 1.5 0 0 1 12 12.75H4a1.5 1.5 0 0 1-1.5-1.5z"/></g>
+  <text x="52" y="207" font-size="13" fill="#9CA3AF">Katalog Dokumen</text>
+  <g transform="translate(28,234)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13h12 M3.5 13V8.5 M8 13V4.5 M12.5 13V6.5"/></g>
+  <text x="52" y="247" font-size="13" fill="#9CA3AF">Laporan</text>
+  <rect x="12" y="264" width="196" height="36" rx="8" fill="#B7091E"/>
+  <g transform="translate(28,274)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0-5.5-5.5 M2.5 3.5V6H5 M8 5.25v3l2 1.5"/></g>
+  <text x="52" y="287" font-size="13" font-weight="500" fill="#FFFFFF">Log Aktivitas</text>
+  <g transform="translate(28,314)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.25 11.5V8a3.75 3.75 0 0 1 7.5 0v3.5 M3.25 11.5h9.5 M6.75 13.25a1.4 1.4 0 0 0 2.5 0"/></g>
+  <text x="52" y="327" font-size="13" fill="#9CA3AF">Notifikasi</text>
+<g transform="translate(28,354)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.5 4.5h11 M2.5 8h11 M2.5 11.5h11"/>
+    <circle cx="6" cy="4.5" r="1.6" fill="#9CA3AF"/>
+    <circle cx="10" cy="8" r="1.6" fill="#9CA3AF"/>
+    <circle cx="6.5" cy="11.5" r="1.6" fill="#9CA3AF"/>
+  </g>
+  <text x="52" y="367" font-size="13" fill="#9CA3AF">Pengaturan</text>
+  <g transform="translate(28,394)" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z M8 8.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5z M4.4 12.4a4 4 0 0 1 7.2 0"/></g>
+  <text x="52" y="407" font-size="13" fill="#9CA3AF">Akun Saya</text>
+
+  <line x1="220" y1="96" x2="1280" y2="96" stroke="#E5E7EB"/>
+  <text x="244" y="78" font-size="20" font-weight="600" fill="#111827">Log Aktivitas</text>
+  <text x="1204" y="72" font-size="12" fill="#6B7280" text-anchor="end">Admin Divisi</text>
+  <circle cx="1240" cy="68" r="16" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="1240" y="72" font-size="12" font-weight="600" fill="#374151" text-anchor="middle">AH</text>
+
+  <rect x="244" y="112" width="1012" height="36" rx="8" fill="#F9FAFB" stroke="#D1D5DB"/>
+  <text x="260" y="135" font-size="12" fill="#374151">Log tidak dapat diubah atau dihapus lewat antarmuka. Hanya Admin divisi dan Super Admin yang dapat membukanya.</text>
+
+  <!-- filter -->
+  <rect x="244" y="164" width="1012" height="44" rx="8" fill="#F9FAFB" stroke="#D1D5DB"/>
+  <rect x="260" y="174" width="170" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="272" y="193" font-size="12" fill="#374151">Aktor: semua</text>
+  <rect x="442" y="174" width="170" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="454" y="193" font-size="12" fill="#374151">Aksi: semua</text>
+  <rect x="624" y="174" width="180" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="636" y="193" font-size="12" fill="#374151">Entitas: semua</text>
+  <rect x="816" y="174" width="170" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="828" y="193" font-size="12" fill="#374151">Periode: 30 hari</text>
+  <text x="1240" y="193" font-size="12" fill="#1D4ED8" text-anchor="end">Hapus filter</text>
+
+  <!-- tabel log -->
+  <rect x="244" y="228" width="1012" height="520" rx="10" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="244" y="228" width="1012" height="36" rx="10" fill="#F9FAFB"/>
+  <rect x="244" y="246" width="1012" height="18" fill="#F9FAFB"/>
+  <line x1="244" y1="264" x2="1256" y2="264" stroke="#D1D5DB"/>
+  <text x="260" y="250" font-size="12" font-weight="500" fill="#374151">Waktu</text>
+  <text x="410" y="250" font-size="12" font-weight="500" fill="#374151">Aktor</text>
+  <text x="570" y="250" font-size="12" font-weight="500" fill="#374151">Aksi</text>
+  <text x="730" y="250" font-size="12" font-weight="500" fill="#374151">Entitas</text>
+  <text x="920" y="250" font-size="12" font-weight="500" fill="#374151">Ringkasan perubahan</text>
+
+  <text x="260" y="292" font-size="12" fill="#374151">17 Okt 2026 09:05</text>
+  <text x="410" y="292" font-size="13" fill="#111827">Siti Rahma</text>
+  <text x="410" y="310" font-size="12" fill="#6B7280">Staf, Hukum &amp; Sengketa</text>
+  <text x="570" y="292" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#374151">submission.created</text>
+  <text x="730" y="292" font-size="12" fill="#374151">Penugasan</text>
+  <text x="730" y="310" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/009</text>
+  <text x="920" y="292" font-size="12" fill="#374151">Versi 1 dikirim, status menjadi Menunggu Verifikasi.</text>
+  <line x1="260" y1="324" x2="1240" y2="324" stroke="#E5E7EB"/>
+
+  <text x="260" y="348" font-size="12" fill="#374151">17 Okt 2026 08:30</text>
+  <text x="410" y="348" font-size="13" fill="#111827">Admin Hukum &amp; Sengketa</text>
+  <text x="410" y="366" font-size="12" fill="#6B7280">Admin Divisi</text>
+  <text x="570" y="348" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#374151">due_date.extended</text>
+  <text x="730" y="348" font-size="12" fill="#374151">Tugas</text>
+  <text x="730" y="366" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/009</text>
+  <text x="920" y="348" font-size="12" fill="#374151">due_at: 16 Okt 2026 menjadi 17 Okt 2026.</text>
+  <text x="920" y="366" font-size="12" fill="#6B7280">Alasan: menunggu tanda tangan saksi.</text>
+  <line x1="260" y1="380" x2="1240" y2="380" stroke="#E5E7EB"/>
+
+  <text x="260" y="404" font-size="12" fill="#374151">16 Okt 2026 15:05</text>
+  <text x="410" y="404" font-size="13" fill="#111827">Admin Hukum &amp; Sengketa</text>
+  <text x="410" y="422" font-size="12" fill="#6B7280">Admin Divisi</text>
+  <text x="570" y="404" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#374151">assignment.reviewed</text>
+  <text x="730" y="404" font-size="12" fill="#374151">Penugasan</text>
+  <text x="730" y="422" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/007</text>
+  <text x="920" y="404" font-size="12" fill="#374151">Keputusan REVISION_REQUIRED, revisi ke-1.</text>
+  <text x="920" y="422" font-size="12" fill="#6B7280">Catatan: tanda tangan saksi belum lengkap.</text>
+  <line x1="260" y1="436" x2="1240" y2="436" stroke="#E5E7EB"/>
+
+  <text x="260" y="460" font-size="12" fill="#374151">16 Okt 2026 14:40</text>
+  <text x="410" y="460" font-size="13" fill="#111827">Ahmad Fauzi</text>
+  <text x="410" y="478" font-size="12" fill="#6B7280">Staf, Hukum &amp; Sengketa</text>
+  <text x="570" y="460" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#374151">submission.created</text>
+  <text x="730" y="460" font-size="12" fill="#374151">Penugasan</text>
+  <text x="730" y="478" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">HUK/2026/10/007</text>
+  <text x="920" y="460" font-size="12" fill="#374151">Versi 1 dikirim, 2 berkas.</text>
+  <line x1="260" y1="492" x2="1240" y2="492" stroke="#E5E7EB"/>
+
+  <text x="260" y="516" font-size="12" fill="#374151">15 Okt 2026 10:12</text>
+  <text x="410" y="516" font-size="13" fill="#111827">Super Admin</text>
+  <text x="410" y="534" font-size="12" fill="#6B7280">Super Admin</text>
+  <text x="570" y="516" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#374151">user.division_changed</text>
+  <text x="730" y="516" font-size="12" fill="#374151">Pengguna</text>
+  <text x="730" y="534" font-size="12" font-family="JetBrains Mono, ui-monospace, monospace" fill="#6B7280">staf.hukum</text>
+  <text x="920" y="516" font-size="12" fill="#374151">division_id: Sekretariat menjadi Hukum &amp; Sengketa.</text>
+
+  <text x="260" y="704" font-size="12" fill="#6B7280">Menampilkan 1 sampai 5 dari 128 aktivitas</text>
+  <rect x="1096" y="690" width="28" height="28" rx="6" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="1110" y="709" font-size="12" fill="#374151" text-anchor="middle">1</text>
+  <rect x="1132" y="690" width="28" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="1146" y="709" font-size="12" fill="#374151" text-anchor="middle">2</text>
+  <rect x="1168" y="690" width="28" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="1182" y="709" font-size="12" fill="#374151" text-anchor="middle">3</text>
+  <rect x="1204" y="690" width="36" height="28" rx="6" fill="#FFFFFF" stroke="#D1D5DB"/>
+  <text x="1222" y="709" font-size="12" fill="#374151" text-anchor="middle">25</text>
+
+  <text x="244" y="772" font-size="12" fill="#6B7280">Nilai sebelum dan sesudah disimpan, sehingga perubahan dapat diperiksa tanpa membuka data aslinya.</text>
+</svg>

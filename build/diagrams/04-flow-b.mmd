@@ -1,0 +1,15 @@
+graph TD
+    B1(["User buka List Tugas"]) --> B2["Filter status: perlu dikerjakan / perlu revisi"]
+    B2 --> B3["Klik Kumpulkan Tugas pada baris"]
+    B3 --> B4["Modal terbuka: catatan + drag & drop berkas"]
+    B4 --> B5["Klik Kirim Pengumpulan"]
+    B5 --> B6{"Validasi klien: tipe, jumlah, ukuran"}
+    B6 -->|gagal| B7["Pesan per berkas, modal tetap terbuka"] --> B4
+    B6 -->|lolos| B8["Unggah tiap berkas ke endpoint server (streaming) → objek ditulis ke R2, baris attachment PENDING; idempotency key dibuat sekali"]
+    B8 --> B9["Server validasi isi berkas: tipe, ukuran, jumlah, checksum SHA-256"]
+    B9 --> B10{"Semua berkas terunggah & validasi server lolos?"}
+    B10 -->|tidak| B11["Tandai gagal di modal, berkas PENDING dibiarkan untuk sweep 24 jam"] --> B4
+    B10 -->|ya| B12["env.DB.batch(): submission version+1, attachment COMMITTED, status MENUNGGU_VERIFIKASI, log, notifikasi"]
+    B12 --> B13["Modal menutup, baris tabel jadi Menunggu Verifikasi"]
+    B12 --> B14["Log aktivitas: submission.created"]
+    B10 -.->|commit gagal| B15["Rollback: baris tabel kembali ke status semula, pesan error, tombol aktif kembali"]

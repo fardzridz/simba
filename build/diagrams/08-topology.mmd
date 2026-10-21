@@ -1,0 +1,11 @@
+graph LR
+    BR["Peramban (Chrome/Edge/Firefox)"] -->|HTTPS| APP["Next.js 16 di Cloudflare Workers: SSR + route server + server action"]
+    APP -->|query, env.DB.batch| DB[("Cloudflare D1 (SQLite), location hint apac")]
+    APP -->|put / get objek via binding| OBJ[("Cloudflare R2, bucket privat")]
+    APP -->|tulis baris antrean| DB
+    CRON["Cron per menit + cron harian"] --> DW["Worker pengiriman & sweep"]
+    DW --> DB
+    DW -->|HTTP| WA["Fonnte /send"]
+    DW -->|HTTP| MAIL["Penyedia email"]
+    APP --> LOG["Workers Logs / Logpush + pelacak galat"]
+    DW --> LOG

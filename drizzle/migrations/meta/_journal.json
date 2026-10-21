@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1792163523106,
+      "tag": "0000_panoramic_cannonball",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1792245405453,
+      "tag": "0001_mixed_alex_wilder",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792469023069,
+      "tag": "0002_moaning_young_avengers",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1792483358923,
+      "tag": "0003_mean_blue_blade",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1792483615940,
+      "tag": "0004_flippant_leader",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1792483675576,
+      "tag": "0005_lean_mach_iv",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1792485854419,
+      "tag": "0006_notification_deliveries",
+      "breakpoints": true
+    }
+  ]
+}

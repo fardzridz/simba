@@ -51,7 +51,7 @@ export type DeliverySummary = {
  * Kirim keluar hanya di produksi, atau bila dinyalakan eksplisit. Mencegah
  * kredensial pengembangan mengirim pesan nyata saat pengujian lokal.
  */
-function externalChannelsAllowed(env: AppEnv): boolean {
+export function externalChannelsAllowed(env: AppEnv): boolean {
   return env.APP_ENV === "production" || env.EXTERNAL_CHANNELS_ENABLED === "true";
 }
 

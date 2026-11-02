@@ -149,6 +149,62 @@ describe("processDeliveries", () => {
     expect(retry?.lastError).toBe("Error");
   });
 
+  it("menjadwalkan ulang dengan selisih berlipat ganda 60, 120, 240, 480 detik", async () => {
+    for (let i = 0; i < 4; i += 1) {
+      vi.mocked(sendEmail).mockRejectedValueOnce(new Error("timeout"));
+      const { db, updates } = makeDb([
+        {
+          id: "dlv_back",
+          channel: "EMAIL",
+          attempts: i,
+          email: "staf@example.test",
+          emailVerifiedAt: new Date(),
+          waNumber: null,
+          waVerifiedAt: null,
+        },
+      ]);
+
+      const summary = await processDeliveries(PROD, db as never, 1_800_000_000);
+
+      expect(summary.retrying).toBe(1);
+      // updates[0] adalah klaim SENDING; updates[1] hasil percobaan pengiriman.
+      expect(updates[1]).toEqual({
+        status: "PENDING",
+        attempts: i + 1,
+        lastError: "Error",
+        nextAttemptAt: new Date((1_800_000_000 + 60 * 2 ** i) * 1000),
+      });
+    }
+  });
+
+  it("menghentikan upaya pada percobaan kelima dan menandai FAILED", async () => {
+    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("SMTP down"));
+    const { db, updates } = makeDb([
+      {
+        id: "dlv_max",
+        channel: "EMAIL",
+        attempts: 4,
+        email: "staf@example.test",
+        emailVerifiedAt: new Date(),
+        waNumber: null,
+        waVerifiedAt: null,
+      },
+    ]);
+
+    const summary = await processDeliveries(PROD, db as never, 1_800_000_000);
+
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+    expect(summary.failed).toBe(1);
+    expect(summary.retrying).toBe(0);
+    // updates[0] adalah klaim SENDING; updates[1] hasil percobaan pengiriman.
+    expect(updates[1]).toEqual({
+      status: "FAILED",
+      attempts: 5,
+      lastError: "Error",
+      nextAttemptAt: new Date((1_800_000_000 + 60 * 2 ** 4) * 1000),
+    });
+  });
+
   it("gagal permanen bila alamat tidak lagi terverifikasi", async () => {
     const { db, updates } = makeDb([
       {

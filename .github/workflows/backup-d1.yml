@@ -1,0 +1,46 @@
+name: Backup D1
+
+# Lini retensi panjang dari §9.5: `wrangler d1 export` harian ke R2.
+# Ekspor menulis dump SQL penuh, lalu disalin ke bucket `penugasan-backups`
+# dengan prefiks `backups/d1/`. Lini utama pemulihan tetap Time Travel;
+# dump di sini untuk retensi panjang dan uji restore di staging.
+#
+# Persiapan sekali (dengan kredensial pemilik akun):
+#   npx wrangler r2 bucket create penugasan-backups
+# Rahasia repo:
+#   CLOUDFLARE_API_TOKEN  : izin baca D1 + tulis R2
+#   CLOUDFLARE_ACCOUNT_ID : id akun Cloudflare
+on:
+  schedule:
+    # 20:30 UTC = 03:30 WIB, setengah jam setelah cron harian sweep.
+    - cron: "30 20 * * *"
+  workflow_dispatch:
+
+jobs:
+  export-d1:
+    name: Ekspor D1 harian ke R2
+    runs-on: ubuntu-latest
+    concurrency:
+      group: backup-d1
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ekspor basis data produksi
+        run: |
+          mkdir -p backup
+          STAMP=$(date -u +%Y%m%d-%H%M%S)
+          npx wrangler d1 export penugasan-db --remote --output=backup/d1-$STAMP.sql
+          npx wrangler r2 object put penugasan-backups/backups/d1/d1-$STAMP.sql --file=backup/d1-$STAMP.sql
+          echo "Dump terbaru: backups/d1/d1-$STAMP.sql di penugasan-backups."

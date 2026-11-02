@@ -1,5 +1,11 @@
 import { eq } from "drizzle-orm";
 import { divisions } from "@/db/schema";
+import {
+  getReport,
+  getReportFilterOptions,
+  readReportFilters,
+  REPORT_PERIODS,
+} from "@/db/queries/reports";
 import { appContext } from "@/env";
 import { requireActor } from "@/lib/auth/current";
 import { resolveScope } from "@/lib/auth/scope";
@@ -8,7 +14,14 @@ import ReportsClient from "./reports-client";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReportsPage() {
+export default async function ReportsPage(props: {
+  searchParams: Promise<{
+    period?: string;
+    divisi?: string;
+    status?: string;
+    kategori?: string;
+  }>;
+}) {
   const actor = await requireActor();
   const scope = resolveScope(actor);
 
@@ -26,16 +39,36 @@ export default async function ReportsPage() {
   }
 
   const { db } = appContext();
-  const [division] = await db
-    .select({ name: divisions.name })
-    .from(divisions)
-    .where(eq(divisions.id, actor.divisionId))
-    .limit(1);
+  const params = await props.searchParams;
+  const filters = readReportFilters(params, scope);
+
+  const [report, filterOptions, ownDivision] = await Promise.all([
+    getReport(db, scope, filters),
+    getReportFilterOptions(db, scope),
+    scope.allDivisions
+      ? Promise.resolve(null)
+      : db
+          .select({ name: divisions.name })
+          .from(divisions)
+          .where(eq(divisions.id, scope.divisionId))
+          .limit(1)
+          .then((rows) => rows[0] ?? null),
+  ]);
 
   return (
     <ReportsClient
-      userRole={scope.role}
-      userDivisionName={division?.name ?? "Hukum & Sengketa"}
+      role={scope.role}
+      report={report}
+      filters={{
+        period: filters.period,
+        divisionId: filters.divisionId,
+        status: filters.status ?? "",
+        categoryId: filters.categoryId ?? "",
+      }}
+      periodOptions={REPORT_PERIODS}
+      divisionOptions={filterOptions.divisionOptions}
+      categoryOptions={filterOptions.categoryOptions}
+      ownDivisionName={ownDivision?.name ?? "Divisi Anda"}
     />
   );
 }

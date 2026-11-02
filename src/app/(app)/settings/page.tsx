@@ -1,5 +1,12 @@
 import { requireActor } from "@/lib/auth/current";
 import { resolveScope } from "@/lib/auth/scope";
+import { appContext } from "@/env";
+import { externalChannelsAllowed } from "@/lib/jobs/deliveries";
+import {
+  getAppSettingsView,
+  getDivisionSettingsList,
+} from "@/db/queries/settings";
+import { getActiveCategories } from "@/db/queries/form-data";
 import ForbiddenState from "../forbidden-state";
 import SettingsClient from "./settings-client";
 
@@ -22,10 +29,21 @@ export default async function SettingsPage() {
     );
   }
 
+  const { db, env } = appContext();
+  const [appSettings, divisions, categories] = await Promise.all([
+    getAppSettingsView(db),
+    getDivisionSettingsList(db, scope),
+    getActiveCategories(db),
+  ]);
+
   return (
     <SettingsClient
       role={scope.role}
       userDivisionId={actor.divisionId}
+      appSettings={appSettings}
+      divisions={divisions}
+      categories={categories}
+      externalChannelsEnabled={externalChannelsAllowed(env)}
     />
   );
 }

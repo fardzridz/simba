@@ -9,7 +9,13 @@ export interface ExtendDeadlineModalProps {
   onClose: () => void;
   taskNumber: string;
   currentDueDateFormatted: string;
-  onExtend: (newDueDate: string, reason: string) => void;
+  onExtend: (
+    newDueDate: string,
+    reason: string,
+  ) => Promise<{
+    success?: boolean;
+    error?: string;
+  }>;
 }
 
 export function ExtendDeadlineModal({
@@ -55,23 +61,32 @@ export function ExtendDeadlineModal({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDueDate) {
       setError("Pilih tanggal tenggat baru.");
       return;
     }
-    if (!reason.trim()) {
-      setError("Alasan perpanjangan tenggat wajib diisi untuk jejak audit.");
+    if (reason.length > 500) {
+      setError("Alasan perubahan tenggat maksimal 500 karakter.");
       return;
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      onExtend(newDueDate, reason);
-      setIsSubmitting(false);
+    setError(null);
+
+    try {
+      const result = await onExtend(newDueDate, reason.trim());
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
       onClose();
-    }, 400);
+    } catch {
+      setError("Perpanjangan tenggat gagal diproses. Coba lagi.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -134,12 +149,12 @@ export function ExtendDeadlineModal({
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor={reasonInputId} className="text-body-sm font-medium text-ink">
-              Alasan perubahan tenggat <span className="text-error">*wajib (dicatat di log)</span>
+              Alasan perubahan tenggat{" "}
+              <span className="text-ink-3">(opsional, dicatat di log)</span>
             </label>
             <textarea
               id={reasonInputId}
               rows={3}
-              required
               maxLength={500}
               value={reason}
               onChange={(e) => {
@@ -149,6 +164,10 @@ export function ExtendDeadlineModal({
               placeholder="Jelaskan alasan perpanjangan tenggat (misal: perpanjangan masa verifikasi lapangan)..."
               className="w-full rounded-md border border-border bg-surface p-3 text-body text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
             />
+            <p className="text-body-sm text-ink-3">
+              Perubahan tenggat ditolak bila tanggal baru bukan perpanjangan atau seluruh
+              penugasan sudah final.
+            </p>
           </div>
 
           {error ? (

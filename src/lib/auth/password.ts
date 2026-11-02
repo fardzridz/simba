@@ -4,6 +4,9 @@
  * disimpan di dalam string hasil supaya bisa dinaikkan tanpa migrasi data.
  */
 export const PBKDF2_ITERATIONS = 600_000;
+
+/** Kata sandi awal akun yang dibuat Super Admin (UC02) dan seed (§6.6). Pengguna menggantinya sendiri setelah masuk. */
+export const INITIAL_ACCOUNT_PASSWORD = "Bawaslu#2026";
 const KEY_BITS = 256;
 const SALT_BYTES = 16;
 const ALGORITHM = "PBKDF2-SHA256";

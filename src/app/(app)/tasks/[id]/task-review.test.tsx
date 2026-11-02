@@ -13,8 +13,8 @@ describe("TaskReviewClient L11", () => {
     expect(html).toContain("HUK/2026/10/003");
     expect(html).toContain("Pengunggahan Dokumen C1 Pleno");
     expect(html).toContain("Batalkan Tugas");
-    // Perpanjangan tenggat belum punya action server; tombol tidak ditampilkan.
-    expect(html).not.toContain("Perpanjang Tenggat");
+    // Perpanjangan tenggat kini punya action server sendiri (UC06).
+    expect(html).toContain("Perpanjang Tenggat");
     expect(html).toContain("Penerima:");
     expect(html).toContain("Siti Rahma");
     expect(html).toContain("Tunggu review: 1 hari 3 jam");
@@ -44,5 +44,8 @@ describe("TaskReviewClient L11", () => {
     expect(html).toContain("Akses Baca-Saja");
     expect(html).toContain("Kembali ke Semua Tugas");
     expect(html).not.toContain("Setujui &amp; Arsipkan");
+    // Super Admin baca-saja: tidak boleh memperpanjang tenggat maupun membatalkan.
+    expect(html).not.toContain("Perpanjang Tenggat");
+    expect(html).not.toContain("Batalkan Tugas");
   });
 });

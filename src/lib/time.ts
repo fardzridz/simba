@@ -35,6 +35,18 @@ export function endOfJakartaDayFromDateInput(value: string): number | null {
   return Math.floor(utcMidnight / 1000) - JAKARTA_OFFSET_SECONDS + 86_400 - 1;
 }
 
+/** Awal hari 00:00:00 WIB dari input tanggal `<input type="date">`, epoch detik UTC. */
+export function startOfJakartaDayFromDateInput(value: string): number | null {
+  const end = endOfJakartaDayFromDateInput(value);
+  return end === null ? null : end - 86_399;
+}
+
+/** Tanggal YYYY-MM-DD menurut Asia/Jakarta dari sebuah instant, untuk nilai awal form. */
+export function jakartaDateInput(epochSeconds: number): string {
+  const shifted = new Date((epochSeconds + JAKARTA_OFFSET_SECONDS) * 1000);
+  return shifted.toISOString().slice(0, 10);
+}
+
 /** Format tanggal+tanggal untuk tampilan: 2026-10-16 17:00 WIB. */
 export function formatJakarta(epochSeconds: number): string {
   const shifted = new Date((epochSeconds + JAKARTA_OFFSET_SECONDS) * 1000);
@@ -68,6 +80,12 @@ export function formatJakartaNotification(value: Date | number): string {
   const hours = String(shifted.getUTCHours()).padStart(2, "0");
   const minutes = String(shifted.getUTCMinutes()).padStart(2, "0");
   return `${date} ${month} ${year} ${hours}:${minutes} WIB`;
+}
+
+/** Format tanggal saja untuk laporan: 16 Okt 2026 (Asia/Jakarta). */
+export function formatWibDate(epochSeconds: number): string {
+  const shifted = new Date((epochSeconds + JAKARTA_OFFSET_SECONDS) * 1000);
+  return `${shifted.getUTCDate()} ${MONTH_NAMES_SHORT[shifted.getUTCMonth()]} ${shifted.getUTCFullYear()}`;
 }
 
 export type DeadlineInput = {

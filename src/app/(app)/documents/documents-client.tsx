@@ -1,105 +1,100 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState, useTransition } from "react";
 import { Icon } from "@/app/icons";
 import { EmptyState } from "../states";
 import DocumentDetailPanel from "./document-detail-panel";
-import {
-  MOCK_FINAL_DOCUMENTS,
-  type FinalDocument,
-} from "@/lib/mock-documents";
-import { MOCK_CATEGORIES } from "@/lib/mock-division-members";
+import type { CatalogItem } from "@/db/queries/documents";
+import type { CategoryOption } from "@/db/queries/form-data";
 
 export interface DocumentsClientProps {
-  userRole?: "USER" | "ADMIN" | "SUPER_ADMIN";
-  userDivisionName?: string;
+  role: "USER" | "ADMIN" | "SUPER_ADMIN";
+  /** Filter aktif dari URL; sumbernya server agar layar dan angka selalu sama. */
+  filters: {
+    q: string;
+    categoryId: string;
+    umur: string;
+    divisionId: string;
+  };
+  items: CatalogItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  categoryOptions: CategoryOption[];
+  /** Hanya terisi untuk Super Admin. */
+  divisionOptions: { id: string; name: string }[];
+  userDivisionName: string;
 }
 
+const AGE_OPTIONS: { value: string; label: string }[] = [
+  { value: "", label: "Arsip: semua" },
+  { value: "30", label: "Arsip: 30 hari" },
+  { value: "90", label: "Arsip: 90 hari" },
+  { value: "365", label: "Arsip: 1 tahun" },
+];
+
 export default function DocumentsClient({
-  userRole = "ADMIN",
-  userDivisionName = "Hukum & Sengketa",
+  role,
+  filters,
+  items,
+  total,
+  page,
+  pageSize,
+  totalPages,
+  categoryOptions,
+  divisionOptions,
+  userDivisionName,
 }: DocumentsClientProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("semua");
-  const [selectedAge, setSelectedAge] = useState<number | "semua">("semua");
-  const [selectedDivision, setSelectedDivision] = useState<string>("semua");
-  const [selectedDocId, setSelectedDocId] = useState<string | null>(
-    MOCK_FINAL_DOCUMENTS[0]?.id ?? null,
-  );
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
-
-  // Filter dokumen sesuai kriteria
-  const filteredDocuments = useMemo(() => {
-    return MOCK_FINAL_DOCUMENTS.filter((doc) => {
-      // Filter Divisi (terkunci untuk Staf dan Admin Divisi)
-      if (userRole !== "SUPER_ADMIN") {
-        if (doc.divisionName !== userDivisionName) return false;
-      } else if (selectedDivision !== "semua") {
-        if (doc.divisionName !== selectedDivision) return false;
-      }
-
-      // Filter Pencarian (Nomor Tugas atau Judul)
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchTitle = doc.title.toLowerCase().includes(q);
-        const matchNumber = doc.taskNumber.toLowerCase().includes(q);
-        const matchRecipient = doc.recipientName.toLowerCase().includes(q);
-        if (!matchTitle && !matchNumber && !matchRecipient) return false;
-      }
-
-      // Filter Kategori
-      if (selectedCategory !== "semua" && doc.categoryName !== selectedCategory) {
-        return false;
-      }
-
-      // Filter Rentang Waktu Arsip
-      if (selectedAge !== "semua") {
-        if (doc.archivedDaysAgo > selectedAge) return false;
-      }
-
-      return true;
-    });
-  }, [
-    userRole,
-    userDivisionName,
-    selectedDivision,
-    searchQuery,
-    selectedCategory,
-    selectedAge,
-  ]);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+  const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
 
   const hasActiveFilters = Boolean(
-    searchQuery.trim() ||
-      selectedCategory !== "semua" ||
-      selectedAge !== "semua" ||
-      (userRole === "SUPER_ADMIN" && selectedDivision !== "semua"),
+    filters.q ||
+      filters.categoryId ||
+      filters.umur ||
+      (role === "SUPER_ADMIN" && filters.divisionId),
   );
 
+  function updateParams(updates: Record<string, string | null>) {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === null || value === "") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    }
+    // Filter baru selalu mulai dari halaman pertama.
+    params.delete("page");
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
+  }
+
+  function goToPage(pageNum: number) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", String(pageNum));
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
+  }
+
   const resetFilters = () => {
-    setSearchQuery("");
-    setSelectedCategory("semua");
-    setSelectedAge("semua");
-    setSelectedDivision("semua");
-    setCurrentPage(1);
+    updateParams({ q: null, kategori: null, umur: null, divisi: null });
   };
 
-  // Dokumen yang saat ini aktif ditampilkan di panel samping
   const activeDocument = useMemo(() => {
     if (!selectedDocId) return null;
-    return filteredDocuments.find((d) => d.id === selectedDocId) ?? null;
-  }, [selectedDocId, filteredDocuments]);
+    return items.find((item) => item.id === selectedDocId) ?? null;
+  }, [selectedDocId, items]);
 
-  // Paginasi
-  const totalDocs = filteredDocuments.length;
-  const totalPages = Math.max(1, Math.ceil(totalDocs / pageSize));
-  const paginatedDocuments = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredDocuments.slice(start, start + pageSize);
-  }, [filteredDocuments, currentPage, pageSize]);
-
-  const startRecord = totalDocs === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-  const endRecord = Math.min(currentPage * pageSize, totalDocs);
+  const startRecord = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord = Math.min(page * pageSize, total);
 
   return (
     <div className="flex flex-col gap-6">
@@ -107,88 +102,91 @@ export default function DocumentsClient({
       <div>
         <h1 className="text-h1 font-semibold text-ink">Katalog Dokumen Final</h1>
         <p className="mt-1 text-body text-ink-3">
-          {userRole === "SUPER_ADMIN"
-            ? `Dokumen final lintas seluruh divisi (${totalDocs} dokumen sah). Satu tugas, satu baris dokumen.`
-            : `Dokumen final divisi ${userDivisionName}. Satu tugas, satu baris dokumen.`}
+          {role === "SUPER_ADMIN"
+            ? `Dokumen final lintas seluruh divisi (${total} dokumen). Satu penugasan selesai, satu baris dokumen.`
+            : `Dokumen final divisi ${userDivisionName} (${total} dokumen). Satu penugasan selesai, satu baris dokumen.`}
         </p>
       </div>
 
       {/* Baris Filter Dokumen */}
-      <div className="card p-3 flex flex-wrap items-center gap-3 bg-surface">
-        {/* Input Cari Nomor / Judul */}
-        <div className="relative flex-1 min-w-[200px] tablet:max-w-[260px]">
+      <div
+        className={`card p-3 flex flex-wrap items-center gap-3 bg-surface transition-opacity ${
+          isPending ? "opacity-70" : "opacity-100"
+        }`}
+      >
+        {/* Input Cari Nomor / Judul / Nama Penerima */}
+        <div className="relative flex-1 min-w-[200px] tablet:max-w-[280px]">
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3">
             <Icon name="cari" size={15} />
           </span>
           <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
+            type="search"
+            defaultValue={filters.q}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                updateParams({ q: e.currentTarget.value.trim() || null });
+              }
             }}
+            onBlur={(e) => {
+              if (e.currentTarget.value.trim() !== filters.q) {
+                updateParams({ q: e.currentTarget.value.trim() || null });
+              }
+            }}
+            aria-label="Cari nomor tugas, judul, atau nama penerima"
             placeholder="Cari nomor atau judul..."
-            className="h-8 w-full rounded-md border border-border bg-surface pl-8 pr-3 text-body-sm text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+            className="h-9 w-full rounded-md border border-border-strong bg-surface pl-8 pr-3 text-body-sm text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
           />
         </div>
 
-        {/* Pemilih Divisi */}
-        {userRole === "SUPER_ADMIN" ? (
+        {/* Pemilih Divisi (Super Admin) */}
+        {role === "SUPER_ADMIN" ? (
           <select
-            value={selectedDivision}
-            onChange={(e) => {
-              setSelectedDivision(e.target.value);
-              setCurrentPage(1);
-            }}
+            value={filters.divisionId}
+            onChange={(e) => updateParams({ divisi: e.target.value || null })}
             aria-label="Filter divisi"
-            className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+            className="h-9 rounded-md border border-border-strong bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
           >
-            <option value="semua">Divisi: Semua</option>
-            <option value="Hukum & Sengketa">Hukum &amp; Sengketa</option>
-            <option value="Pengawasan">Pengawasan</option>
-            <option value="SDM & Organisasi">SDM &amp; Organisasi</option>
-            <option value="Sekretariat">Sekretariat</option>
-            <option value="Penindakan">Penindakan</option>
+            <option value="">Divisi: Semua</option>
+            {divisionOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.name}
+              </option>
+            ))}
           </select>
         ) : (
-          <div className="h-8 rounded-md border border-border bg-neutral-surface px-3 flex items-center text-body-sm text-ink-2">
+          <div className="h-9 rounded-md border border-border bg-neutral-surface px-3 flex items-center text-body-sm text-ink-2">
             <span>Divisi: {userDivisionName} (terkunci)</span>
           </div>
         )}
 
         {/* Pemilih Kategori */}
         <select
-          value={selectedCategory}
-          onChange={(e) => {
-            setSelectedCategory(e.target.value);
-            setCurrentPage(1);
-          }}
+          value={filters.categoryId}
+          onChange={(e) => updateParams({ kategori: e.target.value || null })}
           aria-label="Filter kategori"
-          className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+          className="h-9 rounded-md border border-border-strong bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
         >
-          <option value="semua">Kategori: semua</option>
-          {MOCK_CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
+          <option value="">Kategori: semua</option>
+          {categoryOptions.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.name}
             </option>
           ))}
         </select>
 
         {/* Pemilih Rentang Waktu Arsip */}
         <select
-          value={String(selectedAge)}
-          onChange={(e) => {
-            const val = e.target.value;
-            setSelectedAge(val === "semua" ? "semua" : Number(val));
-            setCurrentPage(1);
-          }}
+          value={filters.umur}
+          onChange={(e) => updateParams({ umur: e.target.value || null })}
           aria-label="Rentang waktu arsip"
-          className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+          className="h-9 rounded-md border border-border-strong bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
         >
-          <option value="semua">Arsip: semua</option>
-          <option value="30">Arsip: 30 hari</option>
-          <option value="90">Arsip: 90 hari</option>
-          <option value="365">Arsip: 1 tahun</option>
+          {AGE_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
 
         {/* Tombol Hapus Filter */}
@@ -196,7 +194,7 @@ export default function DocumentsClient({
           <button
             type="button"
             onClick={resetFilters}
-            className="ml-auto text-body-sm font-semibold text-primary hover:underline"
+            className="ml-auto text-body-sm font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
           >
             Hapus filter
           </button>
@@ -205,9 +203,9 @@ export default function DocumentsClient({
 
       {/* Konten Utama: 2 Kolom (Tabel + Panel Samping) */}
       <div className="grid grid-cols-1 gap-6 desktop:grid-cols-12">
-        {/* Kolom Kiri: Tabel Dokumen Final (7 Kolom pada Desktop) */}
+        {/* Kolom Kiri: Tabel Dokumen Final */}
         <div className="flex flex-col gap-4 desktop:col-span-7">
-          {totalDocs === 0 ? (
+          {total === 0 ? (
             <EmptyState
               title={
                 hasActiveFilters
@@ -217,12 +215,12 @@ export default function DocumentsClient({
               description={
                 hasActiveFilters
                   ? "Hapus filter atau sesuaikan kata kunci untuk menemukan dokumen arsip lainnya."
-                  : "Dokumen final akan otomatis muncul di sini begitu penugasan staf disetujui oleh admin divisi."
+                  : "Dokumen final akan muncul di sini setelah admin divisi menyetujui pengumpulan staf."
               }
               reason={
                 hasActiveFilters
-                  ? "data dokumen final ada, tetapi tersaring oleh kombinasi filter yang aktif."
-                  : "belum ada tugas yang selesai diverifikasi dan diarsipkan ke dalam sistem."
+                  ? "data dokumen final ada, tetapi tersaring habis oleh kombinasi filter aktif."
+                  : "belum ada penugasan yang selesai diverifikasi dan diarsipkan ke sistem."
               }
               illustration="rak"
               action={
@@ -237,7 +235,7 @@ export default function DocumentsClient({
               }
             />
           ) : (
-            <div className="card overflow-hidden">
+            <div className={`card overflow-hidden ${isPending ? "opacity-70" : ""}`}>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-body">
                   <thead>
@@ -260,19 +258,27 @@ export default function DocumentsClient({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {paginatedDocuments.map((doc) => {
+                    {items.map((doc) => {
                       const isSelected = doc.id === selectedDocId;
+                      const firstFile = doc.files[0];
                       return (
                         <tr
                           key={doc.id}
+                          tabIndex={0}
                           onClick={() => setSelectedDocId(doc.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setSelectedDocId(doc.id);
+                            }
+                          }}
                           className={`cursor-pointer transition-colors ${
                             isSelected
                               ? "bg-primary-surface/40 hover:bg-primary-surface/60"
                               : "hover:bg-neutral-surface/40"
                           }`}
                         >
-                          {/* Kolom 1: Nomor Tugas Mono */}
+                          {/* Kolom 1: Nomor Tugas Mono (motif identitas) */}
                           <td className="px-4 py-3.5 whitespace-nowrap">
                             <span className="font-mono text-body-sm text-ink-3">
                               {doc.taskNumber}
@@ -282,7 +288,7 @@ export default function DocumentsClient({
                           {/* Kolom 2: Judul Dokumen */}
                           <td className="px-4 py-3.5">
                             <div className="flex flex-col">
-                              <span className="font-medium text-ink hover:text-primary">
+                              <span className="font-medium text-ink">
                                 {doc.title}
                               </span>
                               <span className="text-body-sm text-ink-3">
@@ -291,9 +297,16 @@ export default function DocumentsClient({
                             </div>
                           </td>
 
-                          {/* Kolom 3: Tanggal Arsip */}
-                          <td className="px-4 py-3.5 whitespace-nowrap text-body text-ink">
-                            {doc.archivedDateFormatted}
+                          {/* Kolom 3: Tanggal Arsip WIB */}
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <div className="flex flex-col">
+                              <span className="text-body text-ink">
+                                {doc.archivedDateFormatted}
+                              </span>
+                              <span className="text-body-sm text-ink-3">
+                                {doc.recipientName}
+                              </span>
+                            </div>
                           </td>
 
                           {/* Kolom 4: Jumlah Berkas */}
@@ -301,19 +314,22 @@ export default function DocumentsClient({
                             {doc.files.length} berkas
                           </td>
 
-                          {/* Kolom 5: Aksi */}
+                          {/* Kolom 5: Aksi Unduh Nyata */}
                           <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedDocId(doc.id);
-                              }}
-                              className="inline-flex items-center gap-1 text-body-sm font-semibold text-primary hover:underline"
-                            >
-                              <Icon name="unduh" size={13} />
-                              Unduh
-                            </button>
+                            {doc.files.length > 0 && firstFile ? (
+                              <a
+                                href={firstFile.downloadUrl}
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 text-body-sm font-semibold text-primary hover:underline"
+                              >
+                                <Icon name="unduh" size={13} />
+                                Unduh
+                              </a>
+                            ) : (
+                              <span className="text-body-sm text-ink-3">
+                                tidak ada berkas
+                              </span>
+                            )}
                           </td>
                         </tr>
                       );
@@ -325,7 +341,7 @@ export default function DocumentsClient({
               {/* Baris Informasi Paginasi Bawah */}
               <div className="flex flex-col gap-3 border-t border-border p-4 tablet:flex-row tablet:items-center tablet:justify-between text-body-sm text-ink-3">
                 <span>
-                  Menampilkan {startRecord} sampai {endRecord} dari {totalDocs} dokumen
+                  Menampilkan {startRecord} sampai {endRecord} dari {total} dokumen
                 </span>
 
                 {totalPages > 1 ? (
@@ -334,9 +350,10 @@ export default function DocumentsClient({
                       <button
                         key={pg}
                         type="button"
-                        onClick={() => setCurrentPage(pg)}
-                        className={`flex h-7 w-7 items-center justify-center rounded-md border text-body-sm font-semibold transition-colors ${
-                          pg === currentPage
+                        onClick={() => goToPage(pg)}
+                        aria-current={pg === page ? "page" : undefined}
+                        className={`flex h-8 w-8 items-center justify-center rounded-md border text-body-sm font-semibold transition-colors ${
+                          pg === page
                             ? "border-primary bg-primary text-on-dark"
                             : "border-border bg-surface text-ink hover:bg-neutral-surface"
                         }`}
@@ -351,7 +368,7 @@ export default function DocumentsClient({
           )}
         </div>
 
-        {/* Kolom Kanan: Panel Samping Detail Dokumen (5 Kolom pada Desktop) */}
+        {/* Kolom Kanan: Panel Samping Detail Dokumen */}
         <div className="desktop:col-span-5">
           <DocumentDetailPanel
             document={activeDocument}

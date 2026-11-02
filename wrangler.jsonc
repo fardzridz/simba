@@ -1,43 +1,161 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "penugasan-divisi",
-  "main": "custom-worker.ts",
-  "compatibility_date": "2026-10-16",
-  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  },
-  "services": [
-    {
-      "binding": "WORKER_SELF_REFERENCE",
-      "service": "penugasan-divisi"
-    }
-  ],
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "penugasan-db",
-      "database_id": "GANTI_DENGAN_ID_D1",
-      "migrations_dir": "drizzle/migrations"
-    }
-  ],
-  "r2_buckets": [
-    {
-      "binding": "BUCKET",
-      "bucket_name": "penugasan-files"
-    }
-  ],
-  "triggers": {
-    "crons": ["* * * * *", "0 20 * * *"]
-  },
-  "limits": {
-    "cpu_ms": 30000
-  },
-  "observability": {
-    "enabled": true
-  },
-  "vars": {
-    "APP_ENV": "development"
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "penugasan-divisi",
+	"main": "custom-worker.ts",
+	"compatibility_date": "2026-10-16",
+	"compatibility_flags": [
+		"nodejs_compat",
+		"global_fetch_strictly_public"
+	],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [
+		{
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "penugasan-divisi"
+		}
+	],
+	"d1_databases": [
+		{
+			// Binding produksi dan lokal (`npm run preview`); staging menimpanya
+			// lewat blok env.staging di bawah, jadi tidak perlu binding kedua.
+			"binding": "DB",
+			"database_name": "penugasan-db",
+			"database_id": "7dc0ee5d-de2d-41f6-9621-186b0f858d62",
+			"migrations_dir": "drizzle/migrations"
+		}
+	],
+	"r2_buckets": [
+		{
+			// Binding produksi; staging menimpanya lewat env.staging di bawah.
+			"binding": "BUCKET",
+			"bucket_name": "penugasan-files"
+		}
+	],
+	// Bucket `penugasan-backups` sengaja tanpa binding worker: cadangan D1
+	// ditulis workflow CI (`backup-d1.yml`) lewat nama bucket, bukan dari
+	// dalam kode (§9.5).
+	"triggers": {
+		"crons": [
+			"* * * * *",
+			"0 20 * * *"
+		]
+	},
+	"limits": {
+		"cpu_ms": 30000
+	},
+	"observability": {
+		"enabled": true
+	},
+	"vars": {
+		"APP_ENV": "development",
+		// Kanal luar tertutup secara default; hanya lingkungan staging yang
+		// menyalakannya eksplisit untuk uji backoff pengiriman (§9.11).
+		"EXTERNAL_CHANNELS_ENABLED": "false"
+	},
+	// Lingkungan `--env staging` dan `--env production` dipakai CI (Fase 6).
+	// Kode memakai nama binding yang sama (DB, BUCKET); nilai di bawah
+	// menunjuk D1 dan R2 terpisah per lingkungan (§801 RANCANGAN).
+	"env": {
+		"staging": {
+			"name": "penugasan-divisi-staging",
+			"main": "custom-worker.ts",
+			"compatibility_date": "2026-10-16",
+			"compatibility_flags": [
+				"nodejs_compat",
+				"global_fetch_strictly_public"
+			],
+			"assets": {
+				"directory": ".open-next/assets",
+				"binding": "ASSETS"
+			},
+			"services": [
+				{
+					"binding": "WORKER_SELF_REFERENCE",
+					"service": "penugasan-divisi-staging"
+				}
+			],
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "penugasan-db-staging",
+					"database_id": "b854b7e8-5a7e-4846-8a9e-029ecbc8063a",
+					"migrations_dir": "drizzle/migrations"
+				}
+			],
+			"r2_buckets": [
+				{
+					"binding": "BUCKET",
+					"bucket_name": "penugasan-files-staging"
+				}
+			],
+			"triggers": {
+				"crons": [
+					"* * * * *",
+					"0 20 * * *"
+				]
+			},
+			"limits": {
+				"cpu_ms": 30000
+			},
+			"observability": {
+				"enabled": true
+			},
+			"vars": {
+				"APP_ENV": "staging",
+				"EXTERNAL_CHANNELS_ENABLED": "true"
+			}
+		},
+		"production": {
+			"name": "penugasan-divisi",
+			"main": "custom-worker.ts",
+			"compatibility_date": "2026-10-16",
+			"compatibility_flags": [
+				"nodejs_compat",
+				"global_fetch_strictly_public"
+			],
+			"assets": {
+				"directory": ".open-next/assets",
+				"binding": "ASSETS"
+			},
+			"services": [
+				{
+					"binding": "WORKER_SELF_REFERENCE",
+					"service": "penugasan-divisi"
+				}
+			],
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "penugasan-db",
+					"database_id": "7dc0ee5d-de2d-41f6-9621-186b0f858d62",
+					"migrations_dir": "drizzle/migrations"
+				}
+			],
+			"r2_buckets": [
+				{
+					"binding": "BUCKET",
+					"bucket_name": "penugasan-files"
+				}
+			],
+			"triggers": {
+				"crons": [
+					"* * * * *",
+					"0 20 * * *"
+				]
+			},
+			"limits": {
+				"cpu_ms": 30000
+			},
+			"observability": {
+				"enabled": true
+			},
+			"vars": {
+				"APP_ENV": "production",
+				"EXTERNAL_CHANNELS_ENABLED": "false"
+			}
+		}
+	}
 }

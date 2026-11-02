@@ -23,36 +23,18 @@ export const NOTIFICATION_TYPES = [
   "SUBMISSION_RECEIVED",
   "TASK_CANCELLED",
   "DUE_SOON",
+  "TASK_DUE_EXTENDED",
 ] as const;
 
-/**
- * Setelan operasional satu baris (§6.4). Batas unggah adalah batas atas;
- * nilai aktif hanya boleh menurunkan, bukan menaikkan, batas aplikasi.
- */
-export const appSettings = sqliteTable(
-  "app_settings",
+export const categories = sqliteTable(
+  "categories",
   {
-    id: integer("id").primaryKey().default(1),
-    maxFileBytes: integer("max_file_bytes").notNull().default(10 * 1024 * 1024),
-    maxFilesPerSubmission: integer("max_files_per_submission").notNull().default(5),
-    allowedTypes: text("allowed_types")
-      .notNull()
-      .default('["pdf","doc","docx","xls","xlsx","jpg","jpeg","png"]'),
-    dueSoonDays: integer("due_soon_days").notNull().default(3),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   },
-  (t) => [
-    check("app_settings_singleton_ck", sql`${t.id} = 1`),
-    check(
-      "app_settings_max_file_bytes_ck",
-      sql`${t.maxFileBytes} between 1048576 and 10485760`,
-    ),
-    check(
-      "app_settings_max_files_ck",
-      sql`${t.maxFilesPerSubmission} between 1 and 5`,
-    ),
-    check("app_settings_due_soon_ck", sql`${t.dueSoonDays} between 1 and 30`),
-  ],
+  (t) => [uniqueIndex("categories_name_uq").on(t.name)],
 );
 
 export const divisions = sqliteTable(
@@ -62,9 +44,22 @@ export const divisions = sqliteTable(
     name: text("name").notNull(),
     code: text("code").notNull(),
     isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    /** Kontak formulir sendiri divisi; bentuknya divalidasi di server (§0.3). */
+    contactEmail: text("contact_email"),
+    defaultCategoryId: text("default_category_id").references(() => categories.id, {
+      onDelete: "restrict",
+    }),
+    defaultPriority: text("default_priority", { enum: PRIORITIES }).notNull().default("SEDANG"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   },
-  (t) => [uniqueIndex("divisions_name_uq").on(t.name), uniqueIndex("divisions_code_uq").on(t.code)],
+  (t) => [
+    uniqueIndex("divisions_name_uq").on(t.name),
+    uniqueIndex("divisions_code_uq").on(t.code),
+    check(
+      "divisions_default_priority_ck",
+      sql`${t.defaultPriority} in ('RENDAH','SEDANG','TINGGI','MENDESAK')`,
+    ),
+  ],
 );
 
 export const users = sqliteTable(
@@ -101,15 +96,36 @@ export const users = sqliteTable(
   ],
 );
 
-export const categories = sqliteTable(
-  "categories",
+/**
+ * Setelan operasional satu baris (§6.4). Batas unggah adalah batas atas;
+ * nilai aktif hanya boleh menurunkan, bukan menaikkan, batas aplikasi.
+ */
+export const appSettings = sqliteTable(
+  "app_settings",
   {
-    id: text("id").primaryKey(),
-    name: text("name").notNull(),
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    id: integer("id").primaryKey().default(1),
+    maxFileBytes: integer("max_file_bytes").notNull().default(10 * 1024 * 1024),
+    maxFilesPerSubmission: integer("max_files_per_submission").notNull().default(5),
+    allowedTypes: text("allowed_types")
+      .notNull()
+      .default('["pdf","doc","docx","xls","xlsx","jpg","jpeg","png"]'),
+    dueSoonDays: integer("due_soon_days").notNull().default(3),
+    /** Super Admin terakhir yang menyimpan setelan; kosong berarti seed/terprogram. */
+    updatedBy: text("updated_by").references(() => users.id, { onDelete: "restrict" }),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   },
-  (t) => [uniqueIndex("categories_name_uq").on(t.name)],
+  (t) => [
+    check("app_settings_singleton_ck", sql`${t.id} = 1`),
+    check(
+      "app_settings_max_file_bytes_ck",
+      sql`${t.maxFileBytes} between 1048576 and 10485760`,
+    ),
+    check(
+      "app_settings_max_files_ck",
+      sql`${t.maxFilesPerSubmission} between 1 and 5`,
+    ),
+    check("app_settings_due_soon_ck", sql`${t.dueSoonDays} between 1 and 30`),
+  ],
 );
 
 export const tasks = sqliteTable(
@@ -138,8 +154,14 @@ export const tasks = sqliteTable(
   },
   (t) => [
     uniqueIndex("tasks_task_number_uq").on(t.taskNumber),
-    index("tasks_division_status_due_idx").on(t.divisionId, t.dueAt),
+    /** ERD menulis (division_id, status, due_at), tetapi status milik assignment (§6.2). */
+    index("tasks_division_due_idx").on(t.divisionId, t.dueAt),
     index("tasks_division_created_idx").on(t.divisionId, t.createdAt),
+    /**
+     * Urutan global daftar penugasan Super Admin (tanpa filter divisi)
+     * tetap bisa memakai indeks; hasil audit EXPLAIN Fase 6.
+     */
+    index("tasks_due_idx").on(t.dueAt),
     check("tasks_priority_ck", sql`${t.priority} in ('RENDAH','SEDANG','TINGGI','MENDESAK')`),
     check("tasks_due_after_start_ck", sql`${t.dueAt} >= ${t.startAt}`),
     check("tasks_cancel_ck", sql`(${t.cancelledAt} is null) or (${t.cancelReason} is not null and length(trim(${t.cancelReason})) > 0)`),
@@ -168,6 +190,8 @@ export const taskAssignments = sqliteTable(
   },
   (t) => [
     uniqueIndex("task_assignments_task_user_uq").on(t.taskId, t.userId),
+    /** Melayani agregasi status dashboard yang di-join lewat tasks.division_id (§6.2). */
+    index("task_assignments_task_status_idx").on(t.taskId, t.status),
     index("task_assignments_user_status_idx").on(t.userId, t.status),
     index("task_assignments_status_updated_idx").on(t.status, t.updatedAt),
     check(
@@ -273,6 +297,8 @@ export const documentArchive = sqliteTable(
   (t) => [
     uniqueIndex("document_archive_assignment_uq").on(t.assignmentId),
     index("document_archive_division_archived_idx").on(t.divisionId, t.archivedAt),
+    /** Urutan global katalog Super Admin; audit EXPLAIN Fase 6. */
+    index("document_archive_archived_idx").on(t.archivedAt, t.id),
   ],
 );
 
@@ -307,6 +333,8 @@ export const notificationDeliveries = sqliteTable(
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   },
   (t) => [
+    uniqueIndex("notification_deliveries_notification_channel_uq")
+      .on(t.notificationId, t.channel),
     index("notification_deliveries_due_idx").on(t.status, t.nextAttemptAt),
     index("notification_deliveries_notification_idx").on(t.notificationId),
     check(
@@ -401,7 +429,11 @@ export const notifications = sqliteTable(
     readAt: integer("read_at", { mode: "timestamp" }),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   },
-  (t) => [index("notifications_user_read_idx").on(t.userId, t.readAt)],
+  (t) => [
+    index("notifications_user_read_idx").on(t.userId, t.readAt),
+    /** Cari notifikasi per entitas (adegan pemeriksaan DUE_SOON); audit EXPLAIN Fase 6. */
+    index("notifications_entity_idx").on(t.entityType, t.entityId),
+  ],
 );
 
 export const activityLogs = sqliteTable(
@@ -420,6 +452,8 @@ export const activityLogs = sqliteTable(
   (t) => [
     index("activity_logs_entity_idx").on(t.entityType, t.entityId, t.createdAt),
     index("activity_logs_action_ip_idx").on(t.action, t.ipAddress, t.createdAt),
+    /** Urutan terbaru dulu pada daftar log 25 per halaman; audit EXPLAIN Fase 6. */
+    index("activity_logs_created_idx").on(t.createdAt, t.id),
   ],
 );
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { divisions } from "@/db/schema";
-import { getTaskList, type TaskFilterFlag } from "@/db/queries/tasks";
+import { getTaskList, getTaskKpis, type TaskFilterFlag } from "@/db/queries/tasks";
 import { appContext } from "@/env";
 import { requireActor } from "@/lib/auth/current";
 import { resolveScope } from "@/lib/auth/scope";
@@ -53,6 +53,12 @@ export default async function TasksPage(props: {
 
   const hasActiveFilters = Boolean(q || status || flag);
 
+  // KPI pita empat kartu (L09): agregasi server atas seluruh baris hasil filter.
+  const kpi =
+    scope.role === "ADMIN"
+      ? await getTaskKpis(db, scope, { q, status, flag })
+      : { active: 0, waiting: 0, overdue: 0, revision: 0 };
+
   // Judul & subjudul kontekstual per peran
   const title =
     scope.role === "USER"
@@ -70,23 +76,6 @@ export default async function TasksPage(props: {
 
   const startRecord = result.total === 0 ? 0 : (page - 1) * result.pageSize + 1;
   const endRecord = Math.min(page * result.pageSize, result.total);
-
-  // Metrik ringkasan untuk admin divisi (L09)
-  const isSeedBaseline = !hasActiveFilters && result.total <= 3;
-  const activeCount = isSeedBaseline
-    ? 14
-    : result.items.filter(
-        (it) => it.status === "SEDANG_DIKERJAKAN" || it.status === "BELUM_DIKERJAKAN",
-      ).length;
-  const waitingCount = isSeedBaseline
-    ? 6
-    : result.items.filter((it) => it.status === "MENUNGGU_VERIFIKASI").length;
-  const overdueCount = isSeedBaseline
-    ? 4
-    : result.items.filter((it) => it.dueAt.getTime() < Date.now()).length;
-  const revisionCount = isSeedBaseline
-    ? 3
-    : result.items.filter((it) => it.needsRevision).length;
 
   return (
     <div className="space-y-6">
@@ -117,7 +106,7 @@ export default async function TasksPage(props: {
             <span className="text-body-sm text-ink-3">Penugasan Aktif</span>
             <div className="mt-2 flex items-baseline justify-between">
               <span className="font-display-kpi text-[28px] font-semibold text-ink leading-none">
-                {activeCount}
+                {kpi.active}
               </span>
               <span className="text-body-sm text-ink-3">penugasan</span>
             </div>
@@ -127,7 +116,7 @@ export default async function TasksPage(props: {
             <span className="text-body-sm text-ink-3">Menunggu Verifikasi</span>
             <div className="mt-2 flex items-baseline justify-between">
               <span className="font-display-kpi text-[28px] font-semibold text-ink leading-none">
-                {waitingCount}
+                {kpi.waiting}
               </span>
               <span className="text-body-sm text-ink-3">penugasan</span>
             </div>
@@ -137,7 +126,7 @@ export default async function TasksPage(props: {
             <span className="text-body-sm text-ink-3">Terlambat</span>
             <div className="mt-2 flex items-baseline justify-between">
               <span className="font-display-kpi text-[28px] font-semibold text-error leading-none">
-                {overdueCount}
+                {kpi.overdue}
               </span>
               <span className="text-body-sm text-ink-3">penugasan</span>
             </div>
@@ -147,7 +136,7 @@ export default async function TasksPage(props: {
             <span className="text-body-sm text-ink-3">Perlu Revisi</span>
             <div className="mt-2 flex items-baseline justify-between">
               <span className="font-display-kpi text-[28px] font-semibold text-error leading-none">
-                {revisionCount}
+                {kpi.revision}
               </span>
               <span className="text-body-sm text-ink-3">penugasan</span>
             </div>

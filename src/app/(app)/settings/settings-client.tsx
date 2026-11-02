@@ -2,125 +2,174 @@
 
 import Link from "next/link";
 import { useId, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Icon } from "@/app/icons";
-import { MOCK_MASTER_CATEGORIES } from "@/lib/mock-master";
-import { MOCK_PRIORITIES } from "@/lib/mock-division-members";
-import {
-  CANONICAL_FILE_TYPES,
-  DEFAULT_APP_SETTINGS,
-  MOCK_DIVISION_SETTINGS,
-  type AppSettings,
-  type DivisionSettings,
-} from "@/lib/mock-settings";
-import type { Role } from "@/db/schema";
+import { LoadingButton } from "../loading-state";
+import { PRIORITY_OPTIONS } from "@/lib/task-options";
+import { saveAppSettings, saveDivisionSettings } from "./actions";
+import type { AppSettingsView, DivisionSettingsView } from "@/db/queries/settings";
+import type { CategoryOption } from "@/db/queries/form-data";
+import type { Priority, Role } from "@/db/schema";
+
+/**
+ * Chip tipe berkas: nilai mengikuti nilai kanonik yang diterima server
+ * (CANONICAL_TYPES di lib/storage/settings, huruf kecil), label tampil kapital.
+ */
+const TYPE_CHIPS: Array<{ value: string; label: string }> = [
+  { value: "pdf", label: "PDF" },
+  { value: "doc", label: "DOC" },
+  { value: "docx", label: "DOCX" },
+  { value: "xls", label: "XLS" },
+  { value: "xlsx", label: "XLSX" },
+  { value: "jpg", label: "JPG" },
+  { value: "jpeg", label: "JPEG" },
+  { value: "png", label: "PNG" },
+];
 
 interface SettingsClientProps {
   role: Role;
   userDivisionId?: string;
+  appSettings: AppSettingsView;
+  divisions: DivisionSettingsView[];
+  categories: CategoryOption[];
+  externalChannelsEnabled: boolean;
   initialTab?: SettingsTab;
 }
 
 export type SettingsTab = "divisi" | "sistem";
 
+type Feedback = { tone: "success" | "error"; text: string } | null;
+
 export default function SettingsClient({
   role,
-  userDivisionId = "div_hukum",
+  userDivisionId = "",
+  appSettings,
+  divisions,
+  categories,
+  externalChannelsEnabled,
   initialTab = "divisi",
 }: SettingsClientProps) {
+  const router = useRouter();
   const isSuperAdmin = role === "SUPER_ADMIN";
   const [activeTab, setActiveTab] = useState<SettingsTab>(
     isSuperAdmin && initialTab === "sistem" ? "sistem" : "divisi",
   );
-  // State untuk Tab Divisi
-  const [selectedDivisionId, setSelectedDivisionId] = useState<string>(
-    isSuperAdmin ? "div_hukum" : userDivisionId,
-  );
-  const [divisionsData, setDivisionsData] = useState<Record<string, DivisionSettings>>(
-    MOCK_DIVISION_SETTINGS,
-  );
 
-  // Form state Divisi yang sedang aktif diedit
-  const currentDivision = divisionsData[selectedDivisionId] || MOCK_DIVISION_SETTINGS["div_hukum"]!;
-  const [contactEmail, setContactEmail] = useState(currentDivision.contactEmail);
-  const [defaultCategory, setDefaultCategory] = useState(currentDivision.defaultCategoryId);
-  const [defaultPriority, setDefaultPriority] = useState(currentDivision.defaultPriority);
+  // Pemilih divisi Super Admin memakai divisi akun sebagai titik awal bila tersedia.
+  const initialDivisionId =
+    divisions.find((d) => d.id === userDivisionId)?.id ?? divisions[0]?.id ?? "";
+
+  // State untuk Tab Divisi
+  const [selectedDivisionId, setSelectedDivisionId] = useState(initialDivisionId);
+  const [contactEmail, setContactEmail] = useState(
+    divisions.find((d) => d.id === initialDivisionId)?.contactEmail ?? "",
+  );
+  const [defaultCategoryId, setDefaultCategoryId] = useState(
+    divisions.find((d) => d.id === initialDivisionId)?.defaultCategoryActive
+      ? divisions.find((d) => d.id === initialDivisionId)?.defaultCategoryId ?? ""
+      : "",
+  );
+  const [defaultPriority, setDefaultPriority] = useState<Priority>(
+    divisions.find((d) => d.id === initialDivisionId)?.defaultPriority ?? "SEDANG",
+  );
   const [divisionFormErrors, setDivisionFormErrors] = useState<{ email?: string }>({});
+  const [divisionFeedback, setDivisionFeedback] = useState<Feedback>(null);
+  const [savingDivision, setSavingDivision] = useState(false);
+
+  const currentDivision =
+    divisions.find((d) => d.id === selectedDivisionId) ?? divisions[0];
 
   // State untuk Tab Sistem
-  const [systemSettings, setSystemSettings] = useState<AppSettings>(DEFAULT_APP_SETTINGS);
-  const [maxFileMb, setMaxFileMb] = useState(systemSettings.maxFileMb);
-  const [maxFiles, setMaxFiles] = useState(systemSettings.maxFilesPerSubmission);
-  const [allowedTypes, setAllowedTypes] = useState<string[]>([...systemSettings.allowedTypes]);
-  const [dueSoonDays, setDueSoonDays] = useState(systemSettings.dueSoonDays);
+  const [maxFileMb, setMaxFileMb] = useState(appSettings.maxFileMb);
+  const [maxFiles, setMaxFiles] = useState(appSettings.maxFilesPerSubmission);
+  const [allowedTypes, setAllowedTypes] = useState<string[]>([
+    ...appSettings.allowedTypes,
+  ]);
+  const [dueSoonDays, setDueSoonDays] = useState(appSettings.dueSoonDays);
   const [systemFormErrors, setSystemFormErrors] = useState<{
     fileSize?: string;
     fileCount?: string;
     types?: string;
     dueSoon?: string;
   }>({});
-
-  // Feedback Notifikasi
-  const [notification, setNotification] = useState<string | null>(null);
-
-  const showNotification = (msg: string) => {
-    setNotification(msg);
-    setTimeout(() => setNotification(null), 4000);
-  };
-
-  // Kategori aktif untuk pilihan form
-  const activeCategories = MOCK_MASTER_CATEGORIES.filter((c) => c.isActive);
+  const [systemFeedback, setSystemFeedback] = useState<Feedback>(null);
+  const [savingSystem, setSavingSystem] = useState(false);
 
   // Pergantian divisi terpilih (khusus Super Admin)
   const handleSelectDivision = (divId: string) => {
     setSelectedDivisionId(divId);
-    const target = divisionsData[divId] || MOCK_DIVISION_SETTINGS[divId];
+    const target = divisions.find((d) => d.id === divId);
     if (target) {
-      setContactEmail(target.contactEmail);
-      setDefaultCategory(target.defaultCategoryId);
+      setContactEmail(target.contactEmail ?? "");
+      setDefaultCategoryId(
+        target.defaultCategoryActive ? (target.defaultCategoryId ?? "") : "",
+      );
       setDefaultPriority(target.defaultPriority);
       setDivisionFormErrors({});
+      setDivisionFeedback(null);
     }
   };
 
   // Reset form divisi ke state tersimpan saat ini
   const handleResetDivisionForm = () => {
-    setContactEmail(currentDivision.contactEmail);
-    setDefaultCategory(currentDivision.defaultCategoryId);
+    if (!currentDivision) return;
+    setContactEmail(currentDivision.contactEmail ?? "");
+    setDefaultCategoryId(
+      currentDivision.defaultCategoryActive
+        ? (currentDivision.defaultCategoryId ?? "")
+        : "",
+    );
     setDefaultPriority(currentDivision.defaultPriority);
     setDivisionFormErrors({});
+    setDivisionFeedback(null);
   };
 
   // Simpan form divisi
-  const handleSaveDivisionSettings = (e: React.FormEvent) => {
+  const handleSaveDivisionSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    const errors: { email?: string } = {};
+    if (!currentDivision) return;
 
-    if (contactEmail.trim()) {
+    const email = contactEmail.trim();
+    if (email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(contactEmail.trim())) {
-        errors.email = "Format alamat surel kontak divisi tidak valid.";
+      if (!emailRegex.test(email)) {
+        setDivisionFormErrors({
+          email: "Format alamat surel kontak divisi tidak valid.",
+        });
+        return;
       }
     }
 
-    if (Object.keys(errors).length > 0) {
-      setDivisionFormErrors(errors);
-      return;
-    }
-
     setDivisionFormErrors({});
-    setDivisionsData((prev) => ({
-      ...prev,
-      [selectedDivisionId]: {
-        ...currentDivision,
-        contactEmail: contactEmail.trim(),
-        defaultCategoryId: defaultCategory,
-        defaultPriority,
-      },
-    }));
+    setSavingDivision(true);
+    setDivisionFeedback(null);
 
-    showNotification(
-      `Pengaturan divisi ${currentDivision.name} (${currentDivision.code}) berhasil disimpan dan dicatat ke log audit.`,
-    );
+    try {
+      const result = await saveDivisionSettings({
+        divisionId: isSuperAdmin ? currentDivision.id : undefined,
+        contactEmail: email,
+        defaultCategoryId,
+        defaultPriority,
+      });
+
+      if (result.error) {
+        setDivisionFeedback({ tone: "error", text: result.error });
+        return;
+      }
+
+      setDivisionFeedback({
+        tone: "success",
+        text: `Pengaturan divisi ${currentDivision.name} (${currentDivision.code}) tersimpan dan tercatat di log nilai lama dan baru.`,
+      });
+      router.refresh();
+    } catch {
+      setDivisionFeedback({
+        tone: "error",
+        text: "Penyimpanan gagal diproses. Coba beberapa saat lagi.",
+      });
+    } finally {
+      setSavingDivision(false);
+    }
   };
 
   // Toggle tipe berkas yang diterima pada tab Sistem
@@ -145,25 +194,23 @@ export default function SettingsClient({
 
   // Reset form sistem ke state tersimpan saat ini
   const handleResetSystemForm = () => {
-    setMaxFileMb(systemSettings.maxFileMb);
-    setMaxFiles(systemSettings.maxFilesPerSubmission);
-    setAllowedTypes([...systemSettings.allowedTypes]);
-    setDueSoonDays(systemSettings.dueSoonDays);
+    setMaxFileMb(appSettings.maxFileMb);
+    setMaxFiles(appSettings.maxFilesPerSubmission);
+    setAllowedTypes([...appSettings.allowedTypes]);
+    setDueSoonDays(appSettings.dueSoonDays);
     setSystemFormErrors({});
+    setSystemFeedback(null);
   };
 
   // Simpan form sistem
-  const handleSaveSystemSettings = (e: React.FormEvent) => {
+  const handleSaveSystemSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    const errors: {
-      fileSize?: string;
-      fileCount?: string;
-      types?: string;
-      dueSoon?: string;
-    } = {};
+
+    const errors: typeof systemFormErrors = {};
 
     if (maxFileMb < 1 || maxFileMb > 10) {
-      errors.fileSize = "Ukuran berkas hanya boleh diatur antara 1 sampai 10 MB (hanya boleh menurunkan).";
+      errors.fileSize =
+        "Ukuran berkas hanya boleh diatur antara 1 sampai 10 MB (hanya boleh menurunkan).";
     }
 
     if (maxFiles < 1 || maxFiles > 5) {
@@ -184,27 +231,50 @@ export default function SettingsClient({
     }
 
     setSystemFormErrors({});
-    const nowFormatted = "20 Okt 2026 " + new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
-    setSystemSettings({
-      maxFileMb,
-      maxFilesPerSubmission: maxFiles,
-      allowedTypes,
-      dueSoonDays,
-      updatedBy: "Super Admin",
-      updatedAtFormatted: nowFormatted,
-    });
+    setSavingSystem(true);
+    setSystemFeedback(null);
 
-    showNotification("Kebijakan berkas dan ambang tenggat seluruh institusi berhasil diperbarui.");
+    try {
+      const result = await saveAppSettings({
+        maxFileMb,
+        maxFilesPerSubmission: maxFiles,
+        allowedTypes,
+        dueSoonDays,
+      });
+
+      if (result.error) {
+        setSystemFeedback({ tone: "error", text: result.error });
+        return;
+      }
+
+      setSystemFeedback({
+        tone: "success",
+        text: "Kebijakan berkas dan ambang tenggat tersimpan dan tercatat di log nilai lama dan baru.",
+      });
+      router.refresh();
+    } catch {
+      setSystemFeedback({
+        tone: "error",
+        text: "Penyimpanan gagal diproses. Coba beberapa saat lagi.",
+      });
+    } finally {
+      setSavingSystem(false);
+    }
   };
 
   // IDs untuk aksesibilitas form
   const contactEmailId = useId();
-  const defaultCategoryId = useId();
+  const defaultCatSelectId = useId();
   const defaultPriorityId = useId();
   const divisionSelectId = useId();
   const maxFileMbId = useId();
   const maxFilesId = useId();
   const dueSoonDaysId = useId();
+
+  // Kategori default tersimpan nonaktif tidak ikut daftar; tampilkan penjelasannya saja.
+  const storedDefaultInactive = Boolean(
+    currentDivision?.defaultCategoryName && !currentDivision.defaultCategoryActive,
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -218,14 +288,33 @@ export default function SettingsClient({
         </p>
       </div>
 
-      {/* Spanduk Notifikasi Sukses */}
-      {notification ? (
+      {/* Spanduk Notifikasi Form Divisi */}
+      {divisionFeedback ? (
         <div
-          role="status"
-          className="rounded-lg border border-success/30 bg-success-surface p-4 text-body-sm font-semibold text-success flex items-center gap-2"
+          role={divisionFeedback.tone === "error" ? "alert" : "status"}
+          className={`rounded-lg border p-4 text-body-sm font-semibold flex items-center gap-2 ${
+            divisionFeedback.tone === "error"
+              ? "border-error/30 bg-error-surface text-error"
+              : "border-success/30 bg-success-surface text-success"
+          }`}
         >
-          <Icon name="centang" size={16} />
-          <span>{notification}</span>
+          <Icon name={divisionFeedback.tone === "error" ? "tutup" : "centang"} size={16} />
+          <span>{divisionFeedback.text}</span>
+        </div>
+      ) : null}
+
+      {/* Spanduk Notifikasi Form Sistem */}
+      {systemFeedback ? (
+        <div
+          role={systemFeedback.tone === "error" ? "alert" : "status"}
+          className={`rounded-lg border p-4 text-body-sm font-semibold flex items-center gap-2 ${
+            systemFeedback.tone === "error"
+              ? "border-error/30 bg-error-surface text-error"
+              : "border-success/30 bg-success-surface text-success"
+          }`}
+        >
+          <Icon name={systemFeedback.tone === "error" ? "tutup" : "centang"} size={16} />
+          <span>{systemFeedback.text}</span>
         </div>
       ) : null}
 
@@ -279,7 +368,7 @@ export default function SettingsClient({
                       onChange={(e) => handleSelectDivision(e.target.value)}
                       className="rounded-md border border-border-strong bg-surface px-2.5 py-1 text-body-sm font-medium text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
                     >
-                      {Object.values(divisionsData).map((d) => (
+                      {divisions.map((d) => (
                         <option key={d.id} value={d.id}>
                           {d.name} ({d.code})
                         </option>
@@ -300,7 +389,7 @@ export default function SettingsClient({
                   type="text"
                   readOnly
                   disabled
-                  value={currentDivision.name}
+                  value={currentDivision?.name ?? ""}
                   className="rounded-md border border-border bg-neutral-surface px-3 py-2 text-body text-ink-2"
                 />
               </div>
@@ -312,7 +401,7 @@ export default function SettingsClient({
                   type="text"
                   readOnly
                   disabled
-                  value={currentDivision.code}
+                  value={currentDivision?.code ?? ""}
                   className="rounded-md border border-border bg-neutral-surface px-3 py-2 text-body font-mono text-ink-2"
                 />
                 <p className="text-body-sm text-ink-3">
@@ -320,16 +409,19 @@ export default function SettingsClient({
                 </p>
               </div>
 
-              {/* Kepala Divisi (Read-Only) */}
+              {/* Admin Divisi (Read-Only, diturunkan dari pengguna aktif) */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-body-sm font-medium text-ink-2">Kepala divisi</label>
+                <label className="text-body-sm font-medium text-ink-2">Admin divisi</label>
                 <input
                   type="text"
                   readOnly
                   disabled
-                  value={currentDivision.head}
+                  value={currentDivision?.adminName ?? "Belum ada admin aktif"}
                   className="rounded-md border border-border bg-neutral-surface px-3 py-2 text-body text-ink-2"
                 />
+                <p className="text-body-sm text-ink-3">
+                  Diambil dari pengguna Admin aktif pertama di divisi ini.
+                </p>
               </div>
 
               {/* Kontak Divisi (Dapat Diubah) */}
@@ -363,21 +455,28 @@ export default function SettingsClient({
 
               {/* Kategori Default */}
               <div className="flex flex-col gap-1.5">
-                <label htmlFor={defaultCategoryId} className="text-body-sm font-medium text-ink">
+                <label htmlFor={defaultCatSelectId} className="text-body-sm font-medium text-ink">
                   Kategori default
                 </label>
                 <select
-                  id={defaultCategoryId}
-                  value={defaultCategory}
-                  onChange={(e) => setDefaultCategory(e.target.value)}
+                  id={defaultCatSelectId}
+                  value={defaultCategoryId}
+                  onChange={(e) => setDefaultCategoryId(e.target.value)}
                   className="rounded-md border border-border-strong bg-surface px-3 py-2 text-body text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
                 >
-                  {activeCategories.map((cat) => (
+                  <option value="">Tanpa kategori default</option>
+                  {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
                     </option>
                   ))}
                 </select>
+                {storedDefaultInactive ? (
+                  <p className="text-body-sm font-medium text-warning">
+                    Kategori default tersimpan &quot;{currentDivision?.defaultCategoryName}&quot; sedang nonaktif
+                    dan tidak bisa dipilih; simpan kategori lain atau biarkan kosong.
+                  </p>
+                ) : null}
                 <p className="text-body-sm text-ink-3">
                   Dipakai saat Admin membuka form tugas baru. Kategori nonaktif tidak muncul di pilihan form.
                 </p>
@@ -391,12 +490,10 @@ export default function SettingsClient({
                 <select
                   id={defaultPriorityId}
                   value={defaultPriority}
-                  onChange={(e) =>
-                    setDefaultPriority(e.target.value as DivisionSettings["defaultPriority"])
-                  }
+                  onChange={(e) => setDefaultPriority(e.target.value as Priority)}
                   className="rounded-md border border-border-strong bg-surface px-3 py-2 text-body text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
                 >
-                  {MOCK_PRIORITIES.map((p) => (
+                  {PRIORITY_OPTIONS.map((p) => (
                     <option key={p.value} value={p.value}>
                       {p.label}
                     </option>
@@ -434,12 +531,15 @@ export default function SettingsClient({
               >
                 Batal
               </button>
-              <button
+              <LoadingButton
                 type="submit"
-                className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-body-sm font-semibold text-on-dark hover:bg-primary-hover active:bg-primary-active transition-colors shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+                variant="primary"
+                loading={savingDivision}
+                loadingText="Menyimpan..."
+                className="h-9 px-4 text-body-sm"
               >
                 Simpan Pengaturan
-              </button>
+              </LoadingButton>
             </div>
           </div>
 
@@ -520,15 +620,14 @@ export default function SettingsClient({
                   Tipe berkas yang diterima
                 </span>
                 <div className="flex flex-wrap gap-2">
-                  {CANONICAL_FILE_TYPES.map((type) => {
-                    const isSelected = allowedTypes.includes(type);
+                  {TYPE_CHIPS.map((chip) => {
+                    const isSelected = allowedTypes.includes(chip.value);
                     return (
                       <button
-                        key={type}
+                        key={chip.value}
                         type="button"
-                        role="button"
                         aria-pressed={isSelected}
-                        onClick={() => handleToggleFileType(type)}
+                        onClick={() => handleToggleFileType(chip.value)}
                         className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-body-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light ${
                           isSelected
                             ? "bg-neutral-surface border border-border-strong text-ink shadow-xs"
@@ -542,7 +641,7 @@ export default function SettingsClient({
                             <Icon name="tutup" size={11} />
                           )}
                         </span>
-                        {type}
+                        {chip.label}
                       </button>
                     );
                   })}
@@ -619,7 +718,7 @@ export default function SettingsClient({
                   <span className="text-body font-semibold text-ink">Notifikasi In-App</span>
                   <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-0.5 text-body-sm font-medium text-ink-2">
                     <Icon name="centang" size={12} className="text-success" />
-                    Wajib Aktif
+                    Selalu Aktif
                   </span>
                 </div>
                 <p className="text-body-sm text-ink-3">
@@ -631,10 +730,17 @@ export default function SettingsClient({
               <div className="rounded-lg border border-border bg-neutral-surface p-4 flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <span className="text-body font-semibold text-ink">WhatsApp (Fonnte)</span>
-                  <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-0.5 text-body-sm font-medium text-ink-2">
-                    <Icon name="centang" size={12} className="text-success" />
-                    Terhubung
-                  </span>
+                  {externalChannelsEnabled ? (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-0.5 text-body-sm font-medium text-ink-2">
+                      <Icon name="centang" size={12} className="text-success" />
+                      Dinyalakan
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-0.5 text-body-sm font-medium text-ink-3">
+                      <Icon name="tutup" size={11} />
+                      Dimatikan sistem
+                    </span>
+                  )}
                 </div>
                 <p className="text-body-sm text-ink-3">
                   Gateway pesan WhatsApp. Pengiriman diproses Worker dengan backoff 5 percobaan.
@@ -645,10 +751,17 @@ export default function SettingsClient({
               <div className="rounded-lg border border-border bg-neutral-surface p-4 flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <span className="text-body font-semibold text-ink">Surel (Email Gateway)</span>
-                  <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-0.5 text-body-sm font-medium text-ink-2">
-                    <Icon name="centang" size={12} className="text-success" />
-                    Terkonfigurasi
-                  </span>
+                  {externalChannelsEnabled ? (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-0.5 text-body-sm font-medium text-ink-2">
+                      <Icon name="centang" size={12} className="text-success" />
+                      Dinyalakan
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-0.5 text-body-sm font-medium text-ink-3">
+                      <Icon name="tutup" size={11} />
+                      Dimatikan sistem
+                    </span>
+                  )}
                 </div>
                 <p className="text-body-sm text-ink-3">
                   Domain instansi terverifikasi. Reply-To otomatis mengarah ke kontak divisi.
@@ -668,7 +781,9 @@ export default function SettingsClient({
           {/* Tindakan Form Sistem */}
           <div className="flex flex-col gap-3 tablet:flex-row tablet:items-center tablet:justify-between pt-2">
             <p className="text-body-sm text-ink-3">
-              Perubahan berlaku untuk seluruh divisi setelah disimpan.
+              {appSettings.updatedByName && appSettings.updatedAtFormatted
+                ? `Terakhir disimpan oleh ${appSettings.updatedByName} pada ${appSettings.updatedAtFormatted}.`
+                : "Belum pernah disimpan; nilai di kartu memakai default aplikasi."}
             </p>
             <div className="flex items-center gap-3">
               <button
@@ -678,12 +793,15 @@ export default function SettingsClient({
               >
                 Batal
               </button>
-              <button
+              <LoadingButton
                 type="submit"
-                className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-body-sm font-semibold text-on-dark hover:bg-primary-hover active:bg-primary-active transition-colors shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+                variant="primary"
+                loading={savingSystem}
+                loadingText="Menyimpan..."
+                className="h-9 px-4 text-body-sm"
               >
                 Simpan Pengaturan
-              </button>
+              </LoadingButton>
             </div>
           </div>
 

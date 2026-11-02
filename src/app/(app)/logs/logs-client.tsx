@@ -1,115 +1,84 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTransition } from "react";
 import { Icon } from "@/app/icons";
 import { EmptyState } from "../states";
-import {
-  MOCK_ACTIVITY_LOGS,
-  type MockActivityLog,
-} from "@/lib/mock-logs";
+import type { ActivityLogItem } from "@/db/queries/logs";
 
 export interface LogsClientProps {
-  userRole?: "ADMIN" | "SUPER_ADMIN";
-  userDivisionName?: string;
+  userRole: "ADMIN" | "SUPER_ADMIN";
+  userDivisionName: string;
+  /** Filter aktif dari URL; sumbernya server agar layar tetap akurat. */
+  filters: {
+    q: string;
+    aksi: string;
+    entitas: string;
+    periode: string;
+  };
+  items: ActivityLogItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  actionOptions: { id: string; label: string }[];
+  entityOptions: { id: string; label: string }[];
 }
 
+const PERIODE_OPTIONS: { value: string; label: string }[] = [
+  { value: "", label: "Periode: semua" },
+  { value: "7", label: "Periode: 7 hari" },
+  { value: "30", label: "Periode: 30 hari" },
+  { value: "90", label: "Periode: 90 hari" },
+];
+
 export default function LogsClient({
-  userRole = "ADMIN",
-  userDivisionName = "Hukum & Sengketa",
+  userRole,
+  userDivisionName,
+  filters,
+  items,
+  total,
+  page,
+  pageSize,
+  totalPages,
+  actionOptions,
+  entityOptions,
 }: LogsClientProps) {
-  const [selectedActor, setSelectedActor] = useState("semua");
-  const [selectedAction, setSelectedAction] = useState("semua");
-  const [selectedEntity, setSelectedEntity] = useState("semua");
-  const [selectedPeriod, setSelectedPeriod] = useState<number | "semua">("semua");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
-
-  // Filter log aktivitas
-  const filteredLogs: MockActivityLog[] = useMemo(() => {
-    return MOCK_ACTIVITY_LOGS.filter((log) => {
-      // Scope divisi untuk Admin Divisi
-      if (userRole !== "SUPER_ADMIN") {
-        if (
-          log.divisionName.toLowerCase() !== userDivisionName.toLowerCase() &&
-          log.actorRole !== "Super Admin"
-        ) {
-          return false;
-        }
-      }
-
-      // Filter Pencarian kata kunci
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchSummary = log.summary.toLowerCase().includes(q);
-        const matchActor = log.actorName.toLowerCase().includes(q);
-        const matchAction = log.actionCode.toLowerCase().includes(q);
-        const matchEntity = log.entityId.toLowerCase().includes(q);
-        if (!matchSummary && !matchActor && !matchAction && !matchEntity) {
-          return false;
-        }
-      }
-
-      // Filter Aktor
-      if (selectedActor !== "semua") {
-        if (selectedActor === "admin" && !log.actorRole.includes("Admin Divisi")) return false;
-        if (selectedActor === "staf" && !log.actorRole.includes("Staf")) return false;
-        if (selectedActor === "super_admin" && !log.actorRole.includes("Super Admin")) return false;
-      }
-
-      // Filter Aksi
-      if (selectedAction !== "semua" && log.actionCode !== selectedAction) {
-        return false;
-      }
-
-      // Filter Entitas
-      if (selectedEntity !== "semua" && log.entityType !== selectedEntity) {
-        return false;
-      }
-
-      // Filter Rentang Periode
-      if (selectedPeriod !== "semua" && log.daysAgo > selectedPeriod) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [
-    userRole,
-    userDivisionName,
-    searchQuery,
-    selectedActor,
-    selectedAction,
-    selectedEntity,
-    selectedPeriod,
-  ]);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   const hasActiveFilters = Boolean(
-    searchQuery.trim() ||
-      selectedActor !== "semua" ||
-      selectedAction !== "semua" ||
-      selectedEntity !== "semua" ||
-      selectedPeriod !== "semua",
+    filters.q || filters.aksi || filters.entitas || filters.periode,
   );
 
-  const resetFilters = () => {
-    setSearchQuery("");
-    setSelectedActor("semua");
-    setSelectedAction("semua");
-    setSelectedEntity("semua");
-    setSelectedPeriod("semua");
-    setCurrentPage(1);
-  };
+  function updateParams(updates: Record<string, string | null>) {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === null || value === "") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    }
+    // Filter baru selalu mulai dari halaman pertama.
+    params.delete("page");
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
+  }
 
-  const totalLogs = filteredLogs.length;
-  const totalPages = Math.max(1, Math.ceil(totalLogs / pageSize));
-  const paginatedLogs = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredLogs.slice(start, start + pageSize);
-  }, [filteredLogs, currentPage, pageSize]);
+  function goToPage(pageNum: number) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", String(pageNum));
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
+  }
 
-  const startRecord = totalLogs === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-  const endRecord = Math.min(currentPage * pageSize, totalLogs);
+  const startRecord = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord = Math.min(page * pageSize, total);
 
   return (
     <div className="flex flex-col gap-6">
@@ -117,112 +86,101 @@ export default function LogsClient({
       <div>
         <h1 className="text-h1 font-semibold text-ink">Log Aktivitas</h1>
         <p className="mt-1 text-body text-ink-3">
-          Rekam jejak audit trail seluruh operasi data dan mutasi status di sistem.
+          {userRole === "SUPER_ADMIN"
+            ? "Rekam jejak audit trail seluruh operasi data dan mutasi status di sistem."
+            : `Rekam jejak audit trail divisi ${userDivisionName}, termasuk aksi Super Admin yang menyentuh divisi ini.`}
         </p>
       </div>
 
       {/* Banner Immutability Log Sesuai Wireframe L15 */}
       <div className="rounded-lg border border-border bg-surface-sunken p-3 text-body-sm text-ink-2">
         <p>
-          Log tidak dapat diubah atau dihapus lewat antarmuka. Hanya Admin divisi dan Super Admin yang dapat membukanya.
+          Log tidak dapat diubah atau dihapus lewat antarmuka. Hanya Admin divisi dan
+          Super Admin yang dapat membukanya.
         </p>
       </div>
 
       {/* Baris Filter Audit Trail */}
-      <div className="card p-3 flex flex-wrap items-center gap-3 bg-surface">
+      <div
+        className={`card p-3 flex flex-wrap items-center gap-3 bg-surface transition-opacity ${
+          isPending ? "opacity-70" : "opacity-100"
+        }`}
+      >
         {/* Kotak Cari Cepat */}
-        <div className="relative flex-1 min-w-[200px] tablet:max-w-[240px]">
+        <div className="relative flex-1 min-w-[200px] tablet:max-w-[260px]">
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3">
             <Icon name="cari" size={15} />
           </span>
           <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
+            type="search"
+            defaultValue={filters.q}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                updateParams({ q: e.currentTarget.value.trim() || null });
+              }
             }}
+            onBlur={(e) => {
+              if (e.currentTarget.value.trim() !== filters.q) {
+                updateParams({ q: e.currentTarget.value.trim() || null });
+              }
+            }}
+            aria-label="Cari kode aksi, entitas, aktor, atau isi catatan"
             placeholder="Cari log atau nomor..."
-            className="h-8 w-full rounded-md border border-border bg-surface pl-8 pr-3 text-body-sm text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+            className="h-9 w-full rounded-md border border-border-strong bg-surface pl-8 pr-3 text-body-sm text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
           />
         </div>
 
-        {/* Pemilih Aktor */}
+        {/* Pemilih Kelas Aksi */}
         <select
-          value={selectedActor}
-          onChange={(e) => {
-            setSelectedActor(e.target.value);
-            setCurrentPage(1);
-          }}
-          aria-label="Filter aktor log"
-          className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+          value={filters.aksi}
+          onChange={(e) => updateParams({ aksi: e.target.value || null })}
+          aria-label="Filter kelas aksi log"
+          className="h-9 rounded-md border border-border-strong bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
         >
-          <option value="semua">Aktor: semua</option>
-          <option value="admin">Admin Divisi</option>
-          <option value="staf">Staf Pelaksana</option>
-          <option value="super_admin">Super Admin</option>
-        </select>
-
-        {/* Pemilih Aksi */}
-        <select
-          value={selectedAction}
-          onChange={(e) => {
-            setSelectedAction(e.target.value);
-            setCurrentPage(1);
-          }}
-          aria-label="Filter aksi log"
-          className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
-        >
-          <option value="semua">Aksi: semua</option>
-          <option value="submission.created">submission.created</option>
-          <option value="due_date.extended">due_date.extended</option>
-          <option value="assignment.reviewed">assignment.reviewed</option>
-          <option value="task.created">task.created</option>
-          <option value="task.cancelled">task.cancelled</option>
-          <option value="user.division_changed">user.division_changed</option>
-          <option value="session.login">session.login</option>
+          <option value="">Aksi: semua</option>
+          {actionOptions.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.label}
+            </option>
+          ))}
         </select>
 
         {/* Pemilih Entitas */}
         <select
-          value={selectedEntity}
-          onChange={(e) => {
-            setSelectedEntity(e.target.value);
-            setCurrentPage(1);
-          }}
+          value={filters.entitas}
+          onChange={(e) => updateParams({ entitas: e.target.value || null })}
           aria-label="Filter entitas log"
-          className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+          className="h-9 rounded-md border border-border-strong bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
         >
-          <option value="semua">Entitas: semua</option>
-          <option value="Penugasan">Penugasan</option>
-          <option value="Tugas">Tugas</option>
-          <option value="Pengguna">Pengguna</option>
-          <option value="Sesi">Sesi</option>
+          <option value="">Entitas: semua</option>
+          {entityOptions.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.label}
+            </option>
+          ))}
         </select>
 
         {/* Pemilih Periode */}
         <select
-          value={String(selectedPeriod)}
-          onChange={(e) => {
-            const val = e.target.value;
-            setSelectedPeriod(val === "semua" ? "semua" : Number(val));
-            setCurrentPage(1);
-          }}
+          value={filters.periode}
+          onChange={(e) => updateParams({ periode: e.target.value || null })}
           aria-label="Filter periode log"
-          className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+          className="h-9 rounded-md border border-border-strong bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
         >
-          <option value="semua">Periode: semua</option>
-          <option value="7">Periode: 7 hari</option>
-          <option value="30">Periode: 30 hari</option>
-          <option value="90">Periode: 90 hari</option>
+          {PERIODE_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
 
         {/* Tombol Hapus Filter */}
         {hasActiveFilters ? (
           <button
             type="button"
-            onClick={resetFilters}
-            className="ml-auto text-body-sm font-semibold text-primary hover:underline"
+            onClick={() => updateParams({ q: null, aksi: null, entitas: null, periode: null })}
+            className="ml-auto text-body-sm font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
           >
             Hapus filter
           </button>
@@ -230,7 +188,7 @@ export default function LogsClient({
       </div>
 
       {/* Tabel Log Aktivitas */}
-      {totalLogs === 0 ? (
+      {total === 0 ? (
         <EmptyState
           title={
             hasActiveFilters
@@ -239,10 +197,14 @@ export default function LogsClient({
           }
           description={
             hasActiveFilters
-              ? "Hapus filter untuk melihat rekaman audit trail sistem lainnya."
+              ? "Hapus filter untuk melihat rekaman audit trail lainnya."
               : "Setiap aktivitas penugasan dan perubahan data akan tercatat otomatis di sini."
           }
-          reason="rekaman aktivitas ada, namun tersaring habis oleh kombinasi filter yang aktif."
+          reason={
+            hasActiveFilters
+              ? "rekaman aktivitas ada, tetapi tersaring habis oleh kombinasi filter aktif."
+              : "belum ada aktivitas yang menulis riwayat pada rentang ini."
+          }
           illustration="rak"
           action={
             hasActiveFilters
@@ -250,13 +212,14 @@ export default function LogsClient({
                   type: "button",
                   label: "Hapus filter",
                   variant: "secondary",
-                  onClick: resetFilters,
+                  onClick: () =>
+                    updateParams({ q: null, aksi: null, entitas: null, periode: null }),
                 }
               : undefined
           }
         />
       ) : (
-        <div className="card overflow-hidden">
+        <div className={`card overflow-hidden ${isPending ? "opacity-70" : ""}`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-body">
               <thead>
@@ -279,10 +242,10 @@ export default function LogsClient({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {paginatedLogs.map((log) => (
+                {items.map((log) => (
                   <tr key={log.id} className="hover:bg-neutral-surface/40 transition-colors">
-                    {/* Kolom 1: Waktu */}
-                    <td className="px-4 py-3.5 whitespace-nowrap text-body-sm text-ink-2">
+                    {/* Kolom 1: Waktu WIB */}
+                    <td className="px-4 py-3.5 whitespace-nowrap text-body text-ink-2">
                       {log.timestampFormatted}
                     </td>
 
@@ -292,8 +255,8 @@ export default function LogsClient({
                         <span className="font-semibold text-ink text-body-sm">
                           {log.actorName}
                         </span>
-                        <span className="text-[11px] text-ink-3">
-                          {log.actorRole}
+                        <span className="text-body-sm text-ink-3">
+                          {log.actorRoleLabel}
                         </span>
                       </div>
                     </td>
@@ -309,9 +272,9 @@ export default function LogsClient({
                     <td className="px-4 py-3.5">
                       <div className="flex flex-col">
                         <span className="text-body-sm text-ink font-medium">
-                          {log.entityType}
+                          {log.entityLabel}
                         </span>
-                        <span className="font-mono text-[11px] text-ink-3">
+                        <span className="font-mono text-body-sm text-ink-3 break-all">
                           {log.entityId}
                         </span>
                       </div>
@@ -320,11 +283,9 @@ export default function LogsClient({
                     {/* Kolom 5: Ringkasan Perubahan */}
                     <td className="px-4 py-3.5">
                       <div className="flex flex-col">
-                        <span className="text-body-sm text-ink">
-                          {log.summary}
-                        </span>
+                        <span className="text-body-sm text-ink">{log.summary}</span>
                         {log.detailNote ? (
-                          <span className="text-[11px] text-ink-3 mt-0.5">
+                          <span className="text-body-sm text-ink-3 mt-0.5">
                             {log.detailNote}
                           </span>
                         ) : null}
@@ -339,7 +300,7 @@ export default function LogsClient({
           {/* Baris Informasi Paginasi & Edukasi Audit Trail */}
           <div className="flex flex-col gap-3 border-t border-border p-4 tablet:flex-row tablet:items-center tablet:justify-between text-body-sm text-ink-3">
             <span>
-              Menampilkan {startRecord} sampai {endRecord} dari {totalLogs} aktivitas
+              Menampilkan {startRecord} sampai {endRecord} dari {total} aktivitas
             </span>
 
             {totalPages > 1 ? (
@@ -348,9 +309,10 @@ export default function LogsClient({
                   <button
                     key={pg}
                     type="button"
-                    onClick={() => setCurrentPage(pg)}
-                    className={`flex h-7 w-7 items-center justify-center rounded-md border text-body-sm font-semibold transition-colors ${
-                      pg === currentPage
+                    onClick={() => goToPage(pg)}
+                    aria-current={pg === page ? "page" : undefined}
+                    className={`flex h-8 w-8 items-center justify-center rounded-md border text-body-sm font-semibold transition-colors ${
+                      pg === page
                         ? "border-primary bg-primary text-on-dark"
                         : "border-border bg-surface text-ink hover:bg-neutral-surface"
                     }`}
@@ -366,7 +328,8 @@ export default function LogsClient({
 
       {/* Catatan Kaki Integritas Audit Trail */}
       <p className="text-body-sm text-ink-3">
-        Nilai sebelum dan sesudah disimpan, sehingga perubahan dapat diperiksa tanpa membuka data aslinya.
+        Nilai sebelum dan sesudah disimpan, sehingga perubahan dapat diperiksa tanpa
+        membuka data aslinya.
       </p>
     </div>
   );

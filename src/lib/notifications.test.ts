@@ -19,6 +19,9 @@ describe("notificationTitle", () => {
     expect(notificationTitle("DUE_SOON", "Dokumen D")).toBe(
       "Tenggat dekat: Dokumen D",
     );
+    expect(notificationTitle("TASK_DUE_EXTENDED", "Dokumen E")).toBe(
+      "Tenggat diperpanjang: Dokumen E",
+    );
   });
 });
 
@@ -29,6 +32,7 @@ describe("notificationTone", () => {
     expect(notificationTone("SUBMISSION_RECEIVED")).toBe("warning");
     expect(notificationTone("TASK_CANCELLED")).toBe("neutral");
     expect(notificationTone("TASK_ASSIGNED")).toBeNull();
+    expect(notificationTone("TASK_DUE_EXTENDED")).toBe("warning");
   });
 });
 

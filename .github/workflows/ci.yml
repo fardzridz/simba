@@ -3,9 +3,28 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
+  # Jalur manual untuk deploy ulang tanpa dorongan baru (mis. balik config).
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Lingkungan yang dideploy manual"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
 
 # Runner Linux: build/deploy OpenNext tidak dijamin di Windows (§9.8).
+#
+# Rahasia yang dibutuhkan job deploy (atur per environment di GitHub):
+#   CLOUDFLARE_API_TOKEN  : edit Workers, D1, dan R2
+#   CLOUDFLARE_ACCOUNT_ID : id akun Cloudflare
+#
+# Aktifkan required reviewer pada environment `production` supaya job deploy
+# produksi meminta persetujuan sebelum jalan (§9.9).
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -42,3 +61,81 @@ jobs:
 
       - name: Build worker (OpenNext)
         run: npx opennextjs-cloudflare build
+
+  deploy-staging:
+    name: Deploy staging
+    runs-on: ubuntu-latest
+    needs: verify
+    if: >-
+      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+      (github.event_name == 'workflow_dispatch' && inputs.target == 'staging')
+    environment: staging
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Migrasi D1 staging
+        run: npx wrangler d1 migrations apply penugasan-db-staging --remote --env staging
+
+      - name: Build worker (OpenNext)
+        run: npx opennextjs-cloudflare build
+
+      - name: Deploy worker staging
+        run: npx wrangler deploy --env staging
+
+  deploy-production:
+    name: Deploy produksi
+    runs-on: ubuntu-latest
+    needs: verify
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && inputs.target == 'production')
+    environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cadangkan D1 produksi sebelum migrasi
+        run: |
+          mkdir -p backup
+          STAMP=$(date -u +%Y%m%d-%H%M%S)
+          npx wrangler d1 export penugasan-db --remote --output=backup/pre-migrate-$STAMP.sql
+          npx wrangler r2 object put penugasan-backups/d1/pre-migrate-$STAMP.sql --file=backup/pre-migrate-$STAMP.sql
+
+      - name: Migrasi D1 produksi
+        run: npx wrangler d1 migrations apply penugasan-db --remote --env production
+
+      - name: Build worker (OpenNext)
+        run: npx opennextjs-cloudflare build
+
+      - name: Deploy worker produksi
+        run: npx wrangler deploy --env production
+
+      - name: Pengingat pasca deploy (§9.9)
+        run: echo "Cek /api/health, satu siklus cron pengiriman, dan catat bookmark Time Travel hasil migrasi."

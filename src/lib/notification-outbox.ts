@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import {
   notificationDeliveries,
   notificationPreferences,
@@ -138,7 +138,12 @@ export function buildNotificationBatch(
     mutations.push(
       db
         .insert(notificationDeliveries)
-        .values(deliveries.slice(index, index + DELIVERY_INSERT_CHUNK)),
+        .values(deliveries.slice(index, index + DELIVERY_INSERT_CHUNK))
+        /** Satu notifikasi satu kanal; masukkan ulang memperbarui baris lama, bukan dobel (§6.2). */
+        .onConflictDoUpdate({
+          target: [notificationDeliveries.notificationId, notificationDeliveries.channel],
+          set: { nextAttemptAt: sql`excluded.next_attempt_at` },
+        }),
     );
   }
 

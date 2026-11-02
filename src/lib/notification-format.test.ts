@@ -48,10 +48,12 @@ describe("formatNotificationBlock", () => {
         "SUBMISSION_RECEIVED",
         "TASK_CANCELLED",
         "DUE_SOON",
+        "TASK_DUE_EXTENDED",
       ] as NotificationType[]
     ).map((type) => block(type).headline);
     expect(new Set(headlines).size).toBe(headlines.length);
     expect(block("SUBMISSION_RECEIVED").headline).toBe("Pengumpulan masuk");
+    expect(block("TASK_DUE_EXTENDED").headline).toBe("Tenggat diperpanjang");
   });
 
   it("melewati baris yang kosong tanpa menyisakan spasi", () => {

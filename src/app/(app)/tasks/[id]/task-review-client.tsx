@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Icon } from "@/app/icons";
 import StatusChip from "../../status-chip";
 import { LoadingButton } from "../../loading-state";
-import { cancelTask, reviewSubmission } from "../actions";
-import { CancelTaskModal } from "./task-admin-dialogs";
+import { cancelTask, extendDeadline, reviewSubmission } from "../actions";
+import { CancelTaskModal, ExtendDeadlineModal } from "./task-admin-dialogs";
 import type { TaskDetail } from "@/db/queries/task-detail";
 
 export interface TaskReviewClientProps {
@@ -21,6 +21,7 @@ export default function TaskReviewClient({
   const [task, setTask] = useState<TaskDetail>(initialTask);
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
   const [revisionNote, setRevisionNote] = useState("");
   const [pendingDecision, setPendingDecision] = useState<
     "APPROVED" | "REVISION_REQUIRED" | null
@@ -74,6 +75,22 @@ export default function TaskReviewClient({
     return result;
   };
 
+  const handleExtendDeadline = async (newDueDate: string, reason: string) => {
+    const result = await extendDeadline({
+      taskId: task.id,
+      newDueDate,
+      reason,
+    });
+    if (result.error) return result;
+
+    // Text di bawah hanya jembatan; data tunggakan dimuat ulang dari server.
+    setSuccessBanner(
+      `Tenggat ${task.taskNumber} diperpanjang. Perubahan tercatat di log aktivitas.`,
+    );
+    window.location.reload();
+    return result;
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Tautan Navigasi Kembali */}
@@ -118,6 +135,14 @@ export default function TaskReviewClient({
           {/* Tombol Aksi Admin Kepala Tugas */}
           {!isSuperAdmin && task.status !== "DIBATALKAN" && task.status !== "SELESAI" ? (
             <div className="flex flex-wrap items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsExtendModalOpen(true)}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-border-strong bg-surface px-3 text-body-sm font-semibold text-ink hover:bg-neutral-surface transition-colors"
+              >
+                <Icon name="jam" size={14} />
+                Perpanjang Tenggat
+              </button>
               <button
                 type="button"
                 onClick={() => setIsCancelModalOpen(true)}
@@ -454,6 +479,17 @@ export default function TaskReviewClient({
         taskTitle={task.title}
         onCancelTask={handleCancelTask}
       />
+
+      {/* Dialog Perpanjang Tenggat */}
+      {!isSuperAdmin && task.status !== "SELESAI" && task.status !== "DIBATALKAN" ? (
+        <ExtendDeadlineModal
+          isOpen={isExtendModalOpen}
+          onClose={() => setIsExtendModalOpen(false)}
+          taskNumber={task.taskNumber}
+          currentDueDateFormatted={task.dueAtFormatted}
+          onExtend={handleExtendDeadline}
+        />
+      ) : null}
     </div>
   );
 }

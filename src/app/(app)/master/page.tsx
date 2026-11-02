@@ -1,5 +1,7 @@
+import { getMasterCategories, getMasterDivisions, getMasterUsers } from "@/db/queries/master";
+import { appContext } from "@/env";
 import { requireActor } from "@/lib/auth/current";
-import { resolveScope } from "@/lib/auth/scope";
+import { canManageMasterData, resolveScope } from "@/lib/auth/scope";
 import ForbiddenState from "../forbidden-state";
 import MasterClient from "./master-client";
 
@@ -10,7 +12,7 @@ export default async function MasterPage() {
   const scope = resolveScope(actor);
 
   // Hanya Super Admin yang memiliki hak akses kelola data master
-  if (scope.role !== "SUPER_ADMIN") {
+  if (!canManageMasterData(scope)) {
     return (
       <ForbiddenState
         title="Akses Kelola Master Ditolak"
@@ -22,5 +24,19 @@ export default async function MasterPage() {
     );
   }
 
-  return <MasterClient />;
+  const { db } = appContext();
+  const [users, divisions, categories] = await Promise.all([
+    getMasterUsers(db, scope),
+    getMasterDivisions(db, scope),
+    getMasterCategories(db, scope),
+  ]);
+
+  return (
+    <MasterClient
+      currentUserId={actor.id}
+      users={users}
+      divisions={divisions}
+      categories={categories}
+    />
+  );
 }

@@ -88,4 +88,28 @@ describe("sweepPendingAttachments", () => {
   it("memakai ambang 24 jam", () => {
     expect(PENDING_TTL_SECONDS).toBe(86_400);
   });
+
+  it("membuang submission yatim PENDING tanpa attachment", async () => {
+    const { db, deleteAttachment, deleteSubmission } = makeDb(
+      [],
+      [{ id: "sub_yatim" }],
+    );
+    const bucket = { delete: vi.fn(async () => undefined) };
+
+    const summary = await sweepPendingAttachments(
+      { BUCKET: bucket } as never,
+      db as never,
+      1_800_000_000,
+    );
+
+    expect(bucket.delete).not.toHaveBeenCalled();
+    expect(deleteAttachment).not.toHaveBeenCalled();
+    expect(deleteSubmission).toHaveBeenCalledTimes(1);
+    expect(summary).toMatchObject({
+      attachmentsDeleted: 0,
+      objectsDeleted: 0,
+      objectsFailed: 0,
+      submissionsDeleted: 1,
+    });
+  });
 });

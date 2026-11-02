@@ -3,7 +3,17 @@
 import { useEffect, useId, useState } from "react";
 import { Icon } from "@/app/icons";
 import { LoadingButton } from "../loading-state";
-import type { MasterUser, MasterDivision, MasterCategory } from "@/lib/mock-master";
+import type { MasterActionResult } from "./actions";
+import type { MasterUser, MasterDivision, MasterCategory } from "@/db/queries/master";
+
+/** Nilai formulir pengguna yang dikirim ke aksi server. */
+export type UserFormValues = {
+  fullName: string;
+  username: string;
+  email: string;
+  divisionId: string;
+  role: "USER" | "ADMIN" | "SUPER_ADMIN";
+};
 
 // ==========================================
 // 1. DIALOG RESET KATA SANDI (Wireframe L17)
@@ -12,7 +22,7 @@ export interface ResetPasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: MasterUser | null;
-  onConfirm: (username: string) => void;
+  onConfirm: () => Promise<MasterActionResult>;
 }
 
 export function ResetPasswordModal({
@@ -22,11 +32,13 @@ export function ResetPasswordModal({
   onConfirm,
 }: ResetPasswordModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const titleId = useId();
 
   useEffect(() => {
     if (isOpen) {
       setIsSubmitting(false);
+      setError(null);
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -47,13 +59,20 @@ export function ResetPasswordModal({
 
   if (!isOpen || !user) return null;
 
-  const handleReset = () => {
+  const handleReset = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      onConfirm(user.username);
-      setIsSubmitting(false);
+    setError(null);
+    try {
+      const result = await onConfirm();
+      if (result?.error) {
+        setError(result.error);
+        setIsSubmitting(false);
+        return;
+      }
       onClose();
-    }, 400);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -93,12 +112,22 @@ export function ResetPasswordModal({
             ({user.fullName})
           </p>
           <p className="text-ink">
-            Sesi pengguna akan diakhiri setelah kata sandi direset.
+            Kata sandi akun ini kembali ke nilai awal{" "}
+            <span className="font-mono font-semibold">Bawaslu#2026</span>.
+          </p>
+          <p className="text-ink">
+            Sesi yang sedang berjalan langsung dicabut setelah reset.
           </p>
           <p className="text-ink-3 text-[11px]">
-            Tindakan ini tercatat di log aktivitas dan kata sandi baru sementara akan dikirimkan kepada pengguna.
+            Teruskan kata sandi awal kepada pengguna melalui kanal lain agar ia
+            dapat masuk lalu menggantinya dari menu Akun. Tindakan ini tercatat
+            di log aktivitas.
           </p>
         </div>
+
+        {error ? (
+          <p className="text-body-sm font-medium text-error">{error}</p>
+        ) : null}
 
         <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
           <button
@@ -131,7 +160,7 @@ export interface DeactivateUserModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: MasterUser | null;
-  onConfirm: (userId: string, reason: string) => void;
+  onConfirm: (reason: string) => Promise<MasterActionResult>;
 }
 
 export function DeactivateUserModal({
@@ -161,7 +190,7 @@ export function DeactivateUserModal({
 
   if (!isOpen || !user) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reason.trim()) {
       setError("Alasan penonaktifan akun wajib diisi untuk rekam audit.");
@@ -169,11 +198,18 @@ export function DeactivateUserModal({
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      onConfirm(user.id, reason);
-      setIsSubmitting(false);
+    setError(null);
+    try {
+      const result = await onConfirm(reason);
+      if (result?.error) {
+        setError(result.error);
+        setIsSubmitting(false);
+        return;
+      }
       onClose();
-    }, 400);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -264,25 +300,32 @@ export interface UserFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: MasterUser | null;
-  onSave: (userData: Partial<MasterUser>) => void;
+  divisions: MasterDivision[];
+  onSave: (values: UserFormValues) => Promise<MasterActionResult>;
 }
 
 export function UserFormModal({
   isOpen,
   onClose,
   user,
+  divisions,
   onSave,
 }: UserFormModalProps) {
   const isEdit = Boolean(user);
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [divisionName, setDivisionName] = useState("Hukum & Sengketa");
+  const [divisionId, setDivisionId] = useState("");
   const [role, setRole] = useState<"USER" | "ADMIN" | "SUPER_ADMIN">("USER");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const titleId = useId();
+
+  // Pilihan divisi: aktif dulu, divisi milik akun yang diedit tetap tampil bila nonaktif.
+  const divisionOptions = divisions.filter(
+    (d) => d.isActive || d.id === user?.divisionId,
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -290,13 +333,13 @@ export function UserFormModal({
         setFullName(user.fullName);
         setUsername(user.username);
         setEmail(user.email);
-        setDivisionName(user.divisionName);
+        setDivisionId(user.divisionId);
         setRole(user.role);
       } else {
         setFullName("");
         setUsername("");
         setEmail("");
-        setDivisionName("Hukum & Sengketa");
+        setDivisionId("");
         setRole("USER");
       }
       setError(null);
@@ -312,30 +355,26 @@ export function UserFormModal({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !username.trim() || !email.trim()) {
+    if (!fullName.trim() || !username.trim() || !email.trim() || !divisionId) {
       setError("Seluruh kolom wajib diisi.");
       return;
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      onSave({
-        id: user?.id ?? `usr_new_${Date.now()}`,
-        fullName,
-        username,
-        email,
-        divisionName,
-        divisionCode: divisionName === "Hukum & Sengketa" ? "HUK" : "PGS",
-        role,
-        roleLabel: role === "SUPER_ADMIN" ? "Super Admin" : role === "ADMIN" ? "Admin Divisi" : "Staf",
-        isActive: user?.isActive ?? true,
-        lastLoginFormatted: user?.lastLoginFormatted ?? "Belum pernah",
-      });
-      setIsSubmitting(false);
+    setError(null);
+    try {
+      const result = await onSave({ fullName, username, email, divisionId, role });
+      if (result?.error) {
+        setError(result.error);
+        setIsSubmitting(false);
+        return;
+      }
       onClose();
-    }, 400);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -406,17 +445,18 @@ export function UserFormModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-body-sm font-medium text-ink">Divisi</label>
+              <label className="text-body-sm font-medium text-ink">Divisi *</label>
               <select
-                value={divisionName}
-                onChange={(e) => setDivisionName(e.target.value)}
+                value={divisionId}
+                onChange={(e) => setDivisionId(e.target.value)}
                 className="h-9 w-full rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
               >
-                <option value="Hukum & Sengketa">Hukum &amp; Sengketa</option>
-                <option value="Pengawasan">Pengawasan</option>
-                <option value="SDM & Organisasi">SDM &amp; Organisasi</option>
-                <option value="Sekretariat">Sekretariat</option>
-                <option value="Penindakan">Penindakan</option>
+                <option value="">Pilih divisi</option>
+                {divisionOptions.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex flex-col gap-1">
@@ -432,6 +472,19 @@ export function UserFormModal({
               </select>
             </div>
           </div>
+
+          {isEdit ? (
+            <p className="text-body-sm text-ink-3">
+              Perubahan data akun (nama, surel, divisi, peran) tidak mengubah
+              kata sandi milik pengguna.
+            </p>
+          ) : (
+            <div className="rounded-md border border-border bg-neutral-surface p-3 text-body-sm text-ink-2">
+              Kata sandi awal akun baru otomatis{" "}
+              <span className="font-mono font-semibold text-ink">Bawaslu#2026</span>.
+              Pengguna wajib menggantinya setelah masuk dari menu Akun.
+            </div>
+          )}
 
           {error ? <p className="text-body-sm font-medium text-error">{error}</p> : null}
 
@@ -466,7 +519,7 @@ export interface DivisionFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   division: MasterDivision | null;
-  onSave: (divisionData: Partial<MasterDivision>) => void;
+  onSave: (values: { name: string; code: string }) => Promise<MasterActionResult>;
 }
 
 export function DivisionFormModal({
@@ -505,7 +558,7 @@ export function DivisionFormModal({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !code.trim()) {
       setError("Nama dan kode divisi wajib diisi.");
@@ -513,18 +566,18 @@ export function DivisionFormModal({
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      onSave({
-        id: division?.id ?? `div_new_${Date.now()}`,
-        name,
-        code: code.toUpperCase(),
-        memberCount: division?.memberCount ?? 0,
-        isActive: division?.isActive ?? true,
-        createdAtFormatted: division?.createdAtFormatted ?? "Hari ini",
-      });
-      setIsSubmitting(false);
+    setError(null);
+    try {
+      const result = await onSave({ name, code });
+      if (result?.error) {
+        setError(result.error);
+        setIsSubmitting(false);
+        return;
+      }
       onClose();
-    }, 400);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -570,7 +623,7 @@ export function DivisionFormModal({
 
           <div className="flex flex-col gap-1">
             <label className="text-body-sm font-medium text-ink">
-              Kode Divisi (3 huruf mono) *
+              Kode Divisi (2 sampai 4 huruf kapital) *
             </label>
             <input
               type="text"
@@ -619,7 +672,7 @@ export interface CategoryFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   category: MasterCategory | null;
-  onSave: (categoryData: Partial<MasterCategory>) => void;
+  onSave: (values: { name: string }) => Promise<MasterActionResult>;
 }
 
 export function CategoryFormModal({
@@ -655,7 +708,7 @@ export function CategoryFormModal({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       setError("Nama kategori wajib diisi.");
@@ -663,17 +716,18 @@ export function CategoryFormModal({
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      onSave({
-        id: category?.id ?? `cat_new_${Date.now()}`,
-        name,
-        taskCount: category?.taskCount ?? 0,
-        isActive: category?.isActive ?? true,
-        createdAtFormatted: category?.createdAtFormatted ?? "Hari ini",
-      });
-      setIsSubmitting(false);
+    setError(null);
+    try {
+      const result = await onSave({ name });
+      if (result?.error) {
+        setError(result.error);
+        setIsSubmitting(false);
+        return;
+      }
       onClose();
-    }, 400);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

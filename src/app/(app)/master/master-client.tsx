@@ -1,32 +1,47 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Icon } from "@/app/icons";
+import type { MasterUser, MasterDivision, MasterCategory } from "@/db/queries/master";
 import {
-  MOCK_MASTER_USERS,
-  MOCK_MASTER_DIVISIONS,
-  MOCK_MASTER_CATEGORIES,
-  type MasterUser,
-  type MasterDivision,
-  type MasterCategory,
-} from "@/lib/mock-master";
+  createUser,
+  resetPassword,
+  saveCategory,
+  saveDivision,
+  setCategoryActive,
+  setDivisionActive,
+  setUserActive,
+  updateUser,
+  type MasterActionResult,
+} from "./actions";
 import {
   ResetPasswordModal,
   DeactivateUserModal,
   UserFormModal,
   DivisionFormModal,
   CategoryFormModal,
+  type UserFormValues,
 } from "./master-dialogs";
 
 export type MasterTab = "pengguna" | "divisi" | "kategori";
 
-export default function MasterClient() {
-  const [activeTab, setActiveTab] = useState<MasterTab>("pengguna");
+export type MasterClientProps = {
+  currentUserId: string;
+  users: MasterUser[];
+  divisions: MasterDivision[];
+  categories: MasterCategory[];
+};
 
-  // State Data Master (Murni di frontend)
-  const [users, setUsers] = useState<MasterUser[]>(MOCK_MASTER_USERS);
-  const [divisions, setDivisions] = useState<MasterDivision[]>(MOCK_MASTER_DIVISIONS);
-  const [categories, setCategories] = useState<MasterCategory[]>(MOCK_MASTER_CATEGORIES);
+export default function MasterClient({
+  currentUserId,
+  users,
+  divisions,
+  categories,
+}: MasterClientProps) {
+  const router = useRouter();
+
+  const [activeTab, setActiveTab] = useState<MasterTab>("pengguna");
 
   // Filter State Pengguna
   const [userQuery, setUserQuery] = useState("");
@@ -75,7 +90,7 @@ export default function MasterClient() {
         const isAktif = selectedStatus === "aktif";
         if (u.isActive !== isAktif) return false;
       }
-      if (selectedDivision !== "semua" && u.divisionName !== selectedDivision) return false;
+      if (selectedDivision !== "semua" && u.divisionId !== selectedDivision) return false;
       return true;
     });
   }, [users, userQuery, selectedRole, selectedStatus, selectedDivision]);
@@ -102,60 +117,106 @@ export default function MasterClient() {
     });
   }, [categories, categoryQuery]);
 
-  // Aksi Penanganan Pengguna
-  const handleSaveUser = (userData: Partial<MasterUser>) => {
-    if (editTargetUser) {
-      setUsers((prev) =>
-        prev.map((u) => (u.id === editTargetUser.id ? ({ ...u, ...userData } as MasterUser) : u)),
+  // Aksi Pengguna: setiap perubahan disimpan server, tabel menyusul lewat refresh dari server.
+  const handleConfirmResetPassword = async (): Promise<MasterActionResult> => {
+    if (!resetTargetUser) return { error: "Pengguna tidak ditemukan." };
+    const result = await resetPassword(resetTargetUser.id);
+    if (result.success) {
+      showNotification(
+        `Kata sandi @${resetTargetUser.username} kembali ke Bawaslu#2026 dan sesinya langsung dicabut.`,
       );
-      showNotification(`Data pengguna ${userData.fullName} berhasil diperbarui.`);
-    } else {
-      setUsers((prev) => [userData as MasterUser, ...prev]);
-      showNotification(`Pengguna baru ${userData.fullName} (@${userData.username}) berhasil ditambahkan.`);
+      router.refresh();
+    }
+    return result;
+  };
+
+  const handleConfirmDeactivateUser = async (reason: string): Promise<MasterActionResult> => {
+    if (!deactivateTargetUser) return { error: "Pengguna tidak ditemukan." };
+    const result = await setUserActive({ id: deactivateTargetUser.id, isActive: false, reason });
+    if (result.success) {
+      showNotification(`Akun @${deactivateTargetUser.username} dinonaktifkan. Alasan tercatat di log audit.`);
+      router.refresh();
+    }
+    return result;
+  };
+
+  const handleActivateUser = async (user: MasterUser) => {
+    const result = await setUserActive({ id: user.id, isActive: true });
+    if (result.success) {
+      showNotification(`Akun @${user.username} berhasil diaktifkan kembali.`);
+      router.refresh();
+    } else if (result.error) {
+      showNotification(`Gagal: ${result.error}`);
     }
   };
 
-  const handleConfirmResetPassword = (username: string) => {
-    showNotification(`Kata sandi akun @${username} berhasil direset dan sesi aktif diakhiri.`);
-  };
-
-  const handleConfirmDeactivateUser = (userId: string, reason: string) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, isActive: false } : u)),
-    );
-    showNotification(`Akun berhasil dinonaktifkan. Alasan tercatat di log audit: "${reason}".`);
-  };
-
-  const handleActivateUser = (userId: string) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, isActive: true } : u)),
-    );
-    showNotification("Akun pengguna berhasil diaktifkan kembali.");
-  };
-
-  // Aksi Penanganan Divisi
-  const handleSaveDivision = (divData: Partial<MasterDivision>) => {
-    if (editTargetDivision) {
-      setDivisions((prev) =>
-        prev.map((d) => (d.id === editTargetDivision.id ? ({ ...d, ...divData } as MasterDivision) : d)),
+  const handleSaveUser = async (values: UserFormValues): Promise<MasterActionResult> => {
+    const result = editTargetUser
+      ? await updateUser({ id: editTargetUser.id, ...values })
+      : await createUser(values);
+    if (result.success) {
+      showNotification(
+        editTargetUser
+          ? `Data pengguna ${values.fullName} berhasil diperbarui.`
+          : `Pengguna baru @${values.username} dibuat. Kata sandi awal: Bawaslu#2026.`,
       );
-      showNotification(`Divisi ${divData.name} berhasil diperbarui.`);
-    } else {
-      setDivisions((prev) => [...prev, divData as MasterDivision]);
-      showNotification(`Divisi baru ${divData.name} (${divData.code}) berhasil ditambahkan.`);
+      router.refresh();
+    }
+    return result;
+  };
+
+  // Aksi Divisi dan Kategori
+  const handleSaveDivision = async (values: { name: string; code: string }): Promise<MasterActionResult> => {
+    const result = editTargetDivision
+      ? await saveDivision({ id: editTargetDivision.id, ...values })
+      : await saveDivision(values);
+    if (result.success) {
+      showNotification(
+        editTargetDivision
+          ? `Divisi ${values.name} berhasil diperbarui.`
+          : `Divisi baru ${values.name} (${values.code.toUpperCase()}) berhasil ditambahkan.`,
+      );
+      router.refresh();
+    }
+    return result;
+  };
+
+  const handleToggleDivision = async (division: MasterDivision) => {
+    const result = await setDivisionActive({ id: division.id, isActive: !division.isActive });
+    if (result.success) {
+      showNotification(
+        `Divisi ${division.name} ${division.isActive ? "dinonaktifkan" : "diaktifkan kembali"}.`,
+      );
+      router.refresh();
+    } else if (result.error) {
+      showNotification(`Gagal: ${result.error}`);
     }
   };
 
-  // Aksi Penanganan Kategori
-  const handleSaveCategory = (catData: Partial<MasterCategory>) => {
-    if (editTargetCategory) {
-      setCategories((prev) =>
-        prev.map((c) => (c.id === editTargetCategory.id ? ({ ...c, ...catData } as MasterCategory) : c)),
+  const handleSaveCategory = async (values: { name: string }): Promise<MasterActionResult> => {
+    const result = editTargetCategory
+      ? await saveCategory({ id: editTargetCategory.id, ...values })
+      : await saveCategory(values);
+    if (result.success) {
+      showNotification(
+        editTargetCategory
+          ? `Kategori ${values.name} berhasil diperbarui.`
+          : `Kategori baru ${values.name} berhasil ditambahkan.`,
       );
-      showNotification(`Kategori ${catData.name} berhasil diperbarui.`);
-    } else {
-      setCategories((prev) => [...prev, catData as MasterCategory]);
-      showNotification(`Kategori baru ${catData.name} berhasil ditambahkan.`);
+      router.refresh();
+    }
+    return result;
+  };
+
+  const handleToggleCategory = async (category: MasterCategory) => {
+    const result = await setCategoryActive({ id: category.id, isActive: !category.isActive });
+    if (result.success) {
+      showNotification(
+        `Kategori ${category.name} ${category.isActive ? "dinonaktifkan" : "diaktifkan kembali"}.`,
+      );
+      router.refresh();
+    } else if (result.error) {
+      showNotification(`Gagal: ${result.error}`);
     }
   };
 
@@ -273,7 +334,7 @@ export default function MasterClient() {
         </div>
 
         <p className="text-body-sm text-ink-3">
-          48 pengguna, 5 divisi, 8 kategori pada data contoh. Tabel menampilkan akun seed pengembangan.
+          {users.length} pengguna, {divisions.length} divisi, {categories.length} kategori di database.
         </p>
       </div>
 
@@ -327,11 +388,11 @@ export default function MasterClient() {
               className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
             >
               <option value="semua">Divisi: semua</option>
-              <option value="Hukum & Sengketa">Hukum &amp; Sengketa</option>
-              <option value="Pengawasan">Pengawasan</option>
-              <option value="SDM & Organisasi">SDM &amp; Organisasi</option>
-              <option value="Sekretariat">Sekretariat</option>
-              <option value="Penindakan">Penindakan</option>
+              {divisions.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
             </select>
 
             {(userQuery || selectedRole !== "semua" || selectedStatus !== "semua" || selectedDivision !== "semua") ? (
@@ -365,7 +426,13 @@ export default function MasterClient() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredUsers.map((u) => (
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-6 text-center text-body-sm text-ink-3">
+                        0 baris cocok dengan penyaring.
+                      </td>
+                    </tr>
+                  ) : filteredUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-neutral-surface/40 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex flex-col">
@@ -389,42 +456,46 @@ export default function MasterClient() {
                       </td>
                       <td className="px-4 py-3 text-body-sm text-ink-3">{u.lastLoginFormatted}</td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
-                        <div className="inline-flex items-center gap-2.5">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditTargetUser(u);
-                              setIsAddUserOpen(true);
-                            }}
-                            className="text-body-sm font-semibold text-primary hover:underline"
-                          >
-                            Ubah
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setResetTargetUser(u)}
-                            className="text-body-sm font-semibold text-primary hover:underline"
-                          >
-                            Reset
-                          </button>
-                          {u.isActive ? (
+                        {u.id === currentUserId ? (
+                          <span className="text-[11px] text-ink-3">Akun Anda</span>
+                        ) : (
+                          <div className="inline-flex items-center gap-2.5">
                             <button
                               type="button"
-                              onClick={() => setDeactivateTargetUser(u)}
-                              className="text-body-sm font-semibold text-error hover:underline"
+                              onClick={() => {
+                                setEditTargetUser(u);
+                                setIsAddUserOpen(true);
+                              }}
+                              className="text-body-sm font-semibold text-primary hover:underline"
                             >
-                              Nonaktifkan
+                              Ubah
                             </button>
-                          ) : (
                             <button
                               type="button"
-                              onClick={() => handleActivateUser(u.id)}
-                              className="text-body-sm font-semibold text-success hover:underline"
+                              onClick={() => setResetTargetUser(u)}
+                              className="text-body-sm font-semibold text-primary hover:underline"
                             >
-                              Aktifkan
+                              Reset
                             </button>
-                          )}
-                        </div>
+                            {u.isActive ? (
+                              <button
+                                type="button"
+                                onClick={() => setDeactivateTargetUser(u)}
+                                className="text-body-sm font-semibold text-error hover:underline"
+                              >
+                                Nonaktifkan
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleActivateUser(u)}
+                                className="text-body-sm font-semibold text-success hover:underline"
+                              >
+                                Aktifkan
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -433,7 +504,9 @@ export default function MasterClient() {
             </div>
 
             <div className="flex items-center justify-between border-t border-border p-4 text-body-sm text-ink-3">
-              <span>Menampilkan 1 sampai {filteredUsers.length} dari {users.length} pengguna</span>
+              <span>
+                Menampilkan {filteredUsers.length === 0 ? 0 : 1} sampai {filteredUsers.length} dari {users.length} pengguna
+              </span>
             </div>
           </div>
         </div>
@@ -472,7 +545,13 @@ export default function MasterClient() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredDivisions.map((d) => (
+                  {filteredDivisions.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-6 text-center text-body-sm text-ink-3">
+                        0 divisi tampil.
+                      </td>
+                    </tr>
+                  ) : filteredDivisions.map((d) => (
                     <tr key={d.id} className="hover:bg-neutral-surface/40 transition-colors">
                       <td className="px-4 py-3 font-semibold text-ink text-body-sm">{d.name}</td>
                       <td className="px-4 py-3">
@@ -494,16 +573,35 @@ export default function MasterClient() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditTargetDivision(d);
-                            setIsAddDivisionOpen(true);
-                          }}
-                          className="text-body-sm font-semibold text-primary hover:underline"
-                        >
-                          Ubah
-                        </button>
+                        <div className="inline-flex items-center gap-2.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditTargetDivision(d);
+                              setIsAddDivisionOpen(true);
+                            }}
+                            className="text-body-sm font-semibold text-primary hover:underline"
+                          >
+                            Ubah
+                          </button>
+                          {d.isActive ? (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleDivision(d)}
+                              className="text-body-sm font-semibold text-error hover:underline"
+                            >
+                              Nonaktifkan
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleDivision(d)}
+                              className="text-body-sm font-semibold text-success hover:underline"
+                            >
+                              Aktifkan
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -546,7 +644,13 @@ export default function MasterClient() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredCategories.map((c) => (
+                  {filteredCategories.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-6 text-center text-body-sm text-ink-3">
+                        0 kategori tampil.
+                      </td>
+                    </tr>
+                  ) : filteredCategories.map((c) => (
                     <tr key={c.id} className="hover:bg-neutral-surface/40 transition-colors">
                       <td className="px-4 py-3 font-semibold text-ink text-body-sm">{c.name}</td>
                       <td className="px-4 py-3 text-body-sm text-ink-2">{c.taskCount} tugas</td>
@@ -563,16 +667,35 @@ export default function MasterClient() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditTargetCategory(c);
-                            setIsAddCategoryOpen(true);
-                          }}
-                          className="text-body-sm font-semibold text-primary hover:underline"
-                        >
-                          Ubah
-                        </button>
+                        <div className="inline-flex items-center gap-2.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditTargetCategory(c);
+                              setIsAddCategoryOpen(true);
+                            }}
+                            className="text-body-sm font-semibold text-primary hover:underline"
+                          >
+                            Ubah
+                          </button>
+                          {c.isActive ? (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleCategory(c)}
+                              className="text-body-sm font-semibold text-error hover:underline"
+                            >
+                              Nonaktifkan
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleCategory(c)}
+                              className="text-body-sm font-semibold text-success hover:underline"
+                            >
+                              Aktifkan
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -615,6 +738,7 @@ export default function MasterClient() {
           setEditTargetUser(null);
         }}
         user={editTargetUser}
+        divisions={divisions}
         onSave={handleSaveUser}
       />
 

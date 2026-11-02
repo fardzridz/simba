@@ -1,0 +1,530 @@
+"use server";
+
+import { and, eq, ne } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { activityLogs, categories, divisions, users } from "@/db/schema";
+import { appContext } from "@/env";
+import { requireActor } from "@/lib/auth/current";
+import { canManageMasterData, resolveScope } from "@/lib/auth/scope";
+import { INITIAL_ACCOUNT_PASSWORD, hashPassword } from "@/lib/auth/password";
+import { newId } from "@/lib/ids";
+import { nowSeconds } from "@/lib/time";
+
+export type MasterActionResult = {
+  success?: boolean;
+  error?: string;
+};
+
+/** Kolasi galat kunci unik SQLite menjadi pesan yang terbaca. */
+function uniqueViolation(error: unknown): MasterActionResult {
+  const message = error instanceof Error ? error.message : String(error);
+  if (message.includes("UNIQUE") || message.includes("unique")) {
+    return {
+      error: "Nilai sudah dipakai data lain dan wajib unik, ubah lalu simpan kembali.",
+    };
+  }
+  return { error: "Perubahan gagal disimpan, coba beberapa saat lagi." };
+}
+
+async function requireManager() {
+  const actor = await requireActor();
+  const scope = resolveScope(actor);
+  if (!canManageMasterData(scope)) {
+    return {
+      error: { error: "Hanya Super Admin yang dapat mengelola data master." } as MasterActionResult,
+      blocked: true,
+    };
+  }
+  return { actor, error: null as MasterActionResult | null, blocked: false };
+}
+
+type LogRow = typeof activityLogs.$inferInsert;
+
+function logEntry(actorId: string, action: string, entityId: string, prev: unknown, next: unknown, stamp: Date): LogRow {
+  return {
+    id: newId("log"),
+    actorId,
+    action,
+    entityType: "master",
+    entityId,
+    prevValue: prev === null ? null : JSON.stringify(prev),
+    newValue: JSON.stringify(next),
+    createdAt: stamp,
+  };
+}
+
+// ============================================================
+// Pengguna (UC02)
+// ============================================================
+
+const usernameSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(/^[a-z][a-z0-9._-]{2,31}$/, "Nama pengguna memakai huruf kecil, angka, titik, garis bawah atau hubung, 3 sampai 32 karakter.");
+
+const userFieldsSchema = z.object({
+  fullName: z.string().trim().min(1, "Nama lengkap wajib diisi.").max(100, "Nama lengkap maksimal 100 karakter."),
+  username: usernameSchema,
+  email: z.email("Format surel tidak sah.").trim().toLowerCase().max(254),
+  divisionId: z.string().trim().min(1, "Divisi wajib dipilih."),
+  role: z.enum(["USER", "ADMIN", "SUPER_ADMIN"]),
+});
+
+export async function createUser(input: unknown): Promise<MasterActionResult> {
+  const manager = await requireManager();
+  if (manager.blocked || !manager.actor) return manager.error as MasterActionResult;
+
+  const parsed = userFieldsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data pengguna tidak sah." };
+  }
+  const fields = parsed.data;
+
+  // Kategori akun nonaktif tidak pernah dibuat dari nol; akun baru selalu aktif.
+  const passwordHash = await hashPassword(INITIAL_ACCOUNT_PASSWORD);
+  const now = nowSeconds();
+  const stamp = new Date(now * 1000);
+  const userId = newId("user");
+  const { db } = appContext();
+
+  // Divisi target wajib ada dan aktif (FK restrict ditambah pesan yang jelas).
+  const [division] = await db
+    .select({ id: divisions.id, name: divisions.name, isActive: divisions.isActive })
+    .from(divisions)
+    .where(eq(divisions.id, fields.divisionId))
+    .limit(1);
+  if (!division) {
+    return { error: "Divisi tidak ditemukan." };
+  }
+  if (!division.isActive) {
+    return { error: `Divisi ${division.name} sedang nonaktif, akun tidak dapat ditugaskan ke sana.` };
+  }
+
+  const usernameTaken = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.username, fields.username))
+    .limit(1);
+  if (usernameTaken.length > 0) {
+    return { error: `Nama pengguna @${fields.username} sudah dipakai.` };
+  }
+  const emailTaken = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, fields.email))
+    .limit(1);
+  if (emailTaken.length > 0) {
+    return { error: `Surel ${fields.email} sudah dipakai.` };
+  }
+
+  try {
+    await db.batch([
+      db.insert(users).values({
+        id: userId,
+        divisionId: fields.divisionId,
+        username: fields.username,
+        email: fields.email,
+        fullName: fields.fullName,
+        position: fields.role === "USER" ? "Staf Pelaksana" : "Pengelola",
+        passwordHash,
+        passwordChangedAt: stamp,
+        role: fields.role,
+        isActive: true,
+        createdAt: stamp,
+        updatedAt: stamp,
+      }),
+      db.insert(activityLogs).values(
+        logEntry(manager.actor.id, "user.created", userId, null, {
+          username: fields.username,
+          fullName: fields.fullName,
+          divisionId: fields.divisionId,
+          role: fields.role,
+          initialPassword: INITIAL_ACCOUNT_PASSWORD,
+        }, stamp),
+      ),
+    ]);
+  } catch (error) {
+    return uniqueViolation(error);
+  }
+
+  revalidatePath("/master");
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+const updateUserSchema = userFieldsSchema.extend({ id: z.string().trim().min(1) });
+
+export async function updateUser(input: unknown): Promise<MasterActionResult> {
+  const manager = await requireManager();
+  if (manager.blocked || !manager.actor) return manager.error as MasterActionResult;
+
+  const parsed = updateUserSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data pengguna tidak sah." };
+  }
+  const fields = parsed.data;
+  if (fields.id === manager.actor.id) {
+    return { error: "Data akun sendiri diubah lewat menu Akun, bukan Kelola Master." };
+  }
+
+  const { db } = appContext();
+  const [physical] = await db
+    .select({
+      id: users.id,
+      fullName: users.fullName,
+      username: users.username,
+      email: users.email,
+      divisionId: users.divisionId,
+      role: users.role,
+      isActive: users.isActive,
+    })
+    .from(users)
+    .where(eq(users.id, fields.id))
+    .limit(1);
+  if (!physical) return { error: "Pengguna tidak ditemukan." };
+
+  const clashingUsername = physical.username !== fields.username
+    ? await db.select({ id: users.id }).from(users).where(eq(users.username, fields.username)).limit(1)
+    : [];
+  if (clashingUsername.length > 0) {
+    return { error: `Nama pengguna @${fields.username} sudah dipakai orang lain.` };
+  }
+  const clashingEmail = (physical.email ?? "") !== fields.email
+    ? await db.select({ id: users.id }).from(users).where(eq(users.email, fields.email)).limit(1)
+    : [];
+  if (clashingEmail.length > 0) {
+    return { error: `Surel ${fields.email} sudah dipakai orang lain.` };
+  }
+
+  const now = nowSeconds();
+  const stamp = new Date(now * 1000);
+
+  try {
+    await db.batch([
+      db.update(users).set({
+        fullName: fields.fullName,
+        username: fields.username,
+        email: fields.email,
+        divisionId: fields.divisionId,
+        role: fields.role,
+        updatedAt: stamp,
+      }).where(eq(users.id, fields.id)),
+      db.insert(activityLogs).values(
+        logEntry(manager.actor.id, "user.updated", fields.id, {
+          fullName: physical.fullName,
+          username: physical.username,
+          email: physical.email,
+          divisionId: physical.divisionId,
+          role: physical.role,
+        }, fields, stamp),
+      ),
+    ]);
+  } catch (error) {
+    return uniqueViolation(error);
+  }
+
+  revalidatePath("/master");
+  return { success: true };
+}
+
+/**
+ * Kata sandi kembali ke nilai awal `Bawaslu#2026`. `password_changed_at` maju,
+ * sehingga seluruh sesi lama langsung dicabut oleh pemeriksa sesi (§9.2).
+ */
+export async function resetPassword(userId: string): Promise<MasterActionResult> {
+  const manager = await requireManager();
+  if (manager.blocked || !manager.actor) return manager.error as MasterActionResult;
+  if (userId === manager.actor.id) {
+    return { error: "Kata sandi akun sendiri diubah lewat menu Akun." };
+  }
+
+  const { db } = appContext();
+  const [physical] = await db
+    .select({ id: users.id, username: users.username })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!physical) return { error: "Pengguna tidak ditemukan." };
+
+  const now = nowSeconds();
+  const stamp = new Date(now * 1000);
+  const passwordHash = await hashPassword(INITIAL_ACCOUNT_PASSWORD);
+
+  await db.batch([
+    db.update(users).set({ passwordHash, passwordChangedAt: stamp, updatedAt: stamp }).where(eq(users.id, userId)),
+    db.insert(activityLogs).values(
+      logEntry(manager.actor.id, "user.password_reset", userId, null, {
+        username: physical.username,
+        defaultPassword: INITIAL_ACCOUNT_PASSWORD,
+      }, stamp),
+    ),
+  ]);
+
+  revalidatePath("/master");
+  return { success: true };
+}
+
+const setUserActiveSchema = z.object({
+  id: z.string().trim().min(1),
+  isActive: z.boolean(),
+  reason: z.string().trim().max(500).optional(),
+});
+
+export async function setUserActive(input: unknown): Promise<MasterActionResult> {
+  const manager = await requireManager();
+  if (manager.blocked || !manager.actor) return manager.error as MasterActionResult;
+
+  const parsed = setUserActiveSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Permintaan tidak sah." };
+  }
+  const fields = parsed.data;
+  if (fields.id === manager.actor.id) {
+    return { error: "Status akun sendiri tidak dapat diubah dari Kelola Master." };
+  }
+
+  const { db } = appContext();
+  const [physical] = await db
+    .select({ id: users.id, username: users.username, isActive: users.isActive })
+    .from(users)
+    .where(eq(users.id, fields.id))
+    .limit(1);
+  if (!physical) return { error: "Pengguna tidak ditemukan." };
+
+  if (!fields.isActive && !fields.reason) {
+    return { error: "Alasan penonaktifan wajib diisi untuk rekam audit." };
+  }
+
+  const now = nowSeconds();
+  const stamp = new Date(now * 1000);
+
+  await db.batch([
+    db.update(users).set({ isActive: fields.isActive, updatedAt: stamp }).where(eq(users.id, fields.id)),
+    db.insert(activityLogs).values(
+      logEntry(manager.actor.id, fields.isActive ? "user.activated" : "user.deactivated", fields.id, physical.isActive, {
+        username: physical.username,
+        isActive: fields.isActive,
+        reason: fields.reason ?? null,
+      }, stamp),
+    ),
+  ]);
+
+  revalidatePath("/master");
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+// ============================================================
+// Divisi (UC03) dan kategori (UC04)
+// ============================================================
+
+const divisionSchema = z.object({
+  /** Id hanya dikirim saat mengubah; pembuatan selalu membangkitkan id di server. */
+  id: z.string().trim().min(1).optional(),
+  name: z.string().trim().min(1, "Nama divisi wajib diisi.").max(80, "Nama divisi maksimal 80 karakter."),
+  code: z.string().trim().toUpperCase().regex(/^[A-Z]{2,4}$/, "Kode divisi memakai 2 sampai 4 huruf kapital."),
+});
+
+export async function saveDivision(input: unknown): Promise<MasterActionResult> {
+  const manager = await requireManager();
+  if (manager.blocked || !manager.actor) return manager.error as MasterActionResult;
+
+  const parsed = divisionSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data divisi tidak sah." };
+  }
+  const fields = parsed.data;
+  const { db } = appContext();
+  const now = nowSeconds();
+  const stamp = new Date(now * 1000);
+
+  // Kode awalan wajib unik; baris yang sedang diedit dikecualikan.
+  const codeClash = await db
+    .select({ id: divisions.id })
+    .from(divisions)
+    .where(fields.id ? and(eq(divisions.code, fields.code), ne(divisions.id, fields.id)) : eq(divisions.code, fields.code))
+    .limit(1);
+  if (codeClash.length > 0) {
+    return { error: `Kode ${fields.code} sudah dipakai divisi lain.` };
+  }
+
+  if (fields.id) {
+    const [division] = await db
+      .select({ id: divisions.id, name: divisions.name, code: divisions.code, isActive: divisions.isActive })
+      .from(divisions)
+      .where(eq(divisions.id, fields.id))
+      .limit(1);
+    if (!division) return { error: "Divisi tidak ditemukan." };
+
+    try {
+      await db.batch([
+        db.update(divisions).set({ name: fields.name, code: fields.code }).where(eq(divisions.id, fields.id)),
+        db.insert(activityLogs).values(
+          logEntry(manager.actor.id, "division.updated", fields.id, { name: division.name, code: division.code, isActive: division.isActive }, { name: fields.name, code: fields.code }, stamp),
+        ),
+      ]);
+    } catch (error) {
+      return uniqueViolation(error);
+    }
+  } else {
+    const divisionId = newId("division");
+    try {
+      await db.batch([
+        db.insert(divisions).values({ id: divisionId, name: fields.name, code: fields.code, isActive: true, createdAt: stamp }),
+        db.insert(activityLogs).values(
+          logEntry(manager.actor.id, "division.created", divisionId, null, { name: fields.name, code: fields.code }, stamp),
+        ),
+      ]);
+    } catch (error) {
+      return uniqueViolation(error);
+    }
+  }
+
+  revalidatePath("/master");
+  return { success: true };
+}
+
+/** Menonaktifkan atau mengaktifkan kembali divisi (D9: nonaktif, bukan hapus). */
+export async function setDivisionActive(input: unknown): Promise<MasterActionResult> {
+  const manager = await requireManager();
+  if (manager.blocked || !manager.actor) return manager.error as MasterActionResult;
+
+  const schema = z.object({
+    id: z.string().trim().min(1),
+    isActive: z.boolean(),
+    reason: z.string().trim().max(500).optional(),
+  });
+  const parsed = schema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Permintaan tidak sah." };
+  }
+  const fields = parsed.data;
+
+  const { db } = appContext();
+  const [physical] = await db
+    .select({ id: divisions.id, name: divisions.name, isActive: divisions.isActive })
+    .from(divisions)
+    .where(eq(divisions.id, fields.id))
+    .limit(1);
+  if (!physical) return { error: "Divisi tidak ditemukan." };
+  if (physical.id === manager.actor.divisionId && !fields.isActive) {
+    return { error: "Divisi milik akun Anda tidak dapat dinonaktifkan." };
+  }
+
+  const now = nowSeconds();
+  const stamp = new Date(now * 1000);
+
+  await db.batch([
+    db.update(divisions).set({ isActive: fields.isActive }).where(eq(divisions.id, fields.id)),
+    db.insert(activityLogs).values(
+      logEntry(manager.actor.id, "division.updated", fields.id, physical.isActive, {
+        isActive: fields.isActive,
+        reason: fields.reason ?? null,
+      }, stamp),
+    ),
+  ]);
+
+  revalidatePath("/master");
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+const categorySchema = z.object({
+  /** Id hanya dikirim saat mengubah; pembuatan selalu membangkitkan id di server. */
+  id: z.string().trim().min(1).optional(),
+  name: z.string().trim().min(1, "Nama kategori wajib diisi.").max(80, "Nama kategori maksimal 80 karakter."),
+});
+
+export async function saveCategory(input: unknown): Promise<MasterActionResult> {
+  const manager = await requireManager();
+  if (manager.blocked || !manager.actor) return manager.error as MasterActionResult;
+
+  const parsed = categorySchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data kategori tidak sah." };
+  }
+  const fields = parsed.data;
+  const { db } = appContext();
+  const now = nowSeconds();
+  const stamp = new Date(now * 1000);
+
+  // Nama kategori unik (categories_name_uq); baris yang sedang diedit dikecualikan.
+  const nameClash = await db
+    .select({ id: categories.id })
+    .from(categories)
+    .where(fields.id ? and(eq(categories.name, fields.name), ne(categories.id, fields.id)) : eq(categories.name, fields.name))
+    .limit(1);
+  if (nameClash.length > 0) {
+    return { error: `Kategori ${fields.name} sudah ada.` };
+  }
+
+  if (fields.id) {
+    const [category] = await db
+      .select({ id: categories.id, name: categories.name, isActive: categories.isActive })
+      .from(categories)
+      .where(eq(categories.id, fields.id))
+      .limit(1);
+    if (!category) return { error: "Kategori tidak ditemukan." };
+
+    try {
+      await db.batch([
+        db.update(categories).set({ name: fields.name }).where(eq(categories.id, fields.id)),
+        db.insert(activityLogs).values(
+          logEntry(manager.actor.id, "category.updated", fields.id, { name: category.name, isActive: category.isActive }, { name: fields.name }, stamp),
+        ),
+      ]);
+    } catch (error) {
+      return uniqueViolation(error);
+    }
+  } else {
+    const categoryId = newId("category");
+    try {
+      await db.batch([
+        db.insert(categories).values({ id: categoryId, name: fields.name, isActive: true, createdAt: stamp }),
+        db.insert(activityLogs).values(
+          logEntry(manager.actor.id, "category.created", categoryId, null, { name: fields.name }, stamp),
+        ),
+      ]);
+    } catch (error) {
+      return uniqueViolation(error);
+    }
+  }
+
+  revalidatePath("/master");
+  return { success: true };
+}
+
+export async function setCategoryActive(input: unknown): Promise<MasterActionResult> {
+  const manager = await requireManager();
+  if (manager.blocked || !manager.actor) return manager.error as MasterActionResult;
+
+  const schema = z.object({ id: z.string().trim().min(1), isActive: z.boolean() });
+  const parsed = schema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Permintaan tidak sah." };
+  }
+  const fields = parsed.data;
+
+  const { db } = appContext();
+  const [physical] = await db
+    .select({ id: categories.id, isActive: categories.isActive })
+    .from(categories)
+    .where(eq(categories.id, fields.id))
+    .limit(1);
+  if (!physical) return { error: "Kategori tidak ditemukan." };
+
+  const now = nowSeconds();
+  const stamp = new Date(now * 1000);
+
+  await db.batch([
+    db.update(categories).set({ isActive: fields.isActive }).where(eq(categories.id, fields.id)),
+    db.insert(activityLogs).values(
+      logEntry(manager.actor.id, "category.updated", fields.id, physical.isActive, fields, stamp),
+    ),
+  ]);
+
+  revalidatePath("/master");
+  return { success: true };
+}

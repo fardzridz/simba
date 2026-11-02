@@ -86,7 +86,7 @@ export default async function DashboardPage() {
           value={counts.tasks}
           unit="judul"
           icon="dokumen"
-          hint="count(task), dalam cakupan"
+          hint="jumlah judul tugas dalam cakupan"
         />
         <StatCard
           label="Terlambat"
@@ -136,7 +136,7 @@ export default async function DashboardPage() {
           }
           icon="centang"
           tone={counts.completedOnTime > 0 ? "success" : "normal"}
-          hint="completed_at ≤ due_at"
+          hint="selesai pada atau sebelum tenggat"
         />
       </section>
 

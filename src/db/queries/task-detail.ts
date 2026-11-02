@@ -13,6 +13,7 @@ import {
   type Priority,
 } from "@/db/schema";
 import type { Scope } from "@/lib/auth/scope";
+import { formatBytes } from "@/lib/format";
 import {
   formatJakartaNotification,
   humanizeElapsed,
@@ -70,16 +71,6 @@ const REVIEW_LABEL = {
   REVISION_REQUIRED: "Perlu Revisi",
   PENDING: "Menunggu Verifikasi",
 } as const;
-
-function formatBytes(bytes: number): string {
-  if (bytes >= 1024 * 1024) {
-    return `${(bytes / (1024 * 1024)).toFixed(1).replace(".", ",")} MB`;
-  }
-  if (bytes >= 1024) {
-    return `${Math.round(bytes / 1024)} KB`;
-  }
-  return `${bytes} B`;
-}
 
 function initialsOf(name: string): string {
   return name

@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import TaskTable from "./task-table";
 import TaskEditClient from "./[id]/edit/task-edit-client";
-import { getMockTaskDetail } from "@/lib/mock-task-detail";
 import type { TaskListItem } from "@/db/queries/tasks";
+import type { TaskEditData } from "@/db/queries/form-data";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -136,8 +136,37 @@ describe("Pemisahan Hak Akses dan Aksi Tabel Tugas per Role", () => {
 
 describe("Halaman Ubah Tugas Admin L10", () => {
   it("merender formulir ubah tugas dengan data awal terisi dan tombol Simpan Perubahan", () => {
-    const task = getMockTaskDetail("tsk_huk_1");
-    const html = renderToStaticMarkup(<TaskEditClient initialTask={task} />);
+    const task: TaskEditData = {
+      id: "tsk_huk_1",
+      taskNumber: "HUK/2026/10/001",
+      divisionId: "div_hukum",
+      divisionName: "Hukum & Sengketa",
+      title: "Pengunggahan Dokumen C1 Pleno",
+      description: "Unggah dokumen hasil rapat pleno ke portal.",
+      categoryId: "cat_kegiatan",
+      priority: "SEDANG",
+      startDateInput: "2026-10-24",
+      dueDateInput: "2026-10-30",
+      assignees: [
+        {
+          userId: "usr_staf_hukum",
+          name: "Ahmad Fauzi",
+          status: "SEDANG_DIKERJAKAN",
+          removable: false,
+        },
+        {
+          userId: "usr_staf_hukum_2",
+          name: "Siti Rahma",
+          status: "BELUM_DIKERJAKAN",
+          removable: true,
+        },
+      ],
+      editable: true,
+      lockedReason: null,
+    };
+    const html = renderToStaticMarkup(
+      <TaskEditClient task={task} members={[]} categories={[]} />,
+    );
 
     expect(html).toContain("Ubah Tugas");
     expect(html).toContain("Kembali ke Tugas Divisi");
@@ -145,5 +174,9 @@ describe("Halaman Ubah Tugas Admin L10", () => {
     expect(html).toContain(task.taskNumber);
     expect(html).toContain("Simpan Perubahan");
     expect(html).toContain("Batal");
+    // Penerima terkunci tampil beserta statusnya dan tidak bisa dilepas.
+    expect(html).toContain("Sudah dimulai");
+    expect(html).toContain("Belum dikerjakan");
+    expect(html).toContain('disabled=""');
   });
 });

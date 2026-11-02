@@ -1,88 +1,87 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Icon } from "@/app/icons";
-import { LoadingButton } from "../loading-state";
-import {
-  MOCK_PERIOD_SUMMARY,
-  MOCK_DIVISION_REPORT_ROWS,
-  type DivisionReportRow,
-} from "@/lib/mock-reports";
-import { MOCK_CATEGORIES } from "@/lib/mock-division-members";
+import type { ReportDivisionRow, ReportPeriod, ReportView } from "@/db/queries/reports";
+
+export type Role = "ADMIN" | "SUPER_ADMIN";
+
+export type ReportsFilterState = {
+  period: ReportPeriod;
+  /** null berarti semua divisi (Super Admin); Admin terikat divisinya sendiri. */
+  divisionId: string | null;
+  status: string;
+  categoryId: string;
+};
 
 export interface ReportsClientProps {
-  userRole?: "ADMIN" | "SUPER_ADMIN";
-  userDivisionName?: string;
+  role: Role;
+  report: ReportView;
+  filters: ReportsFilterState;
+  periodOptions: { id: ReportPeriod; label: string }[];
+  divisionOptions: { id: string; name: string }[];
+  categoryOptions: { id: string; name: string }[];
+  ownDivisionName: string;
+}
+
+const DEFAULT_PERIOD: ReportPeriod = "bulan_ini";
+
+/** Susun URL laporan dari filter; default tidak dikirim agar bersih. */
+function buildReportsUrl(state: ReportsFilterState, forExport: boolean): string {
+  const params = new URLSearchParams();
+  if (state.period !== DEFAULT_PERIOD) params.set("period", state.period);
+  if (forExport) params.set("period", state.period);
+  if (state.divisionId) params.set("divisi", state.divisionId);
+  if (state.status) params.set("status", state.status);
+  if (state.categoryId) params.set("kategori", state.categoryId);
+  const qs = params.toString();
+  return `${forExport ? "/reports/export" : "/reports"}${qs ? `?${qs}` : ""}`;
 }
 
 export default function ReportsClient({
-  userRole = "ADMIN",
-  userDivisionName = "Hukum & Sengketa",
+  role,
+  report,
+  filters,
+  periodOptions,
+  divisionOptions,
+  categoryOptions,
+  ownDivisionName,
 }: ReportsClientProps) {
-  const [periodOption, setPeriodOption] = useState("okt_2026");
-  const [selectedDivision, setSelectedDivision] = useState(
-    userRole === "SUPER_ADMIN" ? "semua" : userDivisionName,
-  );
-  const [selectedStatus, setSelectedStatus] = useState("semua");
-  const [selectedCategory, setSelectedCategory] = useState("semua");
+  const router = useRouter();
 
-  const [isExportingXlsx, setIsExportingXlsx] = useState(false);
-  const [exportNotice, setExportNotice] = useState<string | null>(null);
+  const current: ReportsFilterState = {
+    period: filters.period,
+    divisionId: filters.divisionId,
+    status: filters.status ?? "",
+    categoryId: filters.categoryId ?? "",
+  };
 
-  const periodLabel = useMemo(() => {
-    switch (periodOption) {
-      case "sep_2026":
-        return "1 sampai 30 Sep 2026";
-      case "triwulan_3":
-        return "1 Jul sampai 30 Sep 2026";
-      case "tahun_2026":
-        return "1 Jan sampai 17 Okt 2026";
-      default:
-        return "1 sampai 17 Okt 2026";
-    }
-  }, [periodOption]);
-
-  const rows: DivisionReportRow[] = useMemo(() => {
-    if (userRole !== "SUPER_ADMIN" || selectedDivision !== "semua") {
-      const targetDiv = userRole === "SUPER_ADMIN" ? selectedDivision : userDivisionName;
-      return MOCK_DIVISION_REPORT_ROWS.filter(
-        (r) => r.divisionName.toLowerCase() === targetDiv.toLowerCase(),
-      );
-    }
-    return MOCK_DIVISION_REPORT_ROWS;
-  }, [userRole, userDivisionName, selectedDivision]);
+  const update = (patch: Partial<ReportsFilterState>) => {
+    router.push(buildReportsUrl({ ...current, ...patch }, false));
+  };
 
   const hasActiveFilters = Boolean(
-    periodOption !== "okt_2026" ||
-      selectedStatus !== "semua" ||
-      selectedCategory !== "semua" ||
-      (userRole === "SUPER_ADMIN" && selectedDivision !== "semua"),
+    current.period !== DEFAULT_PERIOD ||
+      current.status ||
+      current.categoryId ||
+      (role === "SUPER_ADMIN" && current.divisionId),
   );
 
   const resetFilters = () => {
-    setPeriodOption("okt_2026");
-    setSelectedDivision(userRole === "SUPER_ADMIN" ? "semua" : userDivisionName);
-    setSelectedStatus("semua");
-    setSelectedCategory("semua");
+    router.push(
+      buildReportsUrl(
+        {
+          period: DEFAULT_PERIOD,
+          divisionId: role === "SUPER_ADMIN" ? null : current.divisionId,
+          status: "",
+          categoryId: "",
+        },
+        false,
+      ),
+    );
   };
 
-  const handleExportXlsx = () => {
-    setIsExportingXlsx(true);
-    setExportNotice(null);
-
-    // Simulasi penyusunan berkas XLSX berkecepatan tinggi di sisi klien
-    setTimeout(() => {
-      setIsExportingXlsx(false);
-      setExportNotice(
-        `Berkas Laporan_Penugasan_${periodOption}_${userRole}.xlsx berhasil disiapkan dan diunduh (378 baris data).`,
-      );
-      setTimeout(() => setExportNotice(null), 5000);
-    }, 1000);
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
+  const rows: ReportDivisionRow[] = report.rows;
 
   return (
     <div className="flex flex-col gap-6">
@@ -90,70 +89,60 @@ export default function ReportsClient({
       <div className="print:hidden">
         <h1 className="text-h1 font-semibold text-ink">Laporan &amp; Ekspor</h1>
         <p className="mt-1 text-body text-ink-3">
-          Periode {periodLabel},{" "}
-          {userRole === "SUPER_ADMIN"
-            ? selectedDivision === "semua"
-              ? "seluruh divisi instansi."
-              : `divisi ${selectedDivision}.`
-            : `divisi ${userDivisionName}.`}
+          Periode {report.rangeLabel},{" "}
+          {role === "SUPER_ADMIN"
+            ? current.divisionId
+              ? `divisi ${report.scopeLabels.division}.`
+              : "seluruh divisi instansi."
+            : `divisi ${ownDivisionName}.`}
         </p>
       </div>
-
-      {/* Spanduk Notifikasi Ekspor */}
-      {exportNotice ? (
-        <div
-          role="status"
-          className="rounded-lg border border-success/30 bg-success-surface p-4 text-body-sm font-semibold text-success flex items-center gap-2 print:hidden"
-        >
-          <Icon name="centang" size={16} />
-          <span>{exportNotice}</span>
-        </div>
-      ) : null}
 
       {/* Baris Filter Laporan (Disembunyikan saat cetak kertas) */}
       <div className="card p-3 flex flex-wrap items-center gap-3 bg-surface print:hidden">
         {/* Pemilih Periode */}
         <select
-          value={periodOption}
-          onChange={(e) => setPeriodOption(e.target.value)}
+          value={current.period}
+          onChange={(e) => update({ period: e.target.value as ReportPeriod })}
           aria-label="Pilih rentang periode"
           className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm font-medium text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
         >
-          <option value="okt_2026">1 sampai 17 Okt 2026 (Bulan berjalan)</option>
-          <option value="sep_2026">1 sampai 30 Sep 2026 (Bulan lalu)</option>
-          <option value="triwulan_3">1 Jul s.d. 30 Sep 2026 (Triwulan III)</option>
-          <option value="tahun_2026">Tahun 2026 (Tahun berjalan)</option>
+          {periodOptions.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.label}
+            </option>
+          ))}
         </select>
 
         {/* Pemilih Divisi */}
-        {userRole === "SUPER_ADMIN" ? (
+        {role === "SUPER_ADMIN" ? (
           <select
-            value={selectedDivision}
-            onChange={(e) => setSelectedDivision(e.target.value)}
+            value={current.divisionId ?? ""}
+            onChange={(e) => update({ divisionId: e.target.value || null })}
             aria-label="Filter divisi laporan"
             className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
           >
-            <option value="semua">Divisi: Semua</option>
-            <option value="Hukum & Sengketa">Hukum &amp; Sengketa</option>
-            <option value="Pengawasan">Pengawasan</option>
-            <option value="SDM & Organisasi">SDM &amp; Organisasi</option>
-            <option value="Sekretariat">Sekretariat</option>
-            <option value="Penindakan">Penindakan</option>
+            <option value="">Divisi: Semua</option>
+            {divisionOptions.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
           </select>
         ) : (
           <div className="h-8 rounded-md border border-border bg-neutral-surface px-3 flex items-center text-body-sm text-ink-2">
-            <span>Divisi: {userDivisionName}</span>
+            <span>Divisi: {ownDivisionName}</span>
           </div>
         )}
 
         {/* Pemilih Status */}
         <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
+          value={current.status}
+          onChange={(e) => update({ status: e.target.value })}
           aria-label="Filter status laporan"
           className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
         >
-          <option value="semua">Status: semua</option>
+          <option value="">Status: semua</option>
           <option value="SELESAI">Selesai</option>
           <option value="MENUNGGU_VERIFIKASI">Menunggu Verifikasi</option>
           <option value="SEDANG_DIKERJAKAN">Sedang Dikerjakan</option>
@@ -162,15 +151,15 @@ export default function ReportsClient({
 
         {/* Pemilih Kategori */}
         <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
+          value={current.categoryId}
+          onChange={(e) => update({ categoryId: e.target.value })}
           aria-label="Filter kategori laporan"
           className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
         >
-          <option value="semua">Kategori: semua</option>
-          {MOCK_CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
+          <option value="">Kategori: semua</option>
+          {categoryOptions.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
             </option>
           ))}
         </select>
@@ -201,45 +190,45 @@ export default function ReportsClient({
               <div className="flex flex-col">
                 <span className="text-body-sm text-ink-3">Penugasan</span>
                 <span className="font-display-kpi text-[28px] font-semibold text-ink mt-1">
-                  {MOCK_PERIOD_SUMMARY.totalAssignments}
+                  {report.summary.totalAssignments}
                 </span>
               </div>
 
               <div className="flex flex-col">
                 <span className="text-body-sm text-ink-3">Selesai</span>
                 <span className="font-display-kpi text-[28px] font-semibold text-ink mt-1">
-                  {MOCK_PERIOD_SUMMARY.completed}
+                  {report.summary.completed}
                 </span>
               </div>
 
               <div className="flex flex-col">
                 <span className="text-body-sm text-ink-3">Tepat Waktu</span>
                 <span className="font-display-kpi text-[28px] font-semibold text-ink mt-1">
-                  {MOCK_PERIOD_SUMMARY.onTime}
+                  {report.summary.onTime}
                 </span>
                 <span className="text-[11px] text-ink-3">
-                  dari {MOCK_PERIOD_SUMMARY.completed} selesai
+                  dari {report.summary.completed} selesai
                 </span>
               </div>
 
               <div className="flex flex-col">
                 <span className="text-body-sm text-ink-3">Terlambat</span>
                 <span className="font-display-kpi text-[28px] font-semibold text-error mt-1">
-                  {MOCK_PERIOD_SUMMARY.overdue}
+                  {report.summary.overdue}
                 </span>
               </div>
 
               <div className="flex flex-col">
                 <span className="text-body-sm text-ink-3">Dokumen Final</span>
                 <span className="font-display-kpi text-[28px] font-semibold text-ink mt-1">
-                  {MOCK_PERIOD_SUMMARY.finalDocuments}
+                  {report.summary.finalDocuments}
                 </span>
               </div>
             </div>
           </div>
 
           <p className="mt-4 text-body-sm text-ink-3 border-t border-border pt-3">
-            Angka memakai rumus yang sama dengan dashboard dan ekspor, satuan penugasan.
+            Angka dihitung dari database {report.periodLabel.toLowerCase()} ({report.rangeLabel}); ekspor memakai rumus yang sama.
           </p>
         </div>
 
@@ -256,22 +245,18 @@ export default function ReportsClient({
               </span>
 
               <div className="flex flex-wrap items-center gap-3">
-                <LoadingButton
-                  type="button"
-                  variant="primary"
-                  loading={isExportingXlsx}
-                  loadingText="Menyiapkan berkas..."
-                  onClick={handleExportXlsx}
-                  className="flex-1 h-10 text-body font-semibold shadow-sm"
+                <a
+                  href={buildReportsUrl(current, true)}
+                  className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-md bg-primary px-4 text-body font-semibold text-on-dark hover:bg-primary-hover active:bg-primary-active transition-colors shadow-sm"
                 >
-                  Ekspor XLSX
-                </LoadingButton>
+                  <Icon name="unduh" size={16} />
+                  Ekspor CSV
+                </a>
 
                 <button
                   type="button"
-                  onClick={handlePrint}
-                  disabled={isExportingXlsx}
-                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-md border border-border-strong bg-surface px-4 text-body font-semibold text-ink hover:bg-neutral-surface active:bg-border transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={() => window.print()}
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-md border border-border-strong bg-surface px-4 text-body font-semibold text-ink hover:bg-neutral-surface active:bg-border transition-colors"
                 >
                   Cetak / PDF
                 </button>
@@ -280,8 +265,10 @@ export default function ReportsClient({
           </div>
 
           <div className="mt-4 text-body-sm text-ink-3 border-t border-border pt-3 space-y-1">
-            <p>Menyiapkan berkas, {MOCK_PERIOD_SUMMARY.totalAssignments} baris data.</p>
-            <p>Tombol terkunci sementara saat berkas sedang dikompilasi.</p>
+            <p>
+              CSV menyajikan angka yang identik dengan angka di layar untuk filter aktif ini.
+            </p>
+            <p>Baris pertama berkas memuat periode dan daftar filter aktif.</p>
           </div>
         </div>
       </div>
@@ -293,7 +280,7 @@ export default function ReportsClient({
           <div className="flex items-center justify-between border-b border-border pb-3 print:border-ink">
             <h2 className="text-h2 font-semibold text-ink">Pratinjau</h2>
             <span className="text-body-sm text-ink-3 print:hidden">
-              {rows.length} divisi ditampilkan dari {MOCK_PERIOD_SUMMARY.totalAssignments} penugasan
+              {rows.length} divisi ditampilkan dari {report.summary.totalAssignments} penugasan
             </span>
           </div>
 
@@ -319,25 +306,33 @@ export default function ReportsClient({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border print:divide-ink">
-                {rows.map((row) => (
-                  <tr key={row.divisionId} className="hover:bg-neutral-surface/40">
-                    <td className="py-3 font-medium text-ink">
-                      {row.divisionName}
-                    </td>
-                    <td className="py-3 text-right font-mono text-body text-ink">
-                      {row.totalAssignments}
-                    </td>
-                    <td className="py-3 text-right font-mono text-body text-ink">
-                      {row.completed}
-                    </td>
-                    <td className="py-3 text-right font-mono text-body font-semibold text-error">
-                      {row.overdue}
-                    </td>
-                    <td className="py-3 text-right font-mono text-body text-ink">
-                      {row.finalDocuments}
+                {rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-6 text-center text-body-sm text-ink-3">
+                      0 penugasan pada periode ini.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  rows.map((row) => (
+                    <tr key={row.divisionId} className="hover:bg-neutral-surface/40">
+                      <td className="py-3 font-medium text-ink">
+                        {row.divisionName}
+                      </td>
+                      <td className="py-3 text-right font-mono text-body text-ink">
+                        {row.totalAssignments}
+                      </td>
+                      <td className="py-3 text-right font-mono text-body text-ink">
+                        {row.completed}
+                      </td>
+                      <td className="py-3 text-right font-mono text-body font-semibold text-error">
+                        {row.overdue}
+                      </td>
+                      <td className="py-3 text-right font-mono text-body text-ink">
+                        {row.finalDocuments}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -346,9 +341,8 @@ export default function ReportsClient({
             <p className="text-ink-2 font-medium">
               Hasil ekspor identik dengan filter di layar.
             </p>
-            <p>Kepala laporan memuat daftar filter yang sedang aktif.</p>
             <p>
-              {MOCK_PERIOD_SUMMARY.cancelled} penugasan berstatus Dibatalkan dikeluarkan dari penyebut progres.
+              {report.summary.cancelled} penugasan berstatus Dibatalkan dikeluarkan dari penyebut progres.
             </p>
           </div>
         </div>
@@ -369,9 +363,9 @@ export default function ReportsClient({
               <h3 className="font-semibold text-ink text-sm mt-0.5">
                 Laporan Rekapitulasi Penugasan
               </h3>
-              <p className="text-ink-3 text-[11px]">Periode: {periodLabel}</p>
+              <p className="text-ink-3 text-[11px]">Periode: {report.rangeLabel}</p>
               <p className="text-[10px] text-ink-3 mt-0.5">
-                Filter: Divisi {userDivisionName}, status: semua
+                Filter: {report.scopeLabels.division}, {report.scopeLabels.status.toLowerCase()}, {report.scopeLabels.category.toLowerCase()}
               </p>
             </div>
 
@@ -398,7 +392,7 @@ export default function ReportsClient({
             {/* Kolom Tanda Tangan Resmi */}
             <div className="mt-3 flex flex-col items-center text-center text-[10px] text-ink border-t border-border pt-3">
               <span>Mengetahui,</span>
-              <span className="font-semibold">Kepala Divisi</span>
+              <span className="font-semibold">{role === "SUPER_ADMIN" ? "Kepala Instansi" : "Kepala Divisi"}</span>
               <div className="w-24 border-b border-ink mt-8 mb-1" />
               <span className="text-ink-3 font-mono">Nama &amp; NIP Pejabat</span>
             </div>

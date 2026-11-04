@@ -97,9 +97,9 @@
 					"0 20 * * *"
 				]
 			},
-			"limits": {
-				"cpu_ms": 30000
-			},
+			// "limits": {
+			// 	"cpu_ms": 30000
+			// },
 			"observability": {
 				"enabled": true
 			},
@@ -146,9 +146,9 @@
 					"0 20 * * *"
 				]
 			},
-			"limits": {
-				"cpu_ms": 30000
-			},
+			// "limits": {
+			// 	"cpu_ms": 30000
+			// },
 			"observability": {
 				"enabled": true
 			},

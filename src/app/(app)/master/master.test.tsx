@@ -17,7 +17,7 @@ describe("Kelola Master L17", () => {
     expect(html).toContain("Divisi");
     expect(html).toContain("Kategori");
     expect(html).toContain("Tambah Pengguna");
-    expect(html).toContain("48 pengguna, 5 divisi, 8 kategori pada data contoh.");
+    expect(html).toContain("6 pengguna, 5 divisi, 8 kategori pada data contoh pengembangan.");
   });
 
   it("merender tabel master pengguna dengan nama, username mono, divisi, peran, dan aksi", () => {

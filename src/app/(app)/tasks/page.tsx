@@ -2,6 +2,7 @@ import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { divisions } from "@/db/schema";
 import { getTaskList, type TaskFilterFlag } from "@/db/queries/tasks";
+import { dashboardCounts } from "@/db/queries/dashboard";
 import { appContext } from "@/env";
 import { requireActor } from "@/lib/auth/current";
 import { resolveScope } from "@/lib/auth/scope";
@@ -43,13 +44,16 @@ export default async function TasksPage(props: {
     .where(eq(divisions.id, actor.divisionId))
     .limit(1);
 
-  const result = await getTaskList(db, scope, {
-    q,
-    status,
-    flag,
-    page,
-    pageSize: 25,
-  });
+  const [result, divisionCounts] = await Promise.all([
+    getTaskList(db, scope, {
+      q,
+      status,
+      flag,
+      page,
+      pageSize: 25,
+    }),
+    scope.role === "ADMIN" ? dashboardCounts(db, scope) : Promise.resolve(null),
+  ]);
 
   const hasActiveFilters = Boolean(q || status || flag);
 
@@ -71,22 +75,15 @@ export default async function TasksPage(props: {
   const startRecord = result.total === 0 ? 0 : (page - 1) * result.pageSize + 1;
   const endRecord = Math.min(page * result.pageSize, result.total);
 
-  // Metrik ringkasan untuk admin divisi (L09)
-  const isSeedBaseline = !hasActiveFilters && result.total <= 3;
-  const activeCount = isSeedBaseline
-    ? 14
-    : result.items.filter(
-        (it) => it.status === "SEDANG_DIKERJAKAN" || it.status === "BELUM_DIKERJAKAN",
-      ).length;
-  const waitingCount = isSeedBaseline
-    ? 6
-    : result.items.filter((it) => it.status === "MENUNGGU_VERIFIKASI").length;
-  const overdueCount = isSeedBaseline
-    ? 4
-    : result.items.filter((it) => it.dueAt.getTime() < Date.now()).length;
-  const revisionCount = isSeedBaseline
-    ? 3
-    : result.items.filter((it) => it.needsRevision).length;
+  // Metrik ringkasan untuk admin divisi (L09), rumus §7.1 yang sama dengan
+  // dashboard: dihitung server atas seluruh cakupan divisi, bukan halaman tabel.
+  const activeCount = divisionCounts
+    ? (divisionCounts.byStatus.BELUM_DIKERJAKAN ?? 0) +
+      (divisionCounts.byStatus.SEDANG_DIKERJAKAN ?? 0)
+    : 0;
+  const waitingCount = divisionCounts?.awaitingReview ?? 0;
+  const overdueCount = divisionCounts?.overdue ?? 0;
+  const revisionCount = divisionCounts?.needRevision ?? 0;
 
   return (
     <div className="space-y-6">
@@ -113,43 +110,43 @@ export default async function TasksPage(props: {
           aria-label="Ringkasan tugas divisi"
           className="grid grid-cols-2 gap-4 tablet:grid-cols-4"
         >
-          <div className="card p-4 flex flex-col justify-between">
+          <div className="card p-4">
             <span className="text-body-sm text-ink-3">Penugasan Aktif</span>
-            <div className="mt-2 flex items-baseline justify-between">
-              <span className="font-display-kpi text-[28px] font-semibold text-ink leading-none">
+            <div className="mt-2">
+              <span className="font-display-kpi text-[28px] font-semibold text-ink leading-none tabular-nums">
                 {activeCount}
+                <span className="ml-1.5 text-body-sm font-normal text-ink-3">penugasan</span>
               </span>
-              <span className="text-body-sm text-ink-3">penugasan</span>
             </div>
           </div>
 
-          <div className="card p-4 flex flex-col justify-between">
+          <div className="card p-4">
             <span className="text-body-sm text-ink-3">Menunggu Verifikasi</span>
-            <div className="mt-2 flex items-baseline justify-between">
-              <span className="font-display-kpi text-[28px] font-semibold text-ink leading-none">
+            <div className="mt-2">
+              <span className="font-display-kpi text-[28px] font-semibold text-ink leading-none tabular-nums">
                 {waitingCount}
+                <span className="ml-1.5 text-body-sm font-normal text-ink-3">penugasan</span>
               </span>
-              <span className="text-body-sm text-ink-3">penugasan</span>
             </div>
           </div>
 
-          <div className="card p-4 flex flex-col justify-between">
+          <div className="card p-4">
             <span className="text-body-sm text-ink-3">Terlambat</span>
-            <div className="mt-2 flex items-baseline justify-between">
-              <span className="font-display-kpi text-[28px] font-semibold text-error leading-none">
+            <div className="mt-2">
+              <span className="font-display-kpi text-[28px] font-semibold text-error leading-none tabular-nums">
                 {overdueCount}
+                <span className="ml-1.5 text-body-sm font-normal text-ink-3">penugasan</span>
               </span>
-              <span className="text-body-sm text-ink-3">penugasan</span>
             </div>
           </div>
 
-          <div className="card p-4 flex flex-col justify-between">
+          <div className="card p-4">
             <span className="text-body-sm text-ink-3">Perlu Revisi</span>
-            <div className="mt-2 flex items-baseline justify-between">
-              <span className="font-display-kpi text-[28px] font-semibold text-error leading-none">
+            <div className="mt-2">
+              <span className="font-display-kpi text-[28px] font-semibold text-error leading-none tabular-nums">
                 {revisionCount}
+                <span className="ml-1.5 text-body-sm font-normal text-ink-3">penugasan</span>
               </span>
-              <span className="text-body-sm text-ink-3">penugasan</span>
             </div>
           </div>
         </section>

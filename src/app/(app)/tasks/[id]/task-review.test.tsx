@@ -17,7 +17,8 @@ describe("TaskReviewClient L11", () => {
     expect(html).not.toContain("Perpanjang Tenggat");
     expect(html).toContain("Penerima:");
     expect(html).toContain("Siti Rahma");
-    expect(html).toContain("Tunggu review: 1 hari 3 jam");
+    expect(html).toContain("Tunggu review:");
+    expect(html).toContain("1 hari 3 jam");
   });
 
   it("merender berkas pengumpulan terbaru dan panel keputusan dengan aksi Setujui & Arsipkan", () => {

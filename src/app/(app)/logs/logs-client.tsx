@@ -142,7 +142,7 @@ export default function LogsClient({
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            placeholder="Cari log atau nomor..."
+            placeholder="Cari log atau nomor"
             className="h-8 w-full rounded-md border border-border bg-surface pl-8 pr-3 text-body-sm text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
           />
         </div>
@@ -222,10 +222,10 @@ export default function LogsClient({
           <button
             type="button"
             onClick={resetFilters}
-            className="ml-auto text-body-sm font-semibold text-primary hover:underline"
-          >
-            Hapus filter
-          </button>
+          className="ml-auto text-body-sm font-medium text-ink-2 hover:text-ink hover:underline"
+        >
+          Hapus filter
+        </button>
         ) : null}
       </div>
 
@@ -292,7 +292,7 @@ export default function LogsClient({
                         <span className="font-semibold text-ink text-body-sm">
                           {log.actorName}
                         </span>
-                        <span className="text-[11px] text-ink-3">
+                        <span className="text-body-sm text-ink-3">
                           {log.actorRole}
                         </span>
                       </div>
@@ -311,7 +311,7 @@ export default function LogsClient({
                         <span className="text-body-sm text-ink font-medium">
                           {log.entityType}
                         </span>
-                        <span className="font-mono text-[11px] text-ink-3">
+                        <span className="font-mono text-body-sm text-ink-3">
                           {log.entityId}
                         </span>
                       </div>
@@ -324,7 +324,7 @@ export default function LogsClient({
                           {log.summary}
                         </span>
                         {log.detailNote ? (
-                          <span className="text-[11px] text-ink-3 mt-0.5">
+                          <span className="text-body-sm text-ink-3 mt-0.5">
                             {log.detailNote}
                           </span>
                         ) : null}

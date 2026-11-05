@@ -146,7 +146,7 @@ export function ExtendDeadlineModal({
                 setReason(e.target.value);
                 if (error) setError(null);
               }}
-              placeholder="Jelaskan alasan perpanjangan tenggat (misal: perpanjangan masa verifikasi lapangan)..."
+              placeholder="Jelaskan alasan perpanjangan tenggat, misal perpanjangan masa verifikasi lapangan"
               className="w-full rounded-md border border-border bg-surface p-3 text-body text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
             />
           </div>
@@ -301,7 +301,7 @@ export function CancelTaskModal({
                 setReason(e.target.value);
                 if (error) setError(null);
               }}
-              placeholder="Tuliskan alasan resmi pembatalan tugas ini..."
+              placeholder="Tuliskan alasan resmi pembatalan tugas ini"
               className="w-full rounded-md border border-border bg-surface p-3 text-body text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
             />
           </div>

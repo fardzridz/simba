@@ -43,7 +43,10 @@ export default async function DashboardPage() {
         ? "Seluruh divisi. Data tugas hanya dapat dibaca, tidak diubah dari akun ini."
         : `${division?.name ?? actor.divisionId}. Angka dihitung server saat halaman dibuka.`;
 
-  const todayIso = new Date().toISOString().slice(0, 10);
+  // Tanggal hari ini dalam zona WIB, bukan tanggal UTC dari toISOString.
+  const todayIso = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+  }).format(new Date());
 
   return (
     <div className="space-y-6">
@@ -77,7 +80,7 @@ export default async function DashboardPage() {
         <StatCard
           label="Penugasan"
           value={counts.assignments}
-          unit="tugas"
+          unit="penugasan"
           icon="tugas"
           hint="semua status, seumur data"
         />
@@ -86,12 +89,12 @@ export default async function DashboardPage() {
           value={counts.tasks}
           unit="judul"
           icon="dokumen"
-          hint="count(task), dalam cakupan"
+          hint="satu judul dapat ditugaskan ke beberapa staf"
         />
         <StatCard
           label="Terlambat"
           value={counts.overdue}
-          unit="tugas"
+          unit="penugasan"
           icon="terlambat"
           tone={counts.overdue > 0 ? "danger" : "normal"}
           hint="melewati tenggat & belum selesai"
@@ -99,7 +102,7 @@ export default async function DashboardPage() {
         <StatCard
           label="Tenggat dekat"
           value={counts.dueSoon}
-          unit="tugas"
+          unit="penugasan"
           icon="jam"
           tone={counts.dueSoon > 0 ? "warning" : "normal"}
           hint="≤ 3 hari lagi"
@@ -107,15 +110,19 @@ export default async function DashboardPage() {
         <StatCard
           label="Menunggu verifikasi"
           value={counts.awaitingReview}
-          unit="tugas"
+          unit="penugasan"
           icon="menunggu"
           tone={counts.awaitingReview > 0 ? "warning" : "normal"}
-          hint="antrean review pengumpulan"
+          hint={
+            scope.role === "USER"
+              ? "menunggu keputusan admin divisi"
+              : "antrean review pengumpulan"
+          }
         />
         <StatCard
           label="Perlu revisi"
           value={counts.needRevision}
-          unit="tugas"
+          unit="penugasan"
           icon="revisi"
           tone={counts.needRevision > 0 ? "warning" : "normal"}
           hint="pengumpulan dikembalikan"
@@ -129,14 +136,11 @@ export default async function DashboardPage() {
         />
         <StatCard
           label="Selesai tepat waktu"
-          value={
-            counts.completedTotal === 0
-              ? "-"
-              : `${counts.completedOnTime}/${counts.completedTotal}`
-          }
+          value={`${counts.completedOnTime}/${counts.completedTotal}`}
+          unit="penugasan"
           icon="centang"
           tone={counts.completedOnTime > 0 ? "success" : "normal"}
-          hint="completed_at ≤ due_at"
+          hint="diselesaikan pada atau sebelum tenggat"
         />
       </section>
 
@@ -240,7 +244,7 @@ export default async function DashboardPage() {
               ) : null}
             </div>
 
-            <div className="mt-4 flex flex-1 flex-col justify-center">
+            <div className="mt-4">
               {queue.length === 0 ? (
                 <div className="flex w-full flex-col items-center justify-center rounded-lg border border-dashed border-border bg-surface-sunken p-6 text-center">
                   <span className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-surface text-ink-3">
@@ -256,10 +260,7 @@ export default async function DashboardPage() {
               ) : (
                 <ul className="divide-y divide-surface-sunken text-body">
                   {queue.map((item) => (
-                    <li
-                      key={item.assignmentId}
-                      className="flex flex-col gap-1 py-3 transition-colors hover:bg-neutral-surface/30"
-                    >
+                    <li key={item.assignmentId} className="flex flex-col gap-1 py-3">
                       <span className="font-medium text-ink">{item.title}</span>
                       <span className="text-body-sm text-ink-3">
                         {item.submittedAt
@@ -274,10 +275,6 @@ export default async function DashboardPage() {
           </section>
         )}
       </div>
-
-      <p className="text-body-sm text-ink-3">
-        Angka pada kartu memakai rumus §7.1 dokumen rancangan; kartu akan terhubung ke daftar terfilter pada Sprint 1.
-      </p>
     </div>
   );
 }

@@ -552,7 +552,7 @@ export default function SubmitModal({
                 maxLength={MAX_NOTES_LENGTH}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Tuliskan keterangan berkas, ringkasan pekerjaan, atau catatan perbaikan..."
+                placeholder="Tuliskan keterangan berkas, ringkasan pekerjaan, atau catatan perbaikan"
                 className="w-full rounded-md border border-border bg-surface px-3 py-2 text-body text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light disabled:cursor-not-allowed disabled:bg-surface-sunken"
               />
             </div>

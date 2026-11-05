@@ -52,7 +52,7 @@ const ADMIN_NOTIFICATIONS: NotificationListItem[] = [
 ];
 
 describe("Notifikasi In-App L16", () => {
-  it("merender halaman notifikasi dengan judul, kelompok BARU, dan SUDAH DIBACA", () => {
+  it("merender halaman notifikasi dengan judul, kelompok Baru, dan Sudah dibaca", () => {
     const html = renderToStaticMarkup(
       <NotificationsClient
         initialNotifications={STAFF_NOTIFICATIONS}
@@ -62,9 +62,9 @@ describe("Notifikasi In-App L16", () => {
 
     expect(html).toContain("Notifikasi");
     expect(html).toContain("Pemberitahuan tugas, review, dan tenggat untuk akunmu.");
-    expect(html).toContain("BARU");
+    expect(html).toContain("Baru");
     expect(html).toContain("Belum Dibaca: 2");
-    expect(html).toContain("SUDAH DIBACA");
+    expect(html).toContain("Sudah dibaca");
     expect(html).toContain("Tandai Semua Dibaca");
   });
 
@@ -80,7 +80,7 @@ describe("Notifikasi In-App L16", () => {
     expect(html).toContain("Perlu revisi: Laporan Hasil Pengawasan Wilayah A");
     expect(html).toContain("Catatan admin: tanda tangan saksi belum lengkap");
     expect(html).toContain("Tenggat dekat: Dokumen C1 Pleno");
-    expect(html).toContain("Buka tugas →");
+    expect(html).toContain("Buka tugas");
   });
 
   it("merender notifikasi admin divisi (pengumpulan baru masuk dari staf)", () => {

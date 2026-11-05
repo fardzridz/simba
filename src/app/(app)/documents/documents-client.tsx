@@ -4,34 +4,34 @@ import { useMemo, useState } from "react";
 import { Icon } from "@/app/icons";
 import { EmptyState } from "../states";
 import DocumentDetailPanel from "./document-detail-panel";
-import {
-  MOCK_FINAL_DOCUMENTS,
-  type FinalDocument,
-} from "@/lib/mock-documents";
-import { MOCK_CATEGORIES } from "@/lib/mock-division-members";
+import type { FinalDocument } from "@/db/queries/documents";
 
 export interface DocumentsClientProps {
   userRole?: "USER" | "ADMIN" | "SUPER_ADMIN";
   userDivisionName?: string;
+  documents: FinalDocument[];
+  categoryNames: string[];
 }
 
 export default function DocumentsClient({
   userRole = "ADMIN",
-  userDivisionName = "Hukum & Sengketa",
+  userDivisionName = "",
+  documents,
+  categoryNames,
 }: DocumentsClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("semua");
   const [selectedAge, setSelectedAge] = useState<number | "semua">("semua");
   const [selectedDivision, setSelectedDivision] = useState<string>("semua");
   const [selectedDocId, setSelectedDocId] = useState<string | null>(
-    MOCK_FINAL_DOCUMENTS[0]?.id ?? null,
+    documents[0]?.id ?? null,
   );
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
   // Filter dokumen sesuai kriteria
   const filteredDocuments = useMemo(() => {
-    return MOCK_FINAL_DOCUMENTS.filter((doc) => {
+    return documents.filter((doc) => {
       // Filter Divisi (terkunci untuk Staf dan Admin Divisi)
       if (userRole !== "SUPER_ADMIN") {
         if (doc.divisionName !== userDivisionName) return false;
@@ -127,7 +127,7 @@ export default function DocumentsClient({
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            placeholder="Cari nomor atau judul..."
+            placeholder="Cari nomor atau judul"
             className="h-8 w-full rounded-md border border-border bg-surface pl-8 pr-3 text-body-sm text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
           />
         </div>
@@ -167,7 +167,7 @@ export default function DocumentsClient({
           className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
         >
           <option value="semua">Kategori: semua</option>
-          {MOCK_CATEGORIES.map((cat) => (
+          {categoryNames.map((cat) => (
             <option key={cat} value={cat}>
               {cat}
             </option>
@@ -196,7 +196,7 @@ export default function DocumentsClient({
           <button
             type="button"
             onClick={resetFilters}
-            className="ml-auto text-body-sm font-semibold text-primary hover:underline"
+            className="ml-auto text-body-sm font-medium text-ink-2 hover:text-ink hover:underline"
           >
             Hapus filter
           </button>
@@ -309,7 +309,7 @@ export default function DocumentsClient({
                                 e.stopPropagation();
                                 setSelectedDocId(doc.id);
                               }}
-                              className="inline-flex items-center gap-1 text-body-sm font-semibold text-primary hover:underline"
+                              className="inline-flex items-center gap-1 text-body-sm font-medium text-ink-2 hover:text-ink hover:underline"
                             >
                               <Icon name="unduh" size={13} />
                               Unduh

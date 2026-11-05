@@ -60,7 +60,7 @@ export default function TaskFilterBar() {
             </span>
             <input
               type="search"
-              placeholder="Cari nomor atau judul..."
+              placeholder="Cari nomor atau judul"
               defaultValue={currentQ}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -154,7 +154,7 @@ export default function TaskFilterBar() {
                   router.push(pathname);
                 });
               }}
-              className="ml-1 text-body-sm font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+              className="ml-1 text-body-sm font-medium text-ink-2 hover:text-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
             >
               Hapus filter
             </button>

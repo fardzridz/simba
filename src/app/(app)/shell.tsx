@@ -182,9 +182,10 @@ export default function Shell({
           </button>
         </div>
 
-        <h1 className="min-w-0 flex-1 truncate text-center text-body font-semibold desktop:text-left desktop:text-h1">
+        {/* Label arah di top bar, bukan judul H1: H1 halaman ada di konten utama. */}
+        <p className="min-w-0 flex-1 truncate text-center text-body font-semibold desktop:text-left desktop:text-h1">
           {title}
-        </h1>
+        </p>
 
         <div className="flex w-24 shrink-0 items-center justify-end gap-2 tablet:gap-3 desktop:w-auto">
           <Link
@@ -200,7 +201,7 @@ export default function Shell({
             {unreadNotificationCount > 0 ? (
               <span
                 aria-hidden="true"
-                className="absolute -right-0.5 -top-0.5 inline-flex min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-4 text-on-dark"
+                className="absolute -right-1 -top-1 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-body-sm font-semibold leading-none tabular-nums text-on-dark"
               >
                 {unreadNotificationCount > 99
                   ? "99+"

@@ -7,7 +7,10 @@
  * dipakai aplikasi di sini adalah fungsi yang sama, tidak ada format yang diduplikasi.
  * Kata sandi di berkas ini hanya untuk lingkungan pengembangan, bukan produksi.
  */
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { hashPassword } from "../src/lib/auth/password.ts";
@@ -137,6 +140,29 @@ const TASKS = [
       },
     ],
   },
+  {
+    id: "tsk_huk_4",
+    divisionId: "div_hukum",
+    categoryId: "cat_kearsipan",
+    taskNumber: "HUK/2026/10/004",
+    title: "Rekap Berita Acara Rapat Koordinasi",
+    description: "Rekap berita acara rapat koordinasi bulanan beserta rekap data saksi.",
+    priority: "SEDANG",
+    createdBy: "usr_admin_hukum",
+    startAt: now - 3600 * 24 * 5,
+    dueAt: now - 3600 * 24 * 2, // selesai sebelum tenggat
+    assignments: [
+      {
+        id: "asg_huk_4",
+        userId: "usr_staf_hukum",
+        status: "SELESAI",
+        needsRevision: false,
+        startedAt: now - 3600 * 24 * 4,
+        submittedAt: now - 3600 * 24 * 2 - 3600 * 4,
+        completedAt: now - 3600 * 24 * 2,
+      },
+    ],
+  },
 ];
 
 for (const t of TASKS) {
@@ -145,7 +171,7 @@ for (const t of TASKS) {
   );
   for (const a of t.assignments) {
     lines.push(
-      `INSERT INTO task_assignments (id, task_id, user_id, status, needs_revision, revision_count, created_at, updated_at) VALUES (${quote(a.id)}, ${quote(t.id)}, ${quote(a.userId)}, ${quote(a.status)}, ${a.needsRevision ? 1 : 0}, ${a.revisionCount ?? 0}, ${now}, ${now}) ON CONFLICT(id) DO UPDATE SET task_id = excluded.task_id, user_id = excluded.user_id, status = excluded.status, needs_revision = excluded.needs_revision, revision_count = excluded.revision_count, started_at = NULL, submitted_at = NULL, completed_at = NULL, cancelled_at = NULL, updated_at = excluded.updated_at;`,
+      `INSERT INTO task_assignments (id, task_id, user_id, status, needs_revision, revision_count, started_at, submitted_at, completed_at, created_at, updated_at) VALUES (${quote(a.id)}, ${quote(t.id)}, ${quote(a.userId)}, ${quote(a.status)}, ${a.needsRevision ? 1 : 0}, ${a.revisionCount ?? 0}, ${a.startedAt ?? "NULL"}, ${a.submittedAt ?? "NULL"}, ${a.completedAt ?? "NULL"}, ${now}, ${now}) ON CONFLICT(id) DO UPDATE SET task_id = excluded.task_id, user_id = excluded.user_id, status = excluded.status, needs_revision = excluded.needs_revision, revision_count = excluded.revision_count, started_at = excluded.started_at, submitted_at = excluded.submitted_at, completed_at = excluded.completed_at, cancelled_at = NULL, updated_at = excluded.updated_at;`,
     );
   }
 }
@@ -224,7 +250,128 @@ for (const n of NOTIFICATIONS) {
   );
 }
 
+/**
+ * Satu tugas selesai lengkap dengan pengumpulan COMMITTED, review APPROVED,
+ * dan baris arsip, supaya Katalog Dokumen Final memuat contoh nyata dan
+ * tombol unduhan benar-benar mengambil objek dari R2 lokal.
+ */
+function minimalPdf(title, bodyLines) {
+  const esc = (s) =>
+    s.replaceAll("\\", "\\\\").replaceAll("(", "\\(").replaceAll(")", "\\)");
+  const content = [
+    "BT",
+    "/F1 16 Tf",
+    "56 780 Td",
+    `(${esc(title)}) Tj`,
+    "/F1 11 Tf",
+    "0 -32 Td",
+    ...bodyLines.map((line) => `(${esc(line)}) Tj 0 -16 Td`),
+    "ET",
+  ].join("\n");
+  const objects = [
+    "<</Type/Catalog/Pages 2 0 R>>",
+    "<</Type/Pages/Kids[3 0 R]/Count 1>>",
+    "<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>",
+    `<</Length ${content.length}>>\nstream\n${content}\nendstream`,
+    "<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>",
+  ];
+  let pdf = "%PDF-1.4\n";
+  const offsets = [];
+  for (let i = 0; i < objects.length; i += 1) {
+    offsets.push(pdf.length);
+    pdf += `${i + 1} 0 obj\n${objects[i]}\nendobj\n`;
+  }
+  const xrefStart = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (const offset of offsets) {
+    pdf += `${String(offset).padStart(10, "0")} 00000 n \n`;
+  }
+  pdf += `trailer\n<</Size ${objects.length + 1}/Root 1 0 R>>\nstartxref\n${xrefStart}\n%%EOF\n`;
+  return Buffer.from(pdf, "latin1");
+}
+
+const csvRekapSaksi = [
+  "Nomor Tugas,Judul,Tanggal Kegiatan,Jumlah Saksi Diperiksa,Keterangan",
+  `HUK/2026/10/004,Rapat Koordinasi Bulanan,${formatWib(now - 3600 * 24 * 5)},24,Rekapitulasi berita acara rapat koordinasi bulanan`,
+  `HUK/2026/10/004,Rapat Koordinasi Pengawasan Wilayah B,${formatWib(now - 3600 * 24 * 4)},17,Lanjutan pencocokan data saksi wilayah B`,
+].join("\n");
+
+const ARCHIVED_SEED = {
+  submissionId: "sub_huk_4_v1",
+  assignmentId: "asg_huk_4",
+  taskId: "tsk_huk_4",
+  archiveId: "doc_huk_4",
+  archiveTitle: "Rekap Berita Acara Rapat Koordinasi",
+  submittedAt: now - 3600 * 24 * 2 - 3600 * 4,
+  reviewedAt: now - 3600 * 24 * 2,
+  files: [
+    {
+      id: "att_huk_4_1",
+      name: "berita-acara-rapat-koordinasi.pdf",
+      mime: "application/pdf",
+      content: minimalPdf("Berita Acara Rapat Koordinasi", [
+        "Nomor tugas : HUK/2026/10/004",
+        "Disusun oleh : Staf Hukum & Sengketa",
+        "Isi : rekapitulasi berita acara rapat koordinasi bulanan tingkat kota.",
+        "Berkas contoh seed pengembangan.",
+      ]),
+    },
+    {
+      id: "att_huk_4_2",
+      name: "rekap-data-saksi.csv",
+      mime: "text/csv",
+      content: Buffer.from(csvRekapSaksi, "utf8"),
+    },
+  ],
+};
+
+const seedMonth = new Date().toISOString().slice(0, 7);
+for (const file of ARCHIVED_SEED.files) {
+  file.storedKey = `uploads/div_hukum/${seedMonth}/${file.id}-${file.name}`;
+  file.checksum = createHash("sha256").update(file.content).digest("hex");
+  file.sizeBytes = file.content.length;
+}
+
+lines.push(
+  `INSERT INTO task_submissions (id, assignment_id, version, notes, state, idempotency_key, submitted_by, created_at) VALUES (${quote(ARCHIVED_SEED.submissionId)}, ${quote(ARCHIVED_SEED.assignmentId)}, 1, ${quote("Rekap berita acara dan rekap data saksi terlampir.")}, 'COMMITTED', ${quote("seed-huk-4-v1")}, ${quote("usr_staf_hukum")}, ${ARCHIVED_SEED.submittedAt}) ON CONFLICT(id) DO UPDATE SET assignment_id = excluded.assignment_id, version = excluded.version, notes = excluded.notes, state = excluded.state, idempotency_key = excluded.idempotency_key, submitted_by = excluded.submitted_by, created_at = excluded.created_at;`,
+);
+for (const file of ARCHIVED_SEED.files) {
+  lines.push(
+    `INSERT INTO attachments (id, submission_id, original_name, stored_key, mime_type, size_bytes, checksum_sha256, state, uploaded_by, created_at) VALUES (${quote(file.id)}, ${quote(ARCHIVED_SEED.submissionId)}, ${quote(file.name)}, ${quote(file.storedKey)}, ${quote(file.mime)}, ${file.sizeBytes}, ${quote(file.checksum)}, 'COMMITTED', ${quote("usr_staf_hukum")}, ${ARCHIVED_SEED.submittedAt}) ON CONFLICT(id) DO UPDATE SET submission_id = excluded.submission_id, original_name = excluded.original_name, stored_key = excluded.stored_key, mime_type = excluded.mime_type, size_bytes = excluded.size_bytes, checksum_sha256 = excluded.checksum_sha256, state = excluded.state, uploaded_by = excluded.uploaded_by, created_at = excluded.created_at;`,
+  );
+}
+lines.push(
+  `INSERT INTO task_reviews (id, submission_id, reviewer_id, decision, feedback, created_at) VALUES ('rev_huk_4_v1', ${quote(ARCHIVED_SEED.submissionId)}, 'usr_admin_hukum', 'APPROVED', NULL, ${ARCHIVED_SEED.reviewedAt}) ON CONFLICT(id) DO UPDATE SET submission_id = excluded.submission_id, reviewer_id = excluded.reviewer_id, decision = excluded.decision, feedback = excluded.feedback, created_at = excluded.created_at;`,
+);
+lines.push(
+  `INSERT INTO document_archive (id, assignment_id, submission_id, task_id, division_id, title, archived_at) VALUES (${quote(ARCHIVED_SEED.archiveId)}, ${quote(ARCHIVED_SEED.assignmentId)}, ${quote(ARCHIVED_SEED.submissionId)}, ${quote(ARCHIVED_SEED.taskId)}, 'div_hukum', ${quote(ARCHIVED_SEED.archiveTitle)}, ${ARCHIVED_SEED.reviewedAt}) ON CONFLICT(id) DO UPDATE SET assignment_id = excluded.assignment_id, submission_id = excluded.submission_id, task_id = excluded.task_id, division_id = excluded.division_id, title = excluded.title, archived_at = excluded.archived_at;`,
+);
+lines.push(
+  `INSERT INTO activity_logs (id, actor_id, action, entity_type, entity_id, prev_value, new_value, ip_address, created_at) VALUES ('log_seed_huk_4_submit', 'usr_staf_hukum', 'submission.created', 'assignment', ${quote(ARCHIVED_SEED.assignmentId)}, NULL, ${quote("Versi 1 dikirim, 2 berkas.")}, NULL, ${ARCHIVED_SEED.submittedAt}) ON CONFLICT(id) DO UPDATE SET actor_id = excluded.actor_id, action = excluded.action, entity_type = excluded.entity_type, entity_id = excluded.entity_id, prev_value = excluded.prev_value, new_value = excluded.new_value, ip_address = excluded.ip_address, created_at = excluded.created_at;`,
+);
+lines.push(
+  `INSERT INTO activity_logs (id, actor_id, action, entity_type, entity_id, prev_value, new_value, ip_address, created_at) VALUES ('log_seed_huk_4_review', 'usr_admin_hukum', 'assignment.reviewed', 'assignment', ${quote(ARCHIVED_SEED.assignmentId)}, ${quote("MENUNGGU_VERIFIKASI")}, ${quote("SELESAI")}, NULL, ${ARCHIVED_SEED.reviewedAt}) ON CONFLICT(id) DO UPDATE SET actor_id = excluded.actor_id, action = excluded.action, entity_type = excluded.entity_type, entity_id = excluded.entity_id, prev_value = excluded.prev_value, new_value = excluded.new_value, ip_address = excluded.ip_address, created_at = excluded.created_at;`,
+);
+
+// Unggah objek berkas ke R2 lokal supaya unduhan benar-benar berfungsi.
+const tmpDir = mkdtempSync(resolve(tmpdir(), "seed-r2-"));
+try {
+  for (const file of ARCHIVED_SEED.files) {
+    const filePath = resolve(tmpDir, file.id);
+    writeFileSync(filePath, file.content);
+    const key = `penugasan-files/${file.storedKey}`;
+    execSync(
+      `npx wrangler r2 object put "${key}" --file "${filePath}" --content-type "${file.mime}" --local`,
+      { stdio: "inherit", cwd: root },
+    );
+  }
+} finally {
+  rmSync(tmpDir, { recursive: true, force: true });
+}
+
 const outPath = resolve(root, "seed/seed.sql");
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, `${lines.join("\n")}\n`, "utf8");
-console.log(`seed/seed.sql ditulis: ${DIVISIONS.length} divisi, ${CATEGORIES.length} kategori, ${USERS.length} akun.`);
+console.log(
+  `seed/seed.sql ditulis: ${DIVISIONS.length} divisi, ${CATEGORIES.length} kategori, ${USERS.length} akun, ${ARCHIVED_SEED.files.length} berkas arsip (R2 lokal terisi).`,
+);

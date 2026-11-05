@@ -1,5 +1,10 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { divisions } from "@/db/schema";
+import {
+  getReportRecap,
+  reportPeriodOptions,
+  resolveReportPeriod,
+} from "@/db/queries/reports";
 import { appContext } from "@/env";
 import { requireActor } from "@/lib/auth/current";
 import { resolveScope } from "@/lib/auth/scope";
@@ -8,7 +13,9 @@ import ReportsClient from "./reports-client";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReportsPage() {
+export default async function ReportsPage(props: {
+  searchParams: Promise<{ periode?: string; divisi?: string }>;
+}) {
   const actor = await requireActor();
   const scope = resolveScope(actor);
 
@@ -26,16 +33,46 @@ export default async function ReportsPage() {
   }
 
   const { db } = appContext();
-  const [division] = await db
-    .select({ name: divisions.name })
+  const params = await props.searchParams;
+  const periods = reportPeriodOptions();
+  const period = resolveReportPeriod(params.periode ?? "");
+  const activeDivision =
+    scope.allDivisions && params.divisi && params.divisi !== "semua"
+      ? params.divisi
+      : "semua";
+
+  const recapRows = await getReportRecap(db, scope, period);
+  const rows =
+    activeDivision === "semua"
+      ? recapRows
+      : recapRows.filter((row) => row.divisionName === activeDivision);
+
+  const divisionNames = scope.allDivisions
+    ? (
+        await db
+          .select({ name: divisions.name })
+          .from(divisions)
+          .orderBy(asc(divisions.name))
+      ).map((row) => row.name)
+    : [];
+
+  const divisionRows = await db
+    .select({ id: divisions.id, name: divisions.name })
     .from(divisions)
     .where(eq(divisions.id, actor.divisionId))
     .limit(1);
+  const userDivisionName = divisionRows[0]?.name ?? "";
 
   return (
     <ReportsClient
+      rows={rows}
+      periods={periods.map((option) => ({ key: option.key, label: option.label }))}
+      activePeriodKey={period.key}
+      periodLabel={period.label}
+      activeDivision={activeDivision}
+      divisionNames={divisionNames}
       userRole={scope.role}
-      userDivisionName={division?.name ?? "Hukum & Sengketa"}
+      userDivisionName={userDivisionName}
     />
   );
 }

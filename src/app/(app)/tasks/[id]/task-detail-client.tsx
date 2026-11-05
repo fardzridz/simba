@@ -66,11 +66,8 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
       <div>
         <Link
           href="/tasks"
-          className="inline-flex items-center gap-1.5 text-body-sm font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+          className="inline-flex items-center text-body-sm font-medium text-ink-2 hover:text-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
         >
-          <span className="text-body-sm" aria-hidden="true">
-            ←
-          </span>
           Kembali ke Tugas Saya
         </Link>
       </div>
@@ -233,7 +230,7 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
                               {file.downloadUrl ? (
                                 <a
                                   href={file.downloadUrl}
-                                  className="inline-flex items-center gap-1 text-body-sm font-semibold text-primary hover:underline"
+                                  className="inline-flex items-center gap-1 text-body-sm font-medium text-ink-2 hover:text-ink hover:underline"
                                 >
                                   <Icon name="unduh" size={13} />
                                   Unduh
@@ -242,7 +239,7 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
                                 <button
                                   type="button"
                                   disabled
-                                  title="Route unduhan belum tersedia."
+                                  title="Unduhan belum tersedia untuk berkas ini."
                                   className="inline-flex items-center gap-1 text-body-sm font-semibold text-ink-3 disabled:cursor-not-allowed"
                                 >
                                   <Icon name="unduh" size={13} />
@@ -282,13 +279,11 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
               </div>
             )}
 
-            {/* Catatan Edukasi Kearsipan Sesuai Wireframe L07 */}
+            {/* Catatan kearsipan yang berlaku bagi pengguna */}
             <div className="border-t border-border pt-3 text-body-sm text-ink-3 space-y-1">
               <p>
-                Setelah dikumpulkan ulang, pengumpulan berikutnya otomatis tercatat sebagai Versi {nextVersionNumber}.
-              </p>
-              <p>
-                Berkas versi sebelumnya tetap tersimpan untuk jejak audit; unduhan belum tersedia pada versi ini.
+                Setelah dikumpulkan ulang, pengumpulan berikutnya otomatis tercatat sebagai Versi{" "}
+                {nextVersionNumber}. Berkas versi sebelumnya tetap tersimpan untuk jejak audit.
               </p>
             </div>
           </section>

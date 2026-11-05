@@ -9,6 +9,13 @@ import { cancelTask, reviewSubmission } from "../actions";
 import { CancelTaskModal } from "./task-admin-dialogs";
 import type { TaskDetail } from "@/db/queries/task-detail";
 
+const PRIORITY_LABEL: Record<string, string> = {
+  RENDAH: "Rendah",
+  SEDANG: "Sedang",
+  TINGGI: "Tinggi",
+  MENDESAK: "Mendesak",
+};
+
 export interface TaskReviewClientProps {
   initialTask: TaskDetail;
   isSuperAdmin?: boolean;
@@ -80,11 +87,8 @@ export default function TaskReviewClient({
       <div>
         <Link
           href="/tasks"
-          className="inline-flex items-center gap-1.5 text-body-sm font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+          className="inline-flex items-center text-body-sm font-medium text-ink-2 hover:text-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
         >
-          <span className="text-body-sm" aria-hidden="true">
-            ←
-          </span>
           {isSuperAdmin ? "Kembali ke Semua Tugas" : "Kembali ke Tugas Divisi"}
         </Link>
       </div>
@@ -162,8 +166,11 @@ export default function TaskReviewClient({
           </div>
           <div>
             {task.status === "MENUNGGU_VERIFIKASI" ? (
-              <span className="font-semibold text-error">
-                Tunggu review: {task.waitingDurationFormatted ?? "—"}
+              <span>
+                <span className="text-ink-3">Tunggu review: </span>
+                <span className="font-semibold text-ink">
+                  {task.waitingDurationFormatted ?? "belum ada pengumpulan"}
+                </span>
               </span>
             ) : (
               <span className="text-ink-3">Divisi {task.divisionName}</span>
@@ -243,7 +250,7 @@ export default function TaskReviewClient({
                           {file.downloadUrl ? (
                             <a
                               href={file.downloadUrl}
-                              className="inline-flex items-center gap-1 text-body-sm font-semibold text-primary hover:underline"
+                              className="inline-flex items-center gap-1 text-body-sm font-medium text-ink-2 hover:text-ink hover:underline"
                             >
                               <Icon name="unduh" size={13} />
                               Unduh
@@ -252,7 +259,7 @@ export default function TaskReviewClient({
                             <button
                               type="button"
                               disabled
-                              title="Berkas ini belum di-commit sehingga tidak dapat diunduh."
+                              title="Berkas ini belum disahkan sehingga tidak dapat diunduh."
                               className="inline-flex items-center gap-1 text-body-sm font-semibold text-ink-3 disabled:cursor-not-allowed"
                             >
                               <Icon name="unduh" size={13} />
@@ -286,8 +293,9 @@ export default function TaskReviewClient({
                         <span className="text-ink-3">{hist.submittedAtFormatted}</span>
                       </div>
                       {hist.adminFeedback ? (
-                        <p className="text-error font-medium">
-                          Catatan admin: {hist.adminFeedback}
+                        <p className="text-ink-2">
+                          <span className="font-medium text-ink">Catatan admin:</span>{" "}
+                          {hist.adminFeedback}
                         </p>
                       ) : null}
                     </div>
@@ -296,14 +304,11 @@ export default function TaskReviewClient({
               )}
             </div>
 
-            {/* Catatan Edukasi Kearsipan Sesuai Wireframe L11 */}
+            {/* Catatan kearsipan yang berlaku bagi pengguna */}
             <div className="border-t border-border pt-4 text-body-sm text-ink-3 space-y-1">
               <p>
-                Unduhan melewati pemeriksaan sesi dan cakupan divisi pada setiap permintaan.
-              </p>
-              <p>Pratinjau berkas di dalam aplikasi tidak disediakan.</p>
-              <p>
-                Persetujuan menulis satu baris dokumen final untuk penugasan ini, bukan untuk setiap berkas. Menyetujui ulang memperbarui baris yang sama.
+                Persetujuan menulis satu baris dokumen final untuk penugasan ini, bukan untuk
+                setiap berkas. Menyetujui ulang memperbarui baris yang sama.
               </p>
             </div>
           </section>
@@ -438,7 +443,8 @@ export default function TaskReviewClient({
                   <span className="text-ink-3">Kategori:</span> {task.categoryName}
                 </div>
                 <div>
-                  <span className="text-ink-3">Prioritas:</span> {task.priority}
+                  <span className="text-ink-3">Prioritas:</span>{" "}
+                  {PRIORITY_LABEL[task.priority] ?? task.priority}
                 </div>
               </div>
             </div>

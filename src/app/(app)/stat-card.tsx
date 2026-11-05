@@ -50,7 +50,7 @@ export default function StatCard({
 
   return (
     <div
-      className={`card flex flex-col justify-between border p-4 transition-all duration-[120ms] hover:shadow-card-hover ${style.border}`}
+      className={`card flex flex-col justify-between border p-4 transition-[border-color,box-shadow] duration-[120ms] hover:shadow-card-hover ${style.border}`}
     >
       <div className="flex items-start justify-between gap-2">
         <p className="label font-medium text-ink-2">{label}</p>

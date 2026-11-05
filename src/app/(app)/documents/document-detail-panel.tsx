@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Icon } from "@/app/icons";
-import type { FinalDocument } from "@/lib/mock-documents";
+import type { FinalDocument } from "@/db/queries/documents";
 
 export interface DocumentDetailPanelProps {
   document: FinalDocument | null;
@@ -29,13 +29,6 @@ export default function DocumentDetailPanel({
     );
   }
 
-  const handleDownloadAll = () => {
-    // Simulasi unduhan gabungan seluruh berkas lampiran
-    alert(
-      `Memulai unduhan seluruh berkas lampiran (${document.files.length} berkas) untuk dokumen ${document.taskNumber}.`,
-    );
-  };
-
   return (
     <aside
       aria-label="Panel detail dokumen"
@@ -47,7 +40,7 @@ export default function DocumentDetailPanel({
         <button
           type="button"
           onClick={onClose}
-          className="text-body-sm font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+          className="text-body-sm font-medium text-ink-2 hover:text-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
         >
           Tutup
         </button>
@@ -82,9 +75,9 @@ export default function DocumentDetailPanel({
             </span>
           </div>
           <div>
-            <span className="text-ink-3">Versi submission:</span>{" "}
+            <span className="text-ink-3">Versi:</span>{" "}
             <span className="font-medium text-ink">
-              Versi {document.submissionVersion} (disetujui)
+              {document.submissionVersion} (disetujui)
             </span>
           </div>
         </div>
@@ -110,30 +103,32 @@ export default function DocumentDetailPanel({
               </div>
 
               <div className="flex items-center gap-2.5 shrink-0">
-                <span className="font-mono text-[11px] text-ink-3">
+                <span className="font-mono text-body-sm text-ink-3">
                   {file.sizeFormatted} · {file.checksum}
                 </span>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 text-body-sm font-semibold text-primary hover:underline"
-                >
-                  <Icon name="unduh" size={13} />
-                  Unduh
-                </button>
+                {file.downloadUrl ? (
+                  <a
+                    href={file.downloadUrl}
+                    className="inline-flex items-center gap-1 text-body-sm font-medium text-ink-2 hover:text-ink hover:underline"
+                  >
+                    <Icon name="unduh" size={13} />
+                    Unduh
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    title="Unduhan belum tersedia untuk berkas ini."
+                    className="inline-flex items-center gap-1 text-body-sm font-semibold text-ink-3 disabled:cursor-not-allowed"
+                  >
+                    <Icon name="unduh" size={13} />
+                    Unduh
+                  </button>
+                )}
               </div>
             </li>
           ))}
         </ul>
-
-        {/* Tombol Unduh Semua */}
-        <button
-          type="button"
-          onClick={handleDownloadAll}
-          className="mt-1 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-md bg-primary px-4 text-body-sm font-semibold text-on-dark transition-colors hover:bg-primary-hover active:bg-primary-active shadow-sm"
-        >
-          <Icon name="unduh" size={15} />
-          Unduh Semua
-        </button>
       </div>
 
       {/* Catatan Bisnis Kearsipan Sesuai Wireframe L13 */}
@@ -145,15 +140,11 @@ export default function DocumentDetailPanel({
         <div>
           <Link
             href={`/tasks/${document.taskId}`}
-            className="font-semibold text-primary hover:underline inline-flex items-center gap-1"
+            className="font-medium text-ink-2 hover:text-ink hover:underline inline-flex items-center gap-1"
           >
-            Lihat tugas asal →
+            Lihat tugas asal
           </Link>
         </div>
-
-        <p className="mt-1 text-[11px] text-ink-3 border-t border-border pt-2">
-          Cakupan unduhan diperiksa pada setiap permintaan di sisi server.
-        </p>
       </div>
     </aside>
   );

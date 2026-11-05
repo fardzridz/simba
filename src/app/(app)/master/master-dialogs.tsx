@@ -95,7 +95,7 @@ export function ResetPasswordModal({
           <p className="text-ink">
             Sesi pengguna akan diakhiri setelah kata sandi direset.
           </p>
-          <p className="text-ink-3 text-[11px]">
+          <p className="text-ink-3 text-body-sm">
             Tindakan ini tercatat di log aktivitas dan kata sandi baru sementara akan dikirimkan kepada pengguna.
           </p>
         </div>
@@ -226,7 +226,7 @@ export function DeactivateUserModal({
                 setReason(e.target.value);
                 if (error) setError(null);
               }}
-              placeholder="Contoh: Pegawai mutasi ke instansi lain / purna tugas..."
+              placeholder="Contoh: Pegawai mutasi ke instansi lain / purna tugas"
               className="w-full rounded-md border border-border bg-surface p-2.5 text-body text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
             />
           </div>
@@ -581,7 +581,7 @@ export function DivisionFormModal({
               placeholder="HUK"
               className="h-9 w-full rounded-md border border-border bg-surface px-3 font-mono text-body-sm text-ink uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
             />
-            <span className="text-[11px] text-ink-3">
+            <span className="text-body-sm text-ink-3">
               Dipakai sebagai awalan nomor surat tugas (misal HUK/2026/10/001).
             </span>
           </div>
@@ -715,7 +715,7 @@ export function CategoryFormModal({
               placeholder="Contoh: Kearsipan / Persuratan"
               className="h-9 w-full rounded-md border border-border bg-surface px-3 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
             />
-            <span className="text-[11px] text-ink-3">
+            <span className="text-body-sm text-ink-3">
               Kategori nonaktif tidak dapat dipakai tugas baru, tetapi riwayat tugas lama tetap tampil.
             </span>
           </div>

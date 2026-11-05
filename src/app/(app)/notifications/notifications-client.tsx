@@ -86,13 +86,6 @@ export default function NotificationsClient({
   }
 
   function renderRow(item: NotificationListItem) {
-    const messageClass =
-      item.tone === "error"
-        ? "text-error"
-        : item.tone === "warning"
-          ? "text-warning"
-          : "text-ink-3";
-
     return (
       <li
         key={item.id}
@@ -114,7 +107,7 @@ export default function NotificationsClient({
               >
                 {item.title}
               </span>
-              <p className={`text-body-sm mt-0.5 ${messageClass}`}>
+              <p className="text-body-sm mt-0.5 text-ink-3">
                 {item.message}
               </p>
             </div>
@@ -127,9 +120,9 @@ export default function NotificationsClient({
               onClick={(event) => {
                 void handleOpen(event, item);
               }}
-              className="text-body-sm font-semibold text-primary hover:underline"
+              className="text-body-sm font-medium text-ink-2 hover:text-ink hover:underline"
             >
-              Buka tugas →
+              Buka tugas
             </Link>
           </div>
         </div>
@@ -226,9 +219,9 @@ export default function NotificationsClient({
               <div className="flex items-center justify-between border-b border-border pb-2">
                 <span
                   id="heading-baru"
-                  className="text-body-sm font-semibold tracking-wide text-ink-3"
+                  className="text-body-sm font-semibold text-ink-3"
                 >
-                  BARU
+                  Baru
                 </span>
                 <span className="text-body-sm font-medium text-ink-3">
                   Belum Dibaca: {unreadCount}
@@ -254,9 +247,9 @@ export default function NotificationsClient({
               <div className="border-b border-border pb-2">
                 <span
                   id="heading-dibaca"
-                  className="text-body-sm font-semibold tracking-wide text-ink-3"
+                  className="text-body-sm font-semibold text-ink-3"
                 >
-                  SUDAH DIBACA
+                  Sudah dibaca
                 </span>
               </div>
               <ul className="divide-y divide-border">

@@ -1,5 +1,6 @@
-import { eq } from "drizzle-orm";
-import { divisions } from "@/db/schema";
+import { asc, eq } from "drizzle-orm";
+import { categories, divisions } from "@/db/schema";
+import { getFinalDocuments } from "@/db/queries/documents";
 import { appContext } from "@/env";
 import { requireActor } from "@/lib/auth/current";
 import { resolveScope } from "@/lib/auth/scope";
@@ -12,16 +13,26 @@ export default async function DocumentsPage() {
   const scope = resolveScope(actor);
   const { db } = appContext();
 
-  const [division] = await db
-    .select({ name: divisions.name })
-    .from(divisions)
-    .where(eq(divisions.id, actor.divisionId))
-    .limit(1);
+  const [documents, divisionRows, categoryRows] = await Promise.all([
+    getFinalDocuments(db, scope),
+    db
+      .select({ name: divisions.name })
+      .from(divisions)
+      .where(eq(divisions.id, actor.divisionId))
+      .limit(1),
+    db
+      .select({ name: categories.name })
+      .from(categories)
+      .where(eq(categories.isActive, true))
+      .orderBy(asc(categories.name)),
+  ]);
 
   return (
     <DocumentsClient
       userRole={scope.role}
-      userDivisionName={division?.name ?? "Hukum & Sengketa"}
+      userDivisionName={divisionRows[0]?.name ?? ""}
+      documents={documents}
+      categoryNames={categoryRows.map((row) => row.name)}
     />
   );
 }

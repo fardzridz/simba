@@ -111,16 +111,16 @@ export default function TaskTable({
         <table className="w-full text-left text-body">
           <thead>
             <tr className="border-b border-border bg-surface-sunken">
-              <th scope="col" className="label px-4 py-3 font-medium">
+              <th scope="col" className="label px-2.5 py-3 font-medium tablet:px-4">
                 Judul Tugas
               </th>
-              <th scope="col" className="label px-4 py-3 font-medium">
+              <th scope="col" className="label px-3 py-3 font-medium tablet:px-4">
                 Tenggat
               </th>
-              <th scope="col" className="label px-4 py-3 font-medium">
+              <th scope="col" className="label hidden px-2.5 py-3 font-medium tablet:table-cell tablet:px-4">
                 Prioritas
               </th>
-              <th scope="col" className="label px-4 py-3 font-medium">
+              <th scope="col" className="label hidden px-2.5 py-3 font-medium tablet:table-cell tablet:px-4">
                 Status
               </th>
               <th scope="col" className="label px-4 py-3 text-right font-medium">
@@ -174,13 +174,65 @@ export default function TaskTable({
 
               const isUrgent = overdue || dueSoon || item.priority === "MENDESAK";
 
+              // Aturan tumpuk chip (DESIGN-SYSTEM §4): maksimal satu flag tampil
+              // per baris dengan prioritas Terlambat → Perlu Revisi → Terarsip;
+              // sisanya menjadi penghitung "+N" dengan tooltip.
+              const activeFlags: Array<{ key: string; label: string; node: React.ReactNode }> = [];
+              if (overdue && item.status !== "SELESAI") {
+                activeFlags.push({
+                  key: "terlambat",
+                  label: "Terlambat",
+                  node: (
+                    <span
+                      key="terlambat"
+                      className="inline-flex items-center gap-1 rounded bg-error px-1.5 py-0.5 text-body-sm font-medium text-on-dark"
+                    >
+                      <Icon name="terlambat" size={11} />
+                      Terlambat
+                    </span>
+                  ),
+                });
+              }
+              if (item.needsRevision && item.status !== "SELESAI") {
+                activeFlags.push({
+                  key: "revisi",
+                  label: "Perlu Revisi",
+                  node: (
+                    <span
+                      key="revisi"
+                      className="inline-flex items-center gap-1 rounded bg-error-surface px-1.5 py-0.5 text-body-sm font-medium text-error"
+                    >
+                      <Icon name="revisi" size={11} />
+                      Perlu Revisi
+                    </span>
+                  ),
+                });
+              }
+              if (item.isArchived) {
+                activeFlags.push({
+                  key: "terarsip",
+                  label: "Terarsip",
+                  node: (
+                    <span
+                      key="terarsip"
+                      className="inline-flex items-center gap-1 rounded border border-border px-1.5 py-0.5 text-body-sm text-ink-3"
+                    >
+                      <Icon name="terarsip" size={11} />
+                      Terarsip
+                    </span>
+                  ),
+                });
+              }
+              const shownFlag = activeFlags[0];
+              const hiddenFlags = activeFlags.slice(1);
+
               return (
                 <tr
                   key={item.assignmentId}
                   className="transition-colors hover:bg-neutral-surface/40"
                 >
                   {/* Kolom 1: Judul Tugas + Nomor Mono + Kategori */}
-                  <td className="px-4 py-3.5">
+                  <td className="px-2.5 py-3.5 tablet:px-4">
                     <div className="flex flex-col gap-0.5">
                       <Link
                         href={detailHref(item)}
@@ -188,7 +240,7 @@ export default function TaskTable({
                       >
                         {item.title}
                       </Link>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="font-mono text-body-sm text-ink-3">
                           {item.taskNumber}
                         </span>
@@ -196,11 +248,17 @@ export default function TaskTable({
                         <span className="text-body-sm text-ink-3">
                           {item.categoryName}
                         </span>
+                        <span className="text-body-sm text-border-strong tablet:hidden">·</span>
+                        <span
+                          className={`text-body-sm tablet:hidden ${PRIORITY_STYLE[item.priority]}`}
+                        >
+                          {PRIORITY_LABEL[item.priority]}
+                        </span>
                         {effectiveRole !== "USER" && item.assignedUserName ? (
                           <>
                             <span className="text-body-sm text-border-strong">·</span>
                             <span className="inline-flex items-center gap-1.5">
-                              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-neutral-surface border border-border text-[10px] font-semibold text-ink-2">
+                              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-surface border border-border text-body-sm font-semibold text-ink-2">
                                 {item.assignedUserName
                                   .split(" ")
                                   .map((p) => p[0])
@@ -218,9 +276,9 @@ export default function TaskTable({
                   </td>
 
                   {/* Kolom 2: Tenggat & Sisa Waktu */}
-                  <td className="px-4 py-3.5 whitespace-nowrap">
+                  <td className="px-2.5 py-3.5 tablet:whitespace-nowrap tablet:px-4">
                     <div className="flex flex-col">
-                      <span className="text-body text-ink">
+                      <span className="text-body whitespace-nowrap text-ink">
                         {formatWibDateShort(item.dueAt)}
                       </span>
                       <span className={`text-body-sm ${deadlineNotice.style}`}>
@@ -229,45 +287,47 @@ export default function TaskTable({
                     </div>
                   </td>
 
-                  {/* Kolom 3: Prioritas */}
-                  <td className="px-4 py-3.5 whitespace-nowrap">
+                  {/* Kolom 3: Prioritas (di ponsel pindah ke baris kedua sel judul) */}
+                  <td className="hidden px-2.5 py-3.5 whitespace-nowrap tablet:table-cell tablet:px-4">
                     <span className={`text-body-sm ${PRIORITY_STYLE[item.priority]}`}>
                       {PRIORITY_LABEL[item.priority]}
                     </span>
                   </td>
 
-                  {/* Kolom 4: Status + Flags */}
-                  <td className="px-4 py-3.5">
+                  {/* Kolom 4: Status + Flag (satu flag per baris; di ponsel pindah ke sel aksi) */}
+                  <td className="hidden px-2.5 py-3.5 tablet:table-cell tablet:px-4">
                     <div className="flex flex-col items-start gap-1">
                       <StatusChip status={item.status} />
 
-                      {/* Penanda Flag Tambahan */}
-                      {item.needsRevision && item.status !== "SELESAI" ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-error-surface px-1.5 py-0.5 text-body-sm font-medium text-error">
-                          <Icon name="revisi" size={11} />
-                          Perlu Revisi
-                        </span>
-                      ) : null}
+                      {shownFlag?.node}
 
-                      {overdue && item.status !== "SELESAI" ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-error px-1.5 py-0.5 text-body-sm font-medium text-on-dark">
-                          <Icon name="terlambat" size={11} />
-                          Terlambat
-                        </span>
-                      ) : null}
-
-                      {item.isArchived ? (
-                        <span className="inline-flex items-center gap-1 rounded border border-border px-1.5 py-0.5 text-body-sm text-ink-3">
-                          <Icon name="terarsip" size={11} />
-                          Terarsip
+                      {hiddenFlags.length > 0 ? (
+                        <span
+                          title={hiddenFlags.map((f) => f.label).join(", ")}
+                          aria-label={`Flag lain: ${hiddenFlags.map((f) => f.label).join(", ")}`}
+                          className="inline-flex items-center rounded border border-border px-1.5 py-0.5 text-body-sm font-medium text-ink-3"
+                        >
+                          +{hiddenFlags.length}
                         </span>
                       ) : null}
                     </div>
                   </td>
 
-                  {/* Kolom 5: Aksi */}
-                  {/* Kolom 5: Aksi Berdasarkan Peran */}
-                  <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                  {/* Kolom 5: Status+Aksi (ponsel: chip di atas tombol, §5) / Aksi (tablet ke atas) */}
+                  <td className="px-2.5 py-3.5 text-right tablet:whitespace-nowrap tablet:px-4">
+                    <div className="tablet:hidden flex flex-col items-end gap-1 pb-1.5">
+                      <StatusChip status={item.status} />
+                      {shownFlag?.node}
+                      {hiddenFlags.length > 0 ? (
+                        <span
+                          title={hiddenFlags.map((f) => f.label).join(", ")}
+                          aria-label={`Flag lain: ${hiddenFlags.map((f) => f.label).join(", ")}`}
+                          className="inline-flex items-center rounded border border-border px-1.5 py-0.5 text-body-sm font-medium text-ink-3"
+                        >
+                          +{hiddenFlags.length}
+                        </span>
+                      ) : null}
+                    </div>
                     {effectiveRole === "USER" ? (
                       item.status === "BELUM_DIKERJAKAN" ? (
                         <LoadingButton
@@ -283,7 +343,7 @@ export default function TaskTable({
                       ) : item.status === "SEDANG_DIKERJAKAN" || (item.needsRevision && item.status !== "SELESAI") ? (
                         <Link
                           href={detailHref(item)}
-                          className={`inline-flex h-8 items-center justify-center rounded-md px-3 text-body-sm font-semibold transition-colors duration-[120ms] ${
+                          className={`inline-flex min-h-8 items-center justify-center rounded-md px-3 py-1 text-body-sm font-semibold transition-colors duration-[120ms] ${
                             isUrgent
                               ? "bg-primary text-on-dark hover:bg-primary-hover active:bg-primary-active"
                               : "border border-border-strong bg-surface text-ink hover:bg-neutral-surface"
@@ -294,33 +354,33 @@ export default function TaskTable({
                       ) : item.status === "MENUNGGU_VERIFIKASI" ? (
                         <Link
                           href={detailHref(item)}
-                          className="inline-flex h-8 items-center rounded-md border border-border px-3 text-body-sm text-ink-3 hover:text-ink hover:bg-neutral-surface"
+                          className="inline-flex min-h-8 items-center rounded-md border border-border px-3 py-1 text-body-sm text-ink-3 hover:text-ink hover:bg-neutral-surface"
                         >
                           Lihat Berkas
                         </Link>
                       ) : item.status === "SELESAI" ? (
                         <Link
                           href={detailHref(item)}
-                          className="inline-flex items-center gap-1 text-body-sm font-medium text-primary hover:underline"
+                          className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-border px-3 py-1 text-body-sm text-ink hover:bg-neutral-surface"
                         >
                           <Icon name="unduh" size={14} />
                           Lihat Bukti Terarsip
                         </Link>
                       ) : (
-                        <span className="text-body-sm text-ink-3">-</span>
+                        <span className="text-body-sm text-ink-3">Dibatalkan</span>
                       )
                     ) : effectiveRole === "ADMIN" ? (
                       item.status === "MENUNGGU_VERIFIKASI" ? (
                         <Link
                           href={detailHref(item)}
-                          className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-body-sm font-semibold text-on-dark transition-colors hover:bg-primary-hover active:bg-primary-active shadow-sm"
+                          className="inline-flex min-h-8 items-center justify-center rounded-md bg-primary px-3 py-1 text-body-sm font-semibold text-on-dark transition-colors hover:bg-primary-hover active:bg-primary-active shadow-sm"
                         >
                           Tinjau
                         </Link>
                       ) : item.status === "SELESAI" ? (
                         <Link
                           href={detailHref(item)}
-                          className="text-body-sm font-semibold text-primary hover:underline"
+                          className="text-body-sm font-medium text-ink-2 hover:text-ink hover:underline"
                         >
                           Lihat
                         </Link>
@@ -330,7 +390,7 @@ export default function TaskTable({
                         <div className="inline-flex items-center gap-2">
                           <Link
                             href={`/tasks/${item.taskId}/edit`}
-                            className="text-body-sm font-semibold text-primary hover:underline"
+                            className="text-body-sm font-medium text-ink-2 hover:text-ink hover:underline"
                           >
                             Ubah
                           </Link>
@@ -338,7 +398,7 @@ export default function TaskTable({
                           <button
                             type="button"
                             onClick={() => setCancellingTask(item)}
-                            className="text-body-sm font-semibold text-error hover:underline cursor-pointer"
+                            className="text-body-sm font-medium text-error hover:underline cursor-pointer"
                           >
                             Batalkan
                           </button>
@@ -348,7 +408,7 @@ export default function TaskTable({
                       /* SUPER_ADMIN: Hanya aksi Lihat (baca-saja sesuai wireframe L12) */
                       <Link
                         href={detailHref(item)}
-                        className="text-body-sm font-semibold text-primary hover:underline"
+                        className="text-body-sm font-medium text-ink-2 hover:text-ink hover:underline"
                       >
                         Lihat
                       </Link>

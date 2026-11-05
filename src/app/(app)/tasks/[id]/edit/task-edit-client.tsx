@@ -129,11 +129,8 @@ export default function TaskEditClient({
       <div>
         <Link
           href="/tasks"
-          className="inline-flex items-center gap-1.5 text-body-sm font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+          className="inline-flex items-center text-body-sm font-medium text-ink-2 hover:text-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
         >
-          <span className="text-body-sm" aria-hidden="true">
-            ←
-          </span>
           Kembali ke Tugas Divisi
         </Link>
       </div>
@@ -305,7 +302,7 @@ export default function TaskEditClient({
                   <button
                     type="button"
                     onClick={handleSelectAllStaff}
-                    className="font-semibold text-primary hover:underline text-body-sm"
+                    className="font-medium text-ink-2 hover:text-ink hover:underline text-body-sm"
                   >
                     {selectedStaffIds.length === MOCK_DIVISION_MEMBERS.length
                       ? "Batal pilih semua"
@@ -323,7 +320,7 @@ export default function TaskEditClient({
                     type="text"
                     value={staffSearchQuery}
                     onChange={(e) => setStaffSearchQuery(e.target.value)}
-                    placeholder="Cari nama anggota divisi..."
+                    placeholder="Cari nama anggota divisi"
                     className="h-9 w-full rounded-md border border-border bg-surface pl-9 pr-3 text-body-sm text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
                   />
                 </div>
@@ -355,7 +352,7 @@ export default function TaskEditClient({
                               onChange={() => handleToggleStaff(staff.id)}
                               className="h-4 w-4 rounded border-border-strong text-primary accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
                             />
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-surface border border-border text-[10px] font-semibold text-ink-2 shrink-0">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-surface border border-border text-body-sm font-semibold text-ink-2 shrink-0">
                               {staff.initials}
                             </span>
                             <span className="font-medium text-body-sm text-ink truncate">

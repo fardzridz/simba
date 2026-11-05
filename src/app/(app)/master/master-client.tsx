@@ -273,7 +273,8 @@ export default function MasterClient() {
         </div>
 
         <p className="text-body-sm text-ink-3">
-          48 pengguna, 5 divisi, 8 kategori pada data contoh. Tabel menampilkan akun seed pengembangan.
+          {users.length} pengguna, {divisions.length} divisi, {categories.length} kategori pada data
+          contoh pengembangan.
         </p>
       </div>
 
@@ -292,7 +293,7 @@ export default function MasterClient() {
                 type="text"
                 value={userQuery}
                 onChange={(e) => setUserQuery(e.target.value)}
-                placeholder="Cari nama atau nama pengguna..."
+                placeholder="Cari nama atau nama pengguna"
                 className="h-8 w-full rounded-md border border-border bg-surface pl-8 pr-3 text-body-sm text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
               />
             </div>
@@ -343,7 +344,7 @@ export default function MasterClient() {
                   setSelectedStatus("semua");
                   setSelectedDivision("semua");
                 }}
-                className="ml-auto text-body-sm font-semibold text-primary hover:underline"
+                className="ml-auto text-body-sm font-medium text-ink-2 hover:text-ink hover:underline"
               >
                 Hapus filter
               </button>
@@ -396,14 +397,14 @@ export default function MasterClient() {
                               setEditTargetUser(u);
                               setIsAddUserOpen(true);
                             }}
-                            className="text-body-sm font-semibold text-primary hover:underline"
+                            className="text-body-sm font-medium text-ink-2 hover:text-ink hover:underline"
                           >
                             Ubah
                           </button>
                           <button
                             type="button"
                             onClick={() => setResetTargetUser(u)}
-                            className="text-body-sm font-semibold text-primary hover:underline"
+                            className="text-body-sm font-medium text-ink-2 hover:text-ink hover:underline"
                           >
                             Reset
                           </button>
@@ -453,7 +454,7 @@ export default function MasterClient() {
                 type="text"
                 value={divisionQuery}
                 onChange={(e) => setDivisionQuery(e.target.value)}
-                placeholder="Cari nama atau kode divisi..."
+                placeholder="Cari nama atau kode divisi"
                 className="h-8 w-full rounded-md border border-border bg-surface pl-8 pr-3 text-body-sm text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
               />
             </div>
@@ -500,7 +501,7 @@ export default function MasterClient() {
                             setEditTargetDivision(d);
                             setIsAddDivisionOpen(true);
                           }}
-                          className="text-body-sm font-semibold text-primary hover:underline"
+                          className="text-body-sm font-medium text-ink-2 hover:text-ink hover:underline"
                         >
                           Ubah
                         </button>
@@ -528,7 +529,7 @@ export default function MasterClient() {
                 type="text"
                 value={categoryQuery}
                 onChange={(e) => setCategoryQuery(e.target.value)}
-                placeholder="Cari nama kategori..."
+                placeholder="Cari nama kategori"
                 className="h-8 w-full rounded-md border border-border bg-surface pl-8 pr-3 text-body-sm text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
               />
             </div>
@@ -569,7 +570,7 @@ export default function MasterClient() {
                             setEditTargetCategory(c);
                             setIsAddCategoryOpen(true);
                           }}
-                          className="text-body-sm font-semibold text-primary hover:underline"
+                          className="text-body-sm font-medium text-ink-2 hover:text-ink hover:underline"
                         >
                           Ubah
                         </button>
@@ -586,7 +587,8 @@ export default function MasterClient() {
       {/* Catatan Edukasi Kearsipan Sesuai Wireframe L17 */}
       <div className="border-t border-border pt-4 text-body-sm text-ink-3 space-y-1">
         <p className="text-ink-2 font-medium">
-          Akun beriwayat dinonaktifkan, bukan dihapus. Divisi dan kategori memakai pola tab dan tabel yang sama.
+          Akun yang sudah pernah dipakai dinonaktifkan, bukan dihapus. Divisi dan kategori memakai
+          pola tab dan tabel yang sama.
         </p>
         <p>
           Kategori nonaktif tidak dapat dipakai tugas baru, riwayat penugasan lama tetap tampil.

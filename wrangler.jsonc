@@ -105,7 +105,10 @@
 			},
 			"vars": {
 				"APP_ENV": "staging",
-				"EXTERNAL_CHANNELS_ENABLED": "true"
+				"EXTERNAL_CHANNELS_ENABLED": "true",
+				// URL publik worker staging: dipakai tautan dalam pesan notifikasi
+				// (§7.6). Nilai rahasia tidak ditulis di sini, hanya var publik.
+				"APP_BASE_URL": "https://penugasan-divisi-staging.sdmbawaslupas-e2d.workers.dev"
 			}
 		},
 		"production": {

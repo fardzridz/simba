@@ -15,7 +15,7 @@ const run = promisify(execFile);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
 const TEST_PASSWORD = "KataSandi#Uji2026";
-/** Turunan PBKDF2 600.000 iterasi butuh detik, jauh lebih lambat dari timeout default. */
+/** Turunan PBKDF2 butuh detik per hash, jauh lebih lambat dari timeout default. */
 const TEST_TIMEOUT_MS = 30_000;
 
 let cachedHash: Promise<string> | null = null;

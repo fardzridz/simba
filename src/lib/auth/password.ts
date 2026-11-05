@@ -3,7 +3,8 @@
  * Argon2/bcrypt tidak tersedia di runtime Workers, jadi format dan iterasi
  * disimpan di dalam string hasil supaya bisa dinaikkan tanpa migrasi data.
  */
-export const PBKDF2_ITERATIONS = 600_000;
+/** workerd menolak PBKDF2 di atas 100.000 iterasi (NotSupportedError), jadi standar menempel batas runtime itu. */
+export const PBKDF2_ITERATIONS = 100_000;
 
 /** Kata sandi awal akun yang dibuat Super Admin (UC02) dan seed (§6.6). Pengguna menggantinya sendiri setelah masuk. */
 export const INITIAL_ACCOUNT_PASSWORD = "Bawaslu#2026";

@@ -805,7 +805,7 @@ Dua lingkungan wajib: `staging` dan `production`, dengan basis data D1 dan bucke
 | Aspek | Ketentuan |
 |---|---|
 | Kredensial | username + kata sandi; email bukan untuk login, melainkan kanal notifikasi setelah diverifikasi |
-| Hash | PBKDF2-SHA256 lewat WebCrypto (`crypto.subtle.deriveBits`), salt 16 byte acak per pengguna, iterasi mengikuti anjuran OWASP untuk PBKDF2-SHA256 (≥ 600.000). Argon2/bcrypt tidak tersedia di WebCrypto Workers |
+| Hash | PBKDF2-SHA256 lewat WebCrypto (`crypto.subtle.deriveBits`), salt 16 byte acak per pengguna, iterasi dibatasi maksimum PBKDF2 yang diterima runtime Workers (100.000; workerd menolak lebih tinggi). Argon2/bcrypt tidak tersedia di WebCrypto Workers |
 | Paket | **Workers Paid wajib**: CPU Free 10 ms per permintaan tidak cukup untuk verifikasi sandi + SSR. Batas CPU dinaikkan lewat `limits.cpu_ms` pada rute login |
 | Sesi | cookie `HttpOnly`, `Secure`, `SameSite=Lax`, masa berlaku 8 jam idle |
 | Proteksi masuk | pembatasan 5 percobaan per menit per akun+IP, jeda bertambah, kegagalan dicatat |

@@ -1,0 +1,58 @@
+diff --git a/node_modules/next/dist/server/app-render/action-handler.js b/node_modules/next/dist/server/app-render/action-handler.js
+index 74e46ee..aa23fba 100644
+--- a/node_modules/next/dist/server/app-render/action-handler.js
++++ b/node_modules/next/dist/server/app-render/action-handler.js
+@@ -664,28 +664,39 @@ async function handleAction({ req, res, ComponentMod, generateFlight, workStore,
+                         } catch (err) {
+                             return handleUnrecognizedAction(err, getUnrecognizedActionStatusCode(actionId));
+                         }
+-                        const busboy = require('next/dist/compiled/busboy')({
+-                            defParamCharset: 'utf8',
+-                            headers: req.headers,
+-                            limits: {
+-                                fieldSize: bodySizeLimitBytes
+-                            }
++                        // [OpenNext-worker patch] React's decodeReplyFromBusboy relies on
++                        // Node busboy stream events; on workerd the stream `finish` event
++                        // can fire while a multipart part is still pending, so every
++                        // fetch action fails with "Connection closed.". Parse the body
++                        // through the same Web FormData parser used by the MPA branch
++                        // below (which is workerd-safe), then decode with decodeReply.
++                        const sizeLimitedBodyPassthrough = new PassThrough();
++                        const fakeRequestForFetchAction = new Request('http://localhost', {
++                            method: 'POST',
++                            // @ts-expect-error
++                            headers: {
++                                'Content-Type': contentType
++                            },
++                            body: Readable.toWeb(sizeLimitedBodyPassthrough),
++                            duplex: 'half'
+                         });
+-                        const abortController = new AbortController();
++                        let fetchActionFormData;
++                        const fetchActionAbortController = new AbortController();
+                         try {
+                             ;
+-                            [, boundActionArguments] = await Promise.all([
+-                                pipeline(body, sizeLimitTransform, busboy, {
+-                                    signal: abortController.signal
++                            [, fetchActionFormData] = await Promise.all([
++                                pipeline(body, sizeLimitTransform, sizeLimitedBodyPassthrough, {
++                                    signal: fetchActionAbortController.signal
+                                 }),
+-                                decodeReplyFromBusboy(busboy, serverModuleMap, {
+-                                    temporaryReferences
+-                                })
++                                fakeRequestForFetchAction.formData()
+                             ]);
+                         } catch (err) {
+-                            abortController.abort();
++                            fetchActionAbortController.abort();
+                             throw err;
+                         }
++                        boundActionArguments = await decodeReply(fetchActionFormData, serverModuleMap, {
++                            temporaryReferences
++                        });
+                     } else {
+                         // Multipart POST, but not a fetch action.
+                         // Potentially an MPA action, we have to try decoding it to check.

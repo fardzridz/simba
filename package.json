@@ -18,6 +18,8 @@
     "db:apply:remote": "wrangler d1 migrations apply penugasan-db --remote",
     "db:seed:local": "wrangler d1 execute penugasan-db --local --file=./seed/seed.sql",
     "db:seed:remote": "wrangler d1 execute penugasan-db --remote --file=./seed/seed.sql",
+    "db:seed:r2:remote": "node scripts/upload-seed-files.mjs penugasan-files",
+    "db:seed:r2:staging": "node scripts/upload-seed-files.mjs penugasan-files-staging --env staging",
     "hash": "node scripts/hash-password.mjs"
   },
   "dependencies": {

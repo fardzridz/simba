@@ -198,6 +198,132 @@ export function ExtendDeadlineModal({
   );
 }
 
+export interface DeleteTaskModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  taskNumber: string;
+  taskTitle: string;
+  onDelete: () => Promise<{
+    success?: boolean;
+    error?: string;
+  }>;
+}
+
+export function DeleteTaskModal({
+  isOpen,
+  onClose,
+  taskNumber,
+  taskTitle,
+  onDelete,
+}: DeleteTaskModalProps) {
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const titleId = useId();
+
+  useEffect(() => {
+    if (isOpen) {
+      setError(null);
+      setIsSubmitting(false);
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const result = await onDelete();
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      onClose();
+    } catch {
+      setError("Penghapusan gagal diproses. Coba lagi.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div
+      role="presentation"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isSubmitting) onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="w-full max-w-[480px] rounded-lg border border-border bg-surface p-6 shadow-card-hover flex flex-col gap-4"
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-border pb-3">
+          <div>
+            <h2 id={titleId} className="text-h2 font-semibold text-error">
+              Hapus Tugas
+            </h2>
+            <span className="font-mono text-body-sm text-ink-3">
+              {taskNumber} · {taskTitle}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            aria-label="Tutup dialog"
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-ink-3 hover:bg-neutral-surface hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Icon name="tutup" size={16} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="rounded-md border border-error/30 bg-error-surface p-3 text-body-sm text-error">
+            <span className="font-semibold">Peringatan:</span> Tugas beserta seluruh
+            penugasannya dihapus permanen dan tidak dapat dikembalikan. Tugas yang
+            sudah memiliki pengumpulan berkas tersimpan tidak akan bisa dihapus.
+          </div>
+
+          {error ? (
+            <p className="text-body-sm font-medium text-error">{error}</p>
+          ) : null}
+
+          <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="inline-flex h-9 items-center justify-center rounded-md border border-border-strong bg-surface px-4 text-body font-semibold text-ink hover:bg-neutral-surface disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Kembali
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="inline-flex h-9 items-center justify-center rounded-md bg-error px-4 text-body font-semibold text-on-dark transition-colors hover:bg-error-hover active:bg-error-active disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSubmitting ? "Menghapus..." : "Hapus Permanen"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export interface CancelTaskModalProps {
   isOpen: boolean;
   onClose: () => void;

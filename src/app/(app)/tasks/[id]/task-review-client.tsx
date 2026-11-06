@@ -346,6 +346,13 @@ export default function TaskReviewClient({
                 <span className="font-semibold text-ink block mb-1">Akses Baca-Saja</span>
                 Super Admin memantau kelengkapan berkas lintas divisi dan tidak melakukan perubahan status atau verifikasi penugasan.
               </div>
+            ) : task.status === "MENUNGGU_VERIFIKASI" && !latestSubmission ? (
+              <div className="rounded-md border border-warning/40 bg-warning-surface p-3 text-body-sm text-ink-2">
+                <span className="font-semibold text-ink block mb-1">
+                  Data pengumpulan tidak ditemukan
+                </span>
+                Penugasan menunggu verifikasi tetapi tidak ada pengumpulan tercatat. Periksa kembali data atau minta Super Admin memeriksa konsistensi data.
+              </div>
             ) : task.status === "MENUNGGU_VERIFIKASI" ? (
               <div className="flex flex-col gap-5">
                 {decisionError ? (

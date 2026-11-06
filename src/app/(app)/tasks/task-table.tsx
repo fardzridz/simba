@@ -5,8 +5,8 @@ import Link from "next/link";
 import StatusChip from "../status-chip";
 import { Icon } from "@/app/icons";
 import { LoadingButton } from "../loading-state";
-import { startTask, cancelTask } from "./actions";
-import { CancelTaskModal } from "./[id]/task-admin-dialogs";
+import { startTask, cancelTask, deleteTask } from "./actions";
+import { CancelTaskModal, DeleteTaskModal } from "./[id]/task-admin-dialogs";
 import type { TaskListItem } from "@/db/queries/tasks";
 import type { Priority } from "@/db/schema";
 import { humanizeRemaining, isDueSoon, isOverdue, nowSeconds } from "@/lib/time";
@@ -70,6 +70,7 @@ export default function TaskTable({
   const [localItems, setLocalItems] = useState<TaskListItem[]>(items);
   const now = nowSeconds();
   const [cancellingTask, setCancellingTask] = useState<TaskListItem | null>(null);
+  const [deletingTask, setDeletingTask] = useState<TaskListItem | null>(null);
 
   const detailHref = (item: TaskListItem) =>
     `/tasks/${item.taskId}?assignment=${encodeURIComponent(item.assignmentId)}`;
@@ -325,7 +326,19 @@ export default function TaskTable({
                           Lihat
                         </Link>
                       ) : item.status === "DIBATALKAN" ? (
-                        <span className="text-body-sm text-ink-3">Dibatalkan</span>
+                        <span className="inline-flex items-center gap-2">
+                          <span className="text-body-sm text-ink-3">
+                            Dibatalkan
+                          </span>
+                          <span className="text-body-sm text-ink-3">·</span>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingTask(item)}
+                            className="text-body-sm font-semibold text-error hover:underline cursor-pointer"
+                          >
+                            Hapus
+                          </button>
+                        </span>
                       ) : (
                         <div className="inline-flex items-center gap-2">
                           <Link
@@ -341,6 +354,14 @@ export default function TaskTable({
                             className="text-body-sm font-semibold text-error hover:underline cursor-pointer"
                           >
                             Batalkan
+                          </button>
+                          <span className="text-body-sm text-ink-3">·</span>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingTask(item)}
+                            className="text-body-sm font-semibold text-error hover:underline cursor-pointer"
+                          >
+                            Hapus
                           </button>
                         </div>
                       )
@@ -377,6 +398,24 @@ export default function TaskTable({
                     ? { ...it, status: "DIBATALKAN" }
                     : it,
                 ),
+              );
+            }
+            return result;
+          }}
+        />
+      ) : null}
+
+      {deletingTask ? (
+        <DeleteTaskModal
+          isOpen={Boolean(deletingTask)}
+          onClose={() => setDeletingTask(null)}
+          taskNumber={deletingTask.taskNumber}
+          taskTitle={deletingTask.title}
+          onDelete={async () => {
+            const result = await deleteTask(deletingTask.taskId);
+            if (result.success) {
+              setLocalItems((prev) =>
+                prev.filter((it) => it.taskId !== deletingTask.taskId),
               );
             }
             return result;

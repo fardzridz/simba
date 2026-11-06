@@ -16,6 +16,128 @@ export type UserFormValues = {
 };
 
 // ==========================================
+// 0. DIALOG KONFIRMASI HAPUS (pengguna/divisi/kategori)
+// ==========================================
+export interface MasterDeleteModalProps {
+  heading: "Hapus Pengguna" | "Hapus Divisi" | "Hapus Kategori";
+  subjectLine: string;
+  warning: string;
+  onConfirm: () => Promise<MasterActionResult>;
+}
+
+/**
+ * Konfirmasi penghapusan master (tanpa isian alasan; jejak audit cukup dari
+ * log aksi user.deleted/division.deleted/category.deleted). Hanya data yang
+ * belum dipakai riwayat yang lolos dari aksi server.
+ */
+export function MasterDeleteModal({
+  isOpen,
+  onClose,
+  heading,
+  subjectLine,
+  warning,
+  onConfirm,
+}: MasterDeleteModalProps & { isOpen: boolean; onClose: () => void }) {
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const titleId = useId();
+
+  useEffect(() => {
+    if (isOpen) {
+      setError(null);
+      setIsSubmitting(false);
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const result = await onConfirm();
+      if (result?.error) {
+        setError(result.error);
+        setIsSubmitting(false);
+        return;
+      }
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div
+      role="presentation"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="w-full max-w-[460px] rounded-lg border border-border bg-surface p-6 shadow-card-hover flex flex-col gap-4"
+      >
+        <div className="flex items-start justify-between border-b border-border pb-3">
+          <h2 id={titleId} className="text-h2 font-semibold text-error">
+            {heading}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Tutup dialog"
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-ink-3 hover:bg-neutral-surface hover:text-ink"
+          >
+            <Icon name="tutup" size={16} />
+          </button>
+        </div>
+
+        <span className="font-mono text-body-sm text-ink-3">{subjectLine}</span>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="rounded-md border border-error/30 bg-error-surface p-3 text-body-sm text-error">
+            <span className="font-semibold">Peringatan:</span> {warning}
+          </div>
+
+          {error ? (
+            <p className="text-body-sm font-medium text-error">{error}</p>
+          ) : null}
+
+          <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-9 items-center justify-center rounded-md border border-border-strong bg-surface px-4 text-body font-semibold text-ink hover:bg-neutral-surface"
+            >
+              Kembali
+            </button>
+            <LoadingButton
+              type="submit"
+              variant="danger"
+              loading={isSubmitting}
+              loadingText="Menghapus..."
+            >
+              Hapus Permanen
+            </LoadingButton>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
 // 1. DIALOG RESET KATA SANDI (Wireframe L17)
 // ==========================================
 export interface ResetPasswordModalProps {

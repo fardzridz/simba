@@ -6,9 +6,11 @@ import { z } from "zod";
 import {
   PRIORITIES,
   activityLogs,
+  attachments,
   categories,
   documentArchive,
   divisions,
+  notifications,
   taskAssignments,
   taskReviews,
   taskSubmissions,
@@ -252,6 +254,131 @@ export async function cancelTask(
   return { success: true };
 }
 
+/**
+ * Menghapus tugas Draft/Aktif beserta seluruh penugasannya (permintaan pengguna
+ * Fase 6). Hanya Admin divisi sendiri; tugas yang sudah memiliki pengumpulan
+ * COMMITTED (menunggu verifikasi atau final/terarsip) tidak boleh dihapus
+ * supaya integral data katalog tetap utuh. Pengumpulan PENDING yang tereskal
+ * ikut dibersihkan; objek R2-nya dihapus best effort tanpa memblokir.
+ */
+export async function deleteTask(taskId: string): Promise<ActionResult> {
+  const actor = await requireActor();
+  const scope = resolveScope(actor);
+
+  if (scope.role !== "ADMIN") {
+    return { error: "Hanya Admin divisi yang dapat menghapus tugas." };
+  }
+
+  const { db, env } = appContext();
+
+  const [task] = await db
+    .select({ id: tasks.id, title: tasks.title, taskNumber: tasks.taskNumber })
+    .from(tasks)
+    .where(and(eq(tasks.id, taskId), eq(tasks.divisionId, scope.divisionId)))
+    .limit(1);
+
+  if (!task) {
+    return {
+      error: "Tugas tidak ditemukan atau berada di luar akses Anda.",
+    };
+  }
+
+  const [block] = await db
+    .select({ total: count() })
+    .from(taskSubmissions)
+    .innerJoin(
+      taskAssignments,
+      eq(taskAssignments.id, taskSubmissions.assignmentId),
+    )
+    .where(
+      and(
+        eq(taskAssignments.taskId, taskId),
+        eq(taskSubmissions.state, "COMMITTED"),
+      ),
+    );
+
+  if ((block?.total ?? 0) > 0) {
+    return {
+      error:
+        "Tugas tidak dapat dihapus karena ada pengumpulan berkas tersimpan (menunggu verifikasi atau final). Batalkan tugasnya bila perlu menutup pekerjaan.",
+    };
+  }
+
+  const assignmentIdsSq = db
+    .select({ id: taskAssignments.id })
+    .from(taskAssignments)
+    .where(eq(taskAssignments.taskId, taskId));
+  const submissionIdsSq = db
+    .select({ id: taskSubmissions.id })
+    .from(taskSubmissions)
+    .where(inArray(taskSubmissions.assignmentId, assignmentIdsSq));
+
+  const pendingFiles = await db
+    .select({ key: attachments.storedKey })
+    .from(attachments)
+    .where(
+      and(
+        inArray(attachments.submissionId, submissionIdsSq),
+        eq(attachments.state, "PENDING"),
+      ),
+    );
+
+  await Promise.all(
+    pendingFiles.map((f) => env.BUCKET.delete(f.key).catch(() => undefined)),
+  );
+
+  const now = nowSeconds();
+  const stamp = new Date(now * 1000);
+
+  const logMutation = db.insert(activityLogs).values({
+    id: newId("log"),
+    actorId: actor.id,
+    action: "task.deleted",
+    entityType: "task",
+    entityId: taskId,
+    newValue: JSON.stringify({
+      taskNumber: task.taskNumber,
+      title: task.title,
+    }),
+    createdAt: stamp,
+  });
+
+  await db.batch([
+    db
+      .delete(documentArchive)
+      .where(inArray(documentArchive.assignmentId, assignmentIdsSq)),
+    db
+      .delete(taskReviews)
+      .where(inArray(taskReviews.submissionId, submissionIdsSq)),
+    db
+      .delete(attachments)
+      .where(inArray(attachments.submissionId, submissionIdsSq)),
+    db
+      .delete(taskSubmissions)
+      .where(inArray(taskSubmissions.assignmentId, assignmentIdsSq)),
+    db
+      .delete(notifications)
+      .where(and(eq(notifications.entityType, "task"), eq(notifications.entityId, taskId))),
+    db
+      .delete(notifications)
+      .where(
+        and(
+          eq(notifications.entityType, "assignment"),
+          inArray(notifications.entityId, assignmentIdsSq),
+        ),
+      ),
+    db.delete(taskAssignments).where(eq(taskAssignments.taskId, taskId)),
+    db
+      .delete(tasks)
+      .where(and(eq(tasks.id, taskId), eq(tasks.divisionId, scope.divisionId))),
+    logMutation,
+  ]);
+
+  revalidateAfterTaskMutation(taskId);
+
+  return { success: true };
+}
+
 export type ReviewDecision = "APPROVED" | "REVISION_REQUIRED";
 export type ReviewActionInput = {
   assignmentId: string;
@@ -291,7 +418,10 @@ export async function reviewSubmission(
 
   const { db } = appContext();
 
-  const [row] = await db
+  // Penugasan dicari terpisah dari pengumpulan: status MENUNGGU_VERIFIKASI
+  // tanpa baris task_submissions COMMITTED (data tidak konsisten) tidak boleh
+  // dilaporkan sebagai "berada di luar akses" karena penugasannya sah.
+  const [assignment] = await db
     .select({
       assignmentId: taskAssignments.id,
       taskId: tasks.id,
@@ -300,32 +430,46 @@ export async function reviewSubmission(
       userId: taskAssignments.userId,
       status: taskAssignments.status,
       revisionCount: taskAssignments.revisionCount,
-      submissionId: taskSubmissions.id,
-      version: taskSubmissions.version,
     })
     .from(taskAssignments)
     .innerJoin(tasks, eq(tasks.id, taskAssignments.taskId))
-    .innerJoin(
-      taskSubmissions,
-      and(
-        eq(taskSubmissions.assignmentId, taskAssignments.id),
-        eq(taskSubmissions.state, "COMMITTED"),
-      ),
-    )
     .where(
       and(
         eq(taskAssignments.id, input.assignmentId),
         eq(tasks.divisionId, scope.divisionId),
       ),
     )
-    .orderBy(desc(taskSubmissions.version))
     .limit(1);
 
-  if (!row) {
+  if (!assignment) {
     return {
       error: "Penugasan tidak ditemukan atau berada di luar akses Anda.",
     };
   }
+
+  const [submission] = await db
+    .select({
+      submissionId: taskSubmissions.id,
+      version: taskSubmissions.version,
+    })
+    .from(taskSubmissions)
+    .where(
+      and(
+        eq(taskSubmissions.assignmentId, assignment.assignmentId),
+        eq(taskSubmissions.state, "COMMITTED"),
+      ),
+    )
+    .orderBy(desc(taskSubmissions.version))
+    .limit(1);
+
+  if (!submission) {
+    return {
+      error:
+        "Pengumpulan tidak ditemukan untuk penugasan yang menunggu verifikasi. Minta staf mengirim ulang berkas atau minta Super Admin memeriksa konsistensi data.",
+    };
+  }
+
+  const row = { ...assignment, ...submission };
 
   const targetStatus =
     input.decision === "APPROVED" ? "SELESAI" : "SEDANG_DIKERJAKAN";

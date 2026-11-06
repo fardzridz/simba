@@ -1,9 +1,21 @@
 "use server";
 
-import { and, eq, ne } from "drizzle-orm";
+import { and, count, eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { activityLogs, categories, divisions, users } from "@/db/schema";
+import {
+  activityLogs,
+  appSettings,
+  attachments,
+  categories,
+  divisions,
+  documentArchive,
+  taskAssignments,
+  taskReviews,
+  taskSubmissions,
+  tasks,
+  users,
+} from "@/db/schema";
 import { appContext } from "@/env";
 import { requireActor } from "@/lib/auth/current";
 import { canManageMasterData, resolveScope } from "@/lib/auth/scope";
@@ -526,5 +538,189 @@ export async function setCategoryActive(input: unknown): Promise<MasterActionRes
   ]);
 
   revalidatePath("/master");
+  return { success: true };
+}
+
+// ============================================================
+// Penghapusan master (permintaan pengguna Fase 6)
+// ============================================================
+
+/**
+ * Menghapus akun pengguna secara permanen. Blokir bila akun masih menjadi
+ * sumber data riwayat (tugas, penugasan, pengumpulan, lampiran, reviu) karena
+ * skema memilih FK restrict demi integritas arsip; akun beriwayat pakai
+ * nonaktif. Relasi CASCADE (sesi, notifikasi, preferensi) dieksekusi basis
+ * data; penunjuk app_settings.updatedBy dikosongkan sendiri.
+ */
+export async function deleteUser(userId: string): Promise<MasterActionResult> {
+  const manager = await requireManager();
+  if (manager.blocked || !manager.actor) return manager.error as MasterActionResult;
+
+  if (userId === manager.actor.id) {
+    return { error: "Akun Anda sendiri tidak dapat dihapus dari Kelola Master." };
+  }
+
+  const { db } = appContext();
+  const [target] = await db
+    .select({
+      id: users.id,
+      username: users.username,
+      fullName: users.fullName,
+      role: users.role,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!target) return { error: "Pengguna tidak ditemukan." };
+  if (target.role === "SUPER_ADMIN") {
+    return { error: "Akun Super Admin tidak dapat dihapus. Nonaktifkan bila akun tidak aktif lagi." };
+  }
+
+  const usage = await Promise.all([
+    db.select({ n: count() }).from(tasks).where(eq(tasks.createdBy, userId)),
+    db.select({ n: count() }).from(taskAssignments).where(eq(taskAssignments.userId, userId)),
+    db.select({ n: count() }).from(taskSubmissions).where(eq(taskSubmissions.submittedBy, userId)),
+    db.select({ n: count() }).from(attachments).where(eq(attachments.uploadedBy, userId)),
+    db.select({ n: count() }).from(taskReviews).where(eq(taskReviews.reviewerId, userId)),
+  ]);
+  const stillReferenced = usage.some(([row]) => (row?.n ?? 0) > 0);
+  if (stillReferenced) {
+    return {
+      error: `Pengguna masih terikat data riwayat (tugas, penugasan, pengumpulan, lampiran, atau reviu). Nonaktifkan akunnya, jangan hapus.`,
+    };
+  }
+
+  const now = nowSeconds();
+  const stamp = new Date(now * 1000);
+
+  try {
+    await db.batch([
+      db.update(appSettings).set({ updatedBy: null }).where(eq(appSettings.updatedBy, userId)),
+      db.delete(users).where(eq(users.id, userId)),
+      db.insert(activityLogs).values(
+        logEntry(
+          manager.actor.id,
+          "user.deleted",
+          userId,
+          { username: target.username, fullName: target.fullName, role: target.role },
+          null,
+          stamp,
+        ),
+      ),
+    ]);
+  } catch (error) {
+    return uniqueViolation(error);
+  }
+
+  revalidatePath("/master");
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+/**
+ * Menghapus divisi dari kelola master. Blokir bila divisi masih punya anggota,
+ * tugas, atau baris arsip dokumen; divisi kosong baru boleh dihapus.
+ */
+export async function deleteDivision(divisionId: string): Promise<MasterActionResult> {
+  const manager = await requireManager();
+  if (manager.blocked || !manager.actor) return manager.error as MasterActionResult;
+
+  const { db } = appContext();
+  const [target] = await db
+    .select({ id: divisions.id, name: divisions.name, code: divisions.code })
+    .from(divisions)
+    .where(eq(divisions.id, divisionId))
+    .limit(1);
+  if (!target) return { error: "Divisi tidak ditemukan." };
+
+  const usage = await Promise.all([
+    db.select({ n: count() }).from(users).where(eq(users.divisionId, divisionId)),
+    db.select({ n: count() }).from(tasks).where(eq(tasks.divisionId, divisionId)),
+    db.select({ n: count() }).from(documentArchive).where(eq(documentArchive.divisionId, divisionId)),
+  ]);
+  const stillReferenced = usage.some(([row]) => (row?.n ?? 0) > 0);
+  if (stillReferenced) {
+    return {
+      error: "Divisi masih memiliki anggota, tugas, atau arsip dokumen. Nonaktifkan divisi bila perlu menyembunyikannya.",
+    };
+  }
+
+  const now = nowSeconds();
+  const stamp = new Date(now * 1000);
+
+  try {
+    await db.batch([
+      db.delete(divisions).where(eq(divisions.id, divisionId)),
+      db.insert(activityLogs).values(
+        logEntry(
+          manager.actor.id,
+          "division.deleted",
+          divisionId,
+          { name: target.name, code: target.code },
+          null,
+          stamp,
+        ),
+      ),
+    ]);
+  } catch (error) {
+    return uniqueViolation(error);
+  }
+
+  revalidatePath("/master");
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+/**
+ * Menghapus kategori dari kelola master. Blokir bila kategori masih dipakai
+ * tugas; preferensi kategori bawaan pengguna yang menusuk kategori ini
+ * dikosongkan sendiri (kolom boleh kosong).
+ */
+export async function deleteCategory(categoryId: string): Promise<MasterActionResult> {
+  const manager = await requireManager();
+  if (manager.blocked || !manager.actor) return manager.error as MasterActionResult;
+
+  const { db } = appContext();
+  const [target] = await db
+    .select({ id: categories.id, name: categories.name })
+    .from(categories)
+    .where(eq(categories.id, categoryId))
+    .limit(1);
+  if (!target) return { error: "Kategori tidak ditemukan." };
+
+  const [usage] = await db
+    .select({ n: count() })
+    .from(tasks)
+    .where(eq(tasks.categoryId, categoryId));
+  if ((usage?.n ?? 0) > 0) {
+    return {
+      error: `Kategori masih dipakai ${usage?.n ?? 0} tugas. Nonaktifkan bila kategori tidak lagi tersedia untuk tugas baru.`,
+    };
+  }
+
+  const now = nowSeconds();
+  const stamp = new Date(now * 1000);
+
+  try {
+    await db.batch([
+      db.update(divisions).set({ defaultCategoryId: null }).where(eq(divisions.defaultCategoryId, categoryId)),
+      db.delete(categories).where(eq(categories.id, categoryId)),
+      db.insert(activityLogs).values(
+        logEntry(
+          manager.actor.id,
+          "category.deleted",
+          categoryId,
+          { name: target.name },
+          null,
+          stamp,
+        ),
+      ),
+    ]);
+  } catch (error) {
+    return uniqueViolation(error);
+  }
+
+  revalidatePath("/master");
+  revalidatePath("/", "layout");
   return { success: true };
 }

@@ -3,11 +3,13 @@
  *
  *   node scripts/build-seed.mjs
  *
- * Node 24 menjalankan impor .ts langsung (type stripping), jadi fungsi hash yang
- * dipakai aplikasi di sini adalah fungsi yang sama, tidak ada format yang diduplikasi.
+ * Skrip ini mengimpor `src/lib/auth/password.ts` (fungsi hash yang sama dengan
+ * aplikasi, jadi tidak ada format sandi yang diduplikasi). Node 24+ menjalankan
+ * impor .ts langsung; pada Node 22 tambahkan `--experimental-strip-types`.
  * Kata sandi di berkas ini hanya untuk lingkungan pengembangan, bukan produksi.
  */
 import { writeFileSync, mkdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { hashPassword } from "../src/lib/auth/password.ts";
@@ -94,6 +96,33 @@ const TASKS = [
         status: "SEDANG_DIKERJAKAN",
         needsRevision: true,
         revisionCount: 1,
+        // Sudah pernah mengumpulkan v1, direvisi admin, kini mengerjakan v2.
+        startedAt: now - 3600 * 36,
+        submittedAt: now - 3600 * 30,
+        submission: {
+          id: "sub_huk_1",
+          version: 1,
+          notes: "Draft laporan wilayah A periode pleno.",
+          idempotencyKey: "seed_sub_huk_1_v1_key",
+          files: [
+            {
+              id: "att_huk_1",
+              name: "laporan-pengawasan-wilayah-a.pdf",
+              titleLines: [
+                "Laporan Hasil Pengawasan Wilayah A",
+                "Divisi Hukum & Sengketa",
+                "Berkas contoh data seed SIMBA.",
+              ],
+            },
+          ],
+        },
+        review: {
+          id: "rev_huk_1",
+          decision: "REVISION_REQUIRED",
+          feedback: "Tanda tangan saksi belum lengkap pada berita acara.",
+          reviewer: "usr_admin_hukum",
+          createdAt: now - 3600 * 24,
+        },
       },
     ],
   },
@@ -134,19 +163,127 @@ const TASKS = [
         userId: "usr_staf_hukum",
         status: "MENUNGGU_VERIFIKASI",
         needsRevision: false,
+        // Pengumpulan v1 menunggu verifikasi admin (panel reviu).
+        startedAt: now - 3600 * 48,
+        submittedAt: now - 3600 * 6,
+        submission: {
+          id: "sub_huk_3",
+          version: 1,
+          notes: "Dokumen C1 pleno hasil verifikasi BPW.",
+          idempotencyKey: "seed_sub_huk_3_v1_key",
+          files: [
+            {
+              id: "att_huk_3",
+              name: "dokumen-c1-pleno.pdf",
+              titleLines: [
+                "Dokumen C1 Pleno",
+                "Divisi Hukum & Sengketa",
+                "Berkas contoh data seed SIMBA.",
+              ],
+            },
+          ],
+        },
       },
     ],
   },
 ];
+
+const SEED_ASSIGNMENT_IDS = TASKS.flatMap((t) =>
+  t.assignments.map((a) => a.id),
+);
+const assignmentIdList = SEED_ASSIGNMENT_IDS.map(quote).join(", ");
+
+// Bersihkan turunan pengumpulan lama agar rebuild seed tidak meninggalkan
+// baris pengumpulan dan lampiran yang sudah tidak cocok dengan keadaan seed.
+// Urutan penghapusan mengikuti FK restrict: arsip, reviu, lampiran, lalu
+// pengumpulan.
+lines.push(
+  `DELETE FROM document_archive WHERE assignment_id IN (${assignmentIdList});`,
+  `DELETE FROM task_reviews WHERE submission_id IN (SELECT id FROM task_submissions WHERE assignment_id IN (${assignmentIdList}));`,
+  `DELETE FROM attachments WHERE submission_id IN (SELECT id FROM task_submissions WHERE assignment_id IN (${assignmentIdList}));`,
+  `DELETE FROM task_submissions WHERE assignment_id IN (${assignmentIdList});`,
+);
+
+// Kunci objek mengikuti pola aplikasi `uploads/<divisi>/<bulan_YYYYMM>/`,
+// dengan nama berkas deterministik agar unduhan seed selalu menunjuk objek
+// yang sama di R2.
+const monthKey = new Date(now * 1000).toISOString().slice(0, 7).replace("-", "");
+
+function sha256Hex(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+/** PDF sungsit deterministik untuk demo seed; tanpa stempel waktu di dalamnya. */
+function minimalPdf(titleLines) {
+  const esc = (s) =>
+    s.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+  const content =
+    "BT\n/F1 18 Tf\n54 760 Td\n" +
+    titleLines
+      .map(
+        (l, i) => (i === 0 ? "0 -18 Td\n" : "0 -24 Td\n") + `(${esc(l)}) Tj\n`,
+      )
+      .join("") +
+    "ET";
+  const objects = [
+    "/Type /Catalog /Pages 2 0 R",
+    "/Type /Pages /Kids [3 0 R] /Count 1",
+    "/Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R",
+    `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
+    "/Type /Font /Subtype /Type1 /BaseFont /Helvetica",
+  ];
+  let body = "%PDF-1.4\n";
+  const offsets = [];
+  for (const [i, obj] of objects.entries()) {
+    offsets.push(body.length);
+    body += `${i + 1} 0 obj\n${obj}\nendobj\n`;
+  }
+  const startxref = body.length;
+  body +=
+    `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n` +
+    offsets.map((o) => `${String(o).padStart(10, "0")} 00000 n \n`).join("") +
+    `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${startxref}\n%%EOF`;
+  return Buffer.from(body, "latin1");
+}
+
+const seedFilesDir = resolve(root, "seed/files");
+mkdirSync(seedFilesDir, { recursive: true });
+const r2Uploads = [];
 
 for (const t of TASKS) {
   lines.push(
     `INSERT INTO tasks (id, division_id, category_id, task_number, title, description, priority, created_by, start_at, due_at, created_at, updated_at) VALUES (${quote(t.id)}, ${quote(t.divisionId)}, ${quote(t.categoryId)}, ${quote(t.taskNumber)}, ${quote(t.title)}, ${quote(t.description)}, ${quote(t.priority)}, ${quote(t.createdBy)}, ${t.startAt}, ${t.dueAt}, ${now}, ${now}) ON CONFLICT(id) DO UPDATE SET division_id = excluded.division_id, category_id = excluded.category_id, task_number = excluded.task_number, title = excluded.title, description = excluded.description, priority = excluded.priority, created_by = excluded.created_by, start_at = excluded.start_at, due_at = excluded.due_at, cancelled_at = NULL, cancel_reason = NULL, updated_at = excluded.updated_at;`,
   );
   for (const a of t.assignments) {
+    const startedAt = a.startedAt ?? null;
+    const submittedAt = a.submittedAt ?? null;
     lines.push(
-      `INSERT INTO task_assignments (id, task_id, user_id, status, needs_revision, revision_count, created_at, updated_at) VALUES (${quote(a.id)}, ${quote(t.id)}, ${quote(a.userId)}, ${quote(a.status)}, ${a.needsRevision ? 1 : 0}, ${a.revisionCount ?? 0}, ${now}, ${now}) ON CONFLICT(id) DO UPDATE SET task_id = excluded.task_id, user_id = excluded.user_id, status = excluded.status, needs_revision = excluded.needs_revision, revision_count = excluded.revision_count, started_at = NULL, submitted_at = NULL, completed_at = NULL, cancelled_at = NULL, updated_at = excluded.updated_at;`,
+      `INSERT INTO task_assignments (id, task_id, user_id, status, needs_revision, revision_count, started_at, submitted_at, created_at, updated_at) VALUES (${quote(a.id)}, ${quote(t.id)}, ${quote(a.userId)}, ${quote(a.status)}, ${a.needsRevision ? 1 : 0}, ${a.revisionCount ?? 0}, ${startedAt ?? "NULL"}, ${submittedAt ?? "NULL"}, ${now}, ${now}) ON CONFLICT(id) DO UPDATE SET task_id = excluded.task_id, user_id = excluded.user_id, status = excluded.status, needs_revision = excluded.needs_revision, revision_count = excluded.revision_count, started_at = ${startedAt ?? "NULL"}, submitted_at = ${submittedAt ?? "NULL"}, completed_at = NULL, cancelled_at = NULL, updated_at = excluded.updated_at;`,
     );
+    if (!a.submission) continue;
+
+    const s = a.submission;
+    lines.push(
+      `INSERT INTO task_submissions (id, assignment_id, version, notes, state, idempotency_key, submitted_by, created_at) VALUES (${quote(s.id)}, ${quote(a.id)}, ${s.version}, ${quote(s.notes)}, 'COMMITTED', ${quote(s.idempotencyKey)}, ${quote(a.userId)}, ${submittedAt}) ON CONFLICT(id) DO UPDATE SET assignment_id = excluded.assignment_id, version = excluded.version, notes = excluded.notes, state = 'COMMITTED', idempotency_key = excluded.idempotency_key, submitted_by = excluded.submitted_by, created_at = excluded.created_at;`,
+    );
+
+    for (const f of s.files) {
+      const storedKey = `uploads/${t.divisionId}/${monthKey}/${f.name}`;
+      const bytes = minimalPdf(f.titleLines);
+      writeFileSync(resolve(seedFilesDir, f.name), bytes);
+      const checksum = sha256Hex(bytes);
+      lines.push(
+        `INSERT INTO attachments (id, submission_id, original_name, stored_key, mime_type, size_bytes, checksum_sha256, state, uploaded_by, created_at) VALUES (${quote(f.id)}, ${quote(s.id)}, ${quote(f.name)}, ${quote(storedKey)}, 'application/pdf', ${bytes.length}, ${quote(checksum)}, 'COMMITTED', ${quote(a.userId)}, ${submittedAt}) ON CONFLICT(id) DO UPDATE SET submission_id = excluded.submission_id, original_name = excluded.original_name, stored_key = excluded.stored_key, mime_type = excluded.mime_type, size_bytes = excluded.size_bytes, checksum_sha256 = excluded.checksum_sha256, state = 'COMMITTED', uploaded_by = excluded.uploaded_by, created_at = excluded.created_at;`,
+      );
+      r2Uploads.push({ key: storedKey, file: `seed/files/${f.name}` });
+    }
+
+    if (a.review) {
+      const r = a.review;
+      lines.push(
+        `INSERT INTO task_reviews (id, submission_id, reviewer_id, decision, feedback, created_at) VALUES (${quote(r.id)}, ${quote(s.id)}, ${quote(r.reviewer)}, ${quote(r.decision)}, ${quote(r.feedback)}, ${r.createdAt}) ON CONFLICT(id) DO UPDATE SET submission_id = excluded.submission_id, reviewer_id = excluded.reviewer_id, decision = excluded.decision, feedback = excluded.feedback, created_at = excluded.created_at;`,
+      );
+    }
   }
 }
 
@@ -227,4 +364,11 @@ for (const n of NOTIFICATIONS) {
 const outPath = resolve(root, "seed/seed.sql");
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, `${lines.join("\n")}\n`, "utf8");
-console.log(`seed/seed.sql ditulis: ${DIVISIONS.length} divisi, ${CATEGORIES.length} kategori, ${USERS.length} akun.`);
+writeFileSync(
+  resolve(root, "seed/seed-r2.json"),
+  `${JSON.stringify(r2Uploads, null, 1)}\n`,
+  "utf8",
+);
+console.log(
+  `seed/seed.sql ditulis: ${DIVISIONS.length} divisi, ${CATEGORIES.length} kategori, ${USERS.length} akun, ${r2Uploads.length} berkas R2.`,
+);

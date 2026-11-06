@@ -6,6 +6,9 @@ import { Icon } from "@/app/icons";
 import type { MasterUser, MasterDivision, MasterCategory } from "@/db/queries/master";
 import {
   createUser,
+  deleteCategory,
+  deleteDivision,
+  deleteUser,
   resetPassword,
   saveCategory,
   saveDivision,
@@ -18,6 +21,7 @@ import {
 import {
   ResetPasswordModal,
   DeactivateUserModal,
+  MasterDeleteModal,
   UserFormModal,
   DivisionFormModal,
   CategoryFormModal,
@@ -56,15 +60,18 @@ export default function MasterClient({
   // State Modal Pengguna
   const [resetTargetUser, setResetTargetUser] = useState<MasterUser | null>(null);
   const [deactivateTargetUser, setDeactivateTargetUser] = useState<MasterUser | null>(null);
+  const [deleteTargetUser, setDeleteTargetUser] = useState<MasterUser | null>(null);
   const [editTargetUser, setEditTargetUser] = useState<MasterUser | null>(null);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
 
   // State Modal Divisi
   const [editTargetDivision, setEditTargetDivision] = useState<MasterDivision | null>(null);
+  const [deleteTargetDivision, setDeleteTargetDivision] = useState<MasterDivision | null>(null);
   const [isAddDivisionOpen, setIsAddDivisionOpen] = useState(false);
 
   // State Modal Kategori
   const [editTargetCategory, setEditTargetCategory] = useState<MasterCategory | null>(null);
+  const [deleteTargetCategory, setDeleteTargetCategory] = useState<MasterCategory | null>(null);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
 
   // Spanduk Feedback Sukses
@@ -150,6 +157,16 @@ export default function MasterClient({
     }
   };
 
+  const handleConfirmDeleteUser = async (): Promise<MasterActionResult> => {
+    if (!deleteTargetUser) return { error: "Pengguna tidak ditemukan." };
+    const result = await deleteUser(deleteTargetUser.id);
+    if (result.success) {
+      showNotification(`Akun @${deleteTargetUser.username} dihapus permanen.`);
+      router.refresh();
+    }
+    return result;
+  };
+
   const handleSaveUser = async (values: UserFormValues): Promise<MasterActionResult> => {
     const result = editTargetUser
       ? await updateUser({ id: editTargetUser.id, ...values })
@@ -193,6 +210,16 @@ export default function MasterClient({
     }
   };
 
+  const handleConfirmDeleteDivision = async (): Promise<MasterActionResult> => {
+    if (!deleteTargetDivision) return { error: "Divisi tidak ditemukan." };
+    const result = await deleteDivision(deleteTargetDivision.id);
+    if (result.success) {
+      showNotification(`Divisi ${deleteTargetDivision.name} dihapus permanen.`);
+      router.refresh();
+    }
+    return result;
+  };
+
   const handleSaveCategory = async (values: { name: string }): Promise<MasterActionResult> => {
     const result = editTargetCategory
       ? await saveCategory({ id: editTargetCategory.id, ...values })
@@ -218,6 +245,16 @@ export default function MasterClient({
     } else if (result.error) {
       showNotification(`Gagal: ${result.error}`);
     }
+  };
+
+  const handleConfirmDeleteCategory = async (): Promise<MasterActionResult> => {
+    if (!deleteTargetCategory) return { error: "Kategori tidak ditemukan." };
+    const result = await deleteCategory(deleteTargetCategory.id);
+    if (result.success) {
+      showNotification(`Kategori ${deleteTargetCategory.name} dihapus permanen.`);
+      router.refresh();
+    }
+    return result;
   };
 
   return (
@@ -494,6 +531,15 @@ export default function MasterClient({
                                 Aktifkan
                               </button>
                             )}
+                            {u.role !== "SUPER_ADMIN" ? (
+                              <button
+                                type="button"
+                                onClick={() => setDeleteTargetUser(u)}
+                                className="text-body-sm font-semibold text-error hover:underline"
+                              >
+                                Hapus
+                              </button>
+                            ) : null}
                           </div>
                         )}
                       </td>
@@ -601,6 +647,13 @@ export default function MasterClient({
                               Aktifkan
                             </button>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTargetDivision(d)}
+                            className="text-body-sm font-semibold text-error hover:underline"
+                          >
+                            Hapus
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -695,6 +748,13 @@ export default function MasterClient({
                               Aktifkan
                             </button>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTargetCategory(c)}
+                            className="text-body-sm font-semibold text-error hover:underline"
+                          >
+                            Hapus
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -709,7 +769,7 @@ export default function MasterClient({
       {/* Catatan Edukasi Kearsipan Sesuai Wireframe L17 */}
       <div className="border-t border-border pt-4 text-body-sm text-ink-3 space-y-1">
         <p className="text-ink-2 font-medium">
-          Akun beriwayat dinonaktifkan, bukan dihapus. Divisi dan kategori memakai pola tab dan tabel yang sama.
+          Data beriwayat dinonaktifkan; tombol Hapus hanya untuk master yang belum memiliki data riwayat sama sekali.
         </p>
         <p>
           Kategori nonaktif tidak dapat dipakai tugas baru, riwayat penugasan lama tetap tampil.
@@ -729,6 +789,19 @@ export default function MasterClient({
         onClose={() => setDeactivateTargetUser(null)}
         user={deactivateTargetUser}
         onConfirm={handleConfirmDeactivateUser}
+      />
+
+      <MasterDeleteModal
+        isOpen={Boolean(deleteTargetUser)}
+        onClose={() => setDeleteTargetUser(null)}
+        heading="Hapus Pengguna"
+        subjectLine={
+          deleteTargetUser
+            ? `${deleteTargetUser.username} · ${deleteTargetUser.fullName}`
+            : ""
+        }
+        warning="Pengguna dihapus permanen beserta sesinya. Pengguna yang masih memiliki tugas, pengumpulan, atau reviu tidak dapat dihapus; sistem akan menolak dan menyarankan nonaktif."
+        onConfirm={handleConfirmDeleteUser}
       />
 
       <UserFormModal
@@ -752,6 +825,19 @@ export default function MasterClient({
         onSave={handleSaveDivision}
       />
 
+      <MasterDeleteModal
+        isOpen={Boolean(deleteTargetDivision)}
+        onClose={() => setDeleteTargetDivision(null)}
+        heading="Hapus Divisi"
+        subjectLine={
+          deleteTargetDivision
+            ? `${deleteTargetDivision.name} · ${deleteTargetDivision.code}`
+            : ""
+        }
+        warning="Divisi dihapus permanen. Divisi yang masih memiliki anggota, tugas, atau arsip dokumen tidak dapat dihapus."
+        onConfirm={handleConfirmDeleteDivision}
+      />
+
       <CategoryFormModal
         isOpen={isAddCategoryOpen}
         onClose={() => {
@@ -760,6 +846,15 @@ export default function MasterClient({
         }}
         category={editTargetCategory}
         onSave={handleSaveCategory}
+      />
+
+      <MasterDeleteModal
+        isOpen={Boolean(deleteTargetCategory)}
+        onClose={() => setDeleteTargetCategory(null)}
+        heading="Hapus Kategori"
+        subjectLine={deleteTargetCategory?.name ?? ""}
+        warning="Kategori dihapus permanen. Kategori yang masih dipakai tugas tidak dapat dihapus; sistem akan menyarankan nonaktif."
+        onConfirm={handleConfirmDeleteCategory}
       />
     </div>
   );

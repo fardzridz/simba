@@ -19,13 +19,15 @@ import {
 import { appContext } from "@/env";
 import { requireActor } from "@/lib/auth/current";
 import { canManageMasterData, resolveScope } from "@/lib/auth/scope";
-import { INITIAL_ACCOUNT_PASSWORD, hashPassword } from "@/lib/auth/password";
+import { generateOneTimePassword, hashPassword } from "@/lib/auth/password";
 import { newId } from "@/lib/ids";
 import { nowSeconds } from "@/lib/time";
 
 export type MasterActionResult = {
   success?: boolean;
   error?: string;
+  /** Sandi awal sekali pakai; hanya ada pada createUser/resetPassword saat sukses. */
+  oneTimePassword?: string;
 };
 
 /** Kolasi galat kunci unik SQLite menjadi pesan yang terbaca. */
@@ -95,7 +97,10 @@ export async function createUser(input: unknown): Promise<MasterActionResult> {
   const fields = parsed.data;
 
   // Kategori akun nonaktif tidak pernah dibuat dari nol; akun baru selalu aktif.
-  const passwordHash = await hashPassword(INITIAL_ACCOUNT_PASSWORD);
+  // Sandi awal diacak per akun dan ditampilkan sekali di layar Super Admin;
+  // tidak tertulis di kode maupun log aktivitas.
+  const oneTimePassword = generateOneTimePassword();
+  const passwordHash = await hashPassword(oneTimePassword);
   const now = nowSeconds();
   const stamp = new Date(now * 1000);
   const userId = newId("user");
@@ -153,7 +158,6 @@ export async function createUser(input: unknown): Promise<MasterActionResult> {
           fullName: fields.fullName,
           divisionId: fields.divisionId,
           role: fields.role,
-          initialPassword: INITIAL_ACCOUNT_PASSWORD,
         }, stamp),
       ),
     ]);
@@ -163,7 +167,7 @@ export async function createUser(input: unknown): Promise<MasterActionResult> {
 
   revalidatePath("/master");
   revalidatePath("/", "layout");
-  return { success: true };
+  return { success: true, oneTimePassword };
 }
 
 const updateUserSchema = userFieldsSchema.extend({ id: z.string().trim().min(1) });
@@ -242,8 +246,10 @@ export async function updateUser(input: unknown): Promise<MasterActionResult> {
 }
 
 /**
- * Kata sandi kembali ke nilai awal `Bawaslu#2026`. `password_changed_at` maju,
- * sehingga seluruh sesi lama langsung dicabut oleh pemeriksa sesi (§9.2).
+ * Menetapkan sandi awal sekali pakai yang baru dan hanya ditampilkan satu kali
+ * di layar Super Admin (§9.2). `password_changed_at` maju, sehingga seluruh
+ * sesi lama langsung dicabut oleh pemeriksa sesi. Sandi tidak tertulis di
+ * kode, log, atau arsip; pengguna wajib menggantinya dari menu Akun.
  */
 export async function resetPassword(userId: string): Promise<MasterActionResult> {
   const manager = await requireManager();
@@ -262,20 +268,20 @@ export async function resetPassword(userId: string): Promise<MasterActionResult>
 
   const now = nowSeconds();
   const stamp = new Date(now * 1000);
-  const passwordHash = await hashPassword(INITIAL_ACCOUNT_PASSWORD);
+  const oneTimePassword = generateOneTimePassword();
+  const passwordHash = await hashPassword(oneTimePassword);
 
   await db.batch([
     db.update(users).set({ passwordHash, passwordChangedAt: stamp, updatedAt: stamp }).where(eq(users.id, userId)),
     db.insert(activityLogs).values(
       logEntry(manager.actor.id, "user.password_reset", userId, null, {
         username: physical.username,
-        defaultPassword: INITIAL_ACCOUNT_PASSWORD,
       }, stamp),
     ),
   ]);
 
   revalidatePath("/master");
-  return { success: true };
+  return { success: true, oneTimePassword };
 }
 
 const setUserActiveSchema = z.object({

@@ -12,7 +12,10 @@ import { join } from "node:path";
 
 const PORT = process.env.TEST_PORT || process.env.PORT || "3005";
 const BASE = `http://localhost:${PORT}`;
-const PASSWORD = "Bawaslu#2026";
+// Sandi akun seed dijaga di luar repositori: set SMOKE_PASSWORD sebelum
+// menjalankan (mis. value yang sama dengan seed lokal dev) supaya berkas
+// throwaway ini tidak membawa kata sandi apa pun.
+const PASSWORD = process.env.SMOKE_PASSWORD;
 const SHOTS = "screenshots";
 mkdirSync(SHOTS, { recursive: true });
 
@@ -30,6 +33,11 @@ function findChromeHeadlessShell() {
 }
 
 const results = [];
+
+if (!PASSWORD) {
+  console.error('Set SMOKE_PASSWORD terlebih dahulu: $env:SMOKE_PASSWORD="..."; node smoke-ui.mjs');
+  process.exit(1);
+}
 function check(name, condition, detail = "") {
   results.push({ name, ok: Boolean(condition), detail });
   console.log(`${condition ? "PASS" : "FAIL"}  ${name}${detail ? `, ${detail}` : ""}`);

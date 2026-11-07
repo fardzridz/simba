@@ -1,7 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { hashPassword, needsRehash, verifyPassword } from "@/lib/auth/password";
+import { generateOneTimePassword, hashPassword, needsRehash, verifyPassword } from "@/lib/auth/password";
 
 const FAST_ITERATIONS = 100_000;
+
+describe("generateOneTimePassword", () => {
+  it("memenuhi kebijakan minimal 12 karakter dengan satu kelas tiap jenis", () => {
+    for (let index = 0; index < 24; index += 1) {
+      const password = generateOneTimePassword();
+      expect(password).toHaveLength(14);
+      expect(password).toMatch(/[A-Z]/);
+      expect(password).toMatch(/[a-z]/);
+      expect(password).toMatch(/\d/);
+      // Karakter yang mudah tertukar tidak ada dalam abjad.
+      expect(password).not.toMatch(/[0O1lIi]/);
+    }
+  });
+
+  it("menghasilkan sandi berbeda tiap panggilan", () => {
+    const values = new Set<string>();
+    for (let index = 0; index < 12; index += 1) values.add(generateOneTimePassword());
+    expect(values.size).toBeGreaterThan(8);
+  });
+});
 
 describe("hashPassword / verifyPassword", () => {
   it("menerima sandi yang benar dan menolak yang salah", async () => {

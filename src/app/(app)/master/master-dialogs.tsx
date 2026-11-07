@@ -234,16 +234,16 @@ export function ResetPasswordModal({
             ({user.fullName})
           </p>
           <p className="text-ink">
-            Kata sandi akun ini kembali ke nilai awal{" "}
-            <span className="font-mono font-semibold">Bawaslu#2026</span>.
+            Sistem membuat sandi awal sekali pakai yang baru dan menampilkannya
+            di layar setelah proses reset. Salin sebelum menutup dialog.
           </p>
           <p className="text-ink">
             Sesi yang sedang berjalan langsung dicabut setelah reset.
           </p>
           <p className="text-ink-3 text-[11px]">
-            Teruskan kata sandi awal kepada pengguna melalui kanal lain agar ia
-            dapat masuk lalu menggantinya dari menu Akun. Tindakan ini tercatat
-            di log aktivitas.
+            Teruskan sandi awal itu kepada pengguna melalui kanal lain agar ia
+            dapat masuk lalu menggantinya dari menu Akun. Log aktivitas mencatat
+            aksi reset tanpa menyertakan sandinya.
           </p>
         </div>
 
@@ -269,6 +269,98 @@ export function ResetPasswordModal({
           >
             Reset Kata Sandi
           </LoadingButton>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 1b. DIALOG SANDI AWAL SEKALI PAKAI (hasil createUser / resetPassword)
+// ==========================================
+export interface CreatedPasswordModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  mode: "created" | "reset";
+  username: string;
+  oneTimePassword: string;
+}
+
+/**
+ * Menampilkan sandi awal sekali pakai hasil pembuatan akun atau reset. Nielsen:
+ * dialog ini tidak bisa ditutup lewat klik luar atau tombol X supaya Super
+ * Admin terpaksa menyadari sandinya hanya ditampilkan sekali.
+ */
+export function CreatedPasswordModal({
+  isOpen,
+  onClose,
+  mode,
+  username,
+  oneTimePassword,
+}: CreatedPasswordModalProps) {
+  const [copied, setCopied] = useState(false);
+  const titleId = useId();
+
+  useEffect(() => {
+    if (isOpen) setCopied(false);
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(oneTimePassword);
+      setCopied(true);
+    } catch {
+      // Papan klip tidak tersedia; sandi tetap terbaca di kotak untuk disalin manual.
+    }
+  };
+
+  return (
+    <div role="presentation" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="w-full max-w-[440px] rounded-lg border border-border bg-surface p-6 shadow-card-hover flex flex-col gap-4"
+      >
+        <div className="border-b border-border pb-3">
+          <h2 id={titleId} className="text-h2 font-semibold text-ink">
+            {mode === "created" ? "Akun Dibuat" : "Kata Sandi Direset"}
+          </h2>
+          <p className="mt-1 text-body-sm text-ink-3">
+            Pengguna: <span className="font-mono font-semibold text-ink">@{username}</span>
+          </p>
+        </div>
+
+        <div className="rounded-md border border-info/30 bg-info-surface p-3 text-body-sm text-ink">
+          <span className="font-semibold">Tampilkan sekali:</span> sandi di bawah
+          tidak disimpan oleh sistem. Salin, kirim lewat kanal lain, lalu minta
+          pengguna menggantinya dari menu Akun setelah masuk.
+        </div>
+
+        <div className="flex items-center gap-3">
+          <code className="min-h-9 flex-1 rounded-md border border-border-strong bg-neutral-surface px-3 py-2 font-mono text-body-sm tracking-[0.08em] break-all select-all text-ink">
+            {oneTimePassword}
+          </code>
+          <button
+            type="button"
+            onClick={handleCopy}
+            aria-live="polite"
+            className="inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface px-3 text-body-sm font-semibold text-ink hover:bg-neutral-surface"
+          >
+            {copied ? "Tersalin" : "Salin"}
+          </button>
+        </div>
+
+        <div className="flex items-center justify-end border-t border-border pt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-body-sm font-semibold text-on-dark transition-colors hover:bg-primary-hover active:bg-primary-active"
+          >
+            Selesai
+          </button>
         </div>
       </div>
     </div>
@@ -602,9 +694,9 @@ export function UserFormModal({
             </p>
           ) : (
             <div className="rounded-md border border-border bg-neutral-surface p-3 text-body-sm text-ink-2">
-              Kata sandi awal akun baru otomatis{" "}
-              <span className="font-mono font-semibold text-ink">Bawaslu#2026</span>.
-              Pengguna wajib menggantinya setelah masuk dari menu Akun.
+              Sandi awal akun baru dibuat otomatis sekali pakai dan ditampilkan
+              di layar setelah akun tersimpan. Pengguna wajib menggantinya
+              setelah masuk dari menu Akun.
             </div>
           )}
 

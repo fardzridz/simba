@@ -51,12 +51,20 @@ function quote(value) {
   return `'${String(value).replaceAll("'", "''")}'`;
 }
 
-const lines = [
-  "-- Seed pengembangan: 5 divisi, 8 kategori, 5 akun (1 Super Admin, 2 Admin divisi, 2 Staf).",
-  "-- Dihasilkan oleh scripts/build-seed.mjs: jangan diedit manual.",
-  "-- Kata sandi semua akun seed: " + SEED_PASSWORD,
-  "",
-];
+const lines = process.argv.includes("--prod-master")
+  ? [
+      "-- Seed produksi (master data) tanpa akun pengguna: 5 divisi, 8 kategori.",
+      "-- Dihasilkan oleh scripts/build-seed.mjs --prod-master; jangan diedit manual.",
+      "-- Akun pertama (Super Admin) dibuat lewat scripts/bootstrap-admin.mjs (UC02)",
+      "-- dengan kata sandi yang tidak tersimpan di repositori ini.",
+      "",
+    ]
+  : [
+      "-- Seed pengembangan: 5 divisi, 8 kategori, 5 akun (1 Super Admin, 2 Admin divisi, 2 Staf).",
+      "-- Dihasilkan oleh scripts/build-seed.mjs: jangan diedit manual.",
+      "-- Kata sandi semua akun seed: " + SEED_PASSWORD,
+      "",
+    ];
 
 for (const [id, name, code] of DIVISIONS) {
   lines.push(
@@ -68,6 +76,17 @@ for (const name of CATEGORIES) {
   lines.push(
     `INSERT OR IGNORE INTO categories (id, name, is_active, created_at) VALUES (${quote(`cat_${name.toLowerCase().replaceAll(/[^a-z0-9]+/g, "_")}`)}, ${quote(name)}, 1, ${now});`,
   );
+}
+
+// Mode produksi berhenti di sini: master data saja, tanpa akun dan demo.
+if (process.argv.includes("--prod-master")) {
+  const prodPath = resolve(root, "seed/seed-prod.sql");
+  mkdirSync(dirname(prodPath), { recursive: true });
+  writeFileSync(prodPath, `${lines.join("\n")}\n`, "utf8");
+  console.log(
+    `seed/seed-prod.sql ditulis: ${DIVISIONS.length} divisi, ${CATEGORIES.length} kategori, tanpa akun pengguna.`,
+  );
+  process.exit(0);
 }
 
 for (const [id, divisionId, username, fullName, role] of USERS) {

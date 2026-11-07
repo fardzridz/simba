@@ -6,8 +6,6 @@
 /** workerd menolak PBKDF2 di atas 100.000 iterasi (NotSupportedError), jadi standar menempel batas runtime itu. */
 export const PBKDF2_ITERATIONS = 100_000;
 
-/** Kata sandi awal akun yang dibuat Super Admin (UC02) dan seed (§6.6). Pengguna menggantinya sendiri setelah masuk. */
-export const INITIAL_ACCOUNT_PASSWORD = "Bawaslu#2026";
 const KEY_BITS = 256;
 const SALT_BYTES = 16;
 const ALGORITHM = "PBKDF2-SHA256";
@@ -42,6 +40,45 @@ export async function hashPassword(password: string, iterations = PBKDF2_ITERATI
   const salt = crypto.getRandomValues(new Uint8Array(SALT_BYTES));
   const derived = await derive(password, salt, iterations);
   return `${ALGORITHM}$${iterations}$${toBase64(salt)}$${toBase64(derived)}`;
+}
+
+/**
+ * Sandi awal sekali pakai untuk akun baru dan reset (UC02): Super Admin
+ * menampilkannya sekali di layar lalu pengguna menggantinya dari menu Akun.
+ * Tidak ada kata sandi tetap di kode, log, atau versi kontrol; setiap akun
+ * mendapat nilai berbeda. Abjad membuang karakter yang mudah tertukar
+ * (0/O, 1/l/I) supaya aman dibaca bebas saat dikonfirmasi lewat kanal lain.
+ */
+const UPPER = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+const LOWER = "abcdefghjkmnpqrstuvwxyz";
+const DIGIT = "23456789";
+const ONE_TIME_ALPHABET = UPPER + LOWER + DIGIT;
+
+/** Bilangan acak tanpa bias modulo untuk batas < 256. */
+function randomInt(bound: number): number {
+  const limit = 256 - (256 % bound);
+  const buffer = new Uint8Array(1);
+  do {
+    crypto.getRandomValues(buffer);
+  } while (buffer[0]! >= limit);
+  return buffer[0]! % bound;
+}
+
+export function generateOneTimePassword(length = 14): string {
+  const chars: string[] = [
+    UPPER[randomInt(UPPER.length)]!,
+    LOWER[randomInt(LOWER.length)]!,
+    DIGIT[randomInt(DIGIT.length)]!,
+  ];
+  while (chars.length < length) {
+    chars.push(ONE_TIME_ALPHABET[randomInt(ONE_TIME_ALPHABET.length)]!);
+  }
+  // Fisher-Yates agar tiga kelas karakter di depan tidak membentuk pola.
+  for (let index = chars.length - 1; index > 0; index -= 1) {
+    const swap = randomInt(index + 1);
+    [chars[index], chars[swap]] = [chars[swap]!, chars[index]!];
+  }
+  return chars.join("");
 }
 
 type ParsedHash = { iterations: number; salt: Uint8Array; expected: Uint8Array };

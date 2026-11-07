@@ -290,7 +290,7 @@ graph LR
 | Kode | Use case | Aktor |
 |---|---|---|
 | UC01 | Login, kelola profil, ganti kata sandi | Semua |
-| UC02 | Kelola pengguna & peran (CRUD, assign divisi, NIP, jabatan, reset sandi, aktif/nonaktif) | Super Admin |
+| UC02 | Kelola pengguna & peran (CRUD, assign divisi, NIP, jabatan, reset sandi, aktif/nonaktif; reset menghasilkan sandi awal sekali pakai yang ditampilkan Super Admin satu kali) | Super Admin |
 | UC03 | Kelola divisi (CRUD, nonaktifkan) | Super Admin |
 | UC04 | Kelola kategori (CRUD master) | Super Admin |
 | UC05 | Lihat dashboard sesuai peran & scope | Semua |

@@ -4,6 +4,7 @@ import MasterClient from "./master-client";
 import {
   ResetPasswordModal,
   DeactivateUserModal,
+  CreatedPasswordModal,
   UserFormModal,
 } from "./master-dialogs";
 import type {
@@ -156,7 +157,7 @@ describe("Kelola Master L17", () => {
     expect(html).not.toContain("Aksi Tidak Tersedia");
   });
 
-  it("merender dialog konfirmasi reset kata sandi dengan teks kata sandi awal", () => {
+  it("merender dialog konfirmasi reset kata sandi tanpa kata sandi di dalamnya", () => {
     const user = USERS[2]!; // staf.hukum
     const html = renderToStaticMarkup(
       <ResetPasswordModal
@@ -169,10 +170,31 @@ describe("Kelola Master L17", () => {
 
     expect(html).toContain("Reset Kata Sandi");
     expect(html).toContain("staf.hukum");
-    expect(html).toContain("Bawaslu#2026");
+    expect(html).toContain("sekali pakai");
     expect(html).toContain("langsung dicabut setelah reset");
-    expect(html).toContain("Tindakan ini tercatat di log aktivitas");
+    expect(html).toContain("tanpa menyertakan sandinya");
     expect(html).toContain("Batal");
+    // Tidak ada sandi tetap yang bocor ke antarmuka.
+    expect(html).not.toContain("Bawaslu#2026");
+  });
+
+  it("merender dialog sandi awal sekali pakai dengan tombol salin dan selesai", () => {
+    const html = renderToStaticMarkup(
+      <CreatedPasswordModal
+        isOpen={true}
+        onClose={() => {}}
+        mode="reset"
+        username="staf.hukum"
+        oneTimePassword="Bk9mQwrsW2xz4A"
+      />,
+    );
+
+    expect(html).toContain("Kata Sandi Direset");
+    expect(html).toContain("@staf.hukum");
+    expect(html).toContain("Bk9mQwrsW2xz4A");
+    expect(html).toContain("Tampilkan sekali");
+    expect(html).toContain("Salin");
+    expect(html).toContain("Selesai");
   });
 
   it("merender dialog nonaktifkan akun dengan aturan bisnis", () => {
@@ -191,7 +213,7 @@ describe("Kelola Master L17", () => {
     expect(html).toContain("Alasan penonaktifan");
   });
 
-  it("merender formulir tambah pengguna dengan divisi dari props dan keterangan kata sandi awal", () => {
+  it("merender formulir tambah pengguna dengan divisi dari props dan keterangan sandi sekali pakai", () => {
     const html = renderToStaticMarkup(
       <UserFormModal
         isOpen={true}
@@ -206,8 +228,8 @@ describe("Kelola Master L17", () => {
     expect(html).toContain("Nama Lengkap *");
     expect(html).toContain("Nama Pengguna *");
     expect(html).toContain("Email *");
-    expect(html).toContain("Kata sandi awal akun baru otomatis");
-    expect(html).toContain("Bawaslu#2026");
+    expect(html).toContain("dibuat otomatis sekali pakai");
+    expect(html).not.toContain("Bawaslu#2026");
     expect(html).toContain("Simpan Pengguna");
   });
 });

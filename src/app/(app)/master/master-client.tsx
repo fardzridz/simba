@@ -21,6 +21,7 @@ import {
 import {
   ResetPasswordModal,
   DeactivateUserModal,
+  CreatedPasswordModal,
   MasterDeleteModal,
   UserFormModal,
   DivisionFormModal,
@@ -77,6 +78,13 @@ export default function MasterClient({
   // Spanduk Feedback Sukses
   const [notification, setNotification] = useState<string | null>(null);
 
+  // Sandi awal sekali pakai hasil createUser/resetPassword (tampil sekali).
+  const [passwordShown, setPasswordShown] = useState<{
+    mode: "created" | "reset";
+    username: string;
+    oneTimePassword: string;
+  } | null>(null);
+
   const showNotification = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 4000);
@@ -129,9 +137,14 @@ export default function MasterClient({
     if (!resetTargetUser) return { error: "Pengguna tidak ditemukan." };
     const result = await resetPassword(resetTargetUser.id);
     if (result.success) {
-      showNotification(
-        `Kata sandi @${resetTargetUser.username} kembali ke Bawaslu#2026 dan sesinya langsung dicabut.`,
-      );
+      if (result.oneTimePassword) {
+        setPasswordShown({
+          mode: "reset",
+          username: resetTargetUser.username,
+          oneTimePassword: result.oneTimePassword,
+        });
+      }
+      showNotification(`Kata sandi @${resetTargetUser.username} direset dan sesi lama langsung dicabut.`);
       router.refresh();
     }
     return result;
@@ -172,10 +185,17 @@ export default function MasterClient({
       ? await updateUser({ id: editTargetUser.id, ...values })
       : await createUser(values);
     if (result.success) {
+      if (!editTargetUser && result.oneTimePassword) {
+        setPasswordShown({
+          mode: "created",
+          username: values.username,
+          oneTimePassword: result.oneTimePassword,
+        });
+      }
       showNotification(
         editTargetUser
           ? `Data pengguna ${values.fullName} berhasil diperbarui.`
-          : `Pengguna baru @${values.username} dibuat. Kata sandi awal: Bawaslu#2026.`,
+          : `Pengguna baru @${values.username} dibuat.`,
       );
       router.refresh();
     }
@@ -777,6 +797,14 @@ export default function MasterClient({
       </div>
 
       {/* Kumpulan Dialog Modal */}
+      <CreatedPasswordModal
+        isOpen={Boolean(passwordShown)}
+        onClose={() => setPasswordShown(null)}
+        mode={passwordShown?.mode ?? "created"}
+        username={passwordShown?.username ?? ""}
+        oneTimePassword={passwordShown?.oneTimePassword ?? ""}
+      />
+
       <ResetPasswordModal
         isOpen={Boolean(resetTargetUser)}
         onClose={() => setResetTargetUser(null)}

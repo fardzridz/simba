@@ -157,7 +157,11 @@
 			},
 			"vars": {
 				"APP_ENV": "production",
-				"EXTERNAL_CHANNELS_ENABLED": "false"
+				"EXTERNAL_CHANNELS_ENABLED": "false",
+				// Domain sendiri belum tersedia (pengguna belum membeli); URL
+				// workers.dev dipakai dulu untuk tautan notifikasi (§7.6).
+				// Saat domain sudah aktif, ganti nilai ini lalu deploy ulang.
+				"APP_BASE_URL": "https://penugasan-divisi.sdmbawaslupas-e2d.workers.dev"
 			}
 		}
 	}

@@ -129,7 +129,8 @@ writeFileSync(sqlPath, sql, "utf8");
 try {
   const applied = d1(["--file", sqlPath]);
   const written = applied.reduce(
-    (total, statement) => total + (statement?.results?.rows_written ?? 0),
+    (total, statement) =>
+      total + (statement?.meta?.rows_written ?? statement?.results?.rows_written ?? 0),
     0,
   );
   if (written === 0) throw new Error("Tidak ada baris tertulis; INSERT mungkin dilewati.");

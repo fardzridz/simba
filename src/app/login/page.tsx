@@ -14,11 +14,14 @@ export default async function LoginPage() {
       <div className="w-full max-w-[420px]">
         <div className="card p-6">
           <div className="text-center">
-            {/* <p className="mx-auto inline-flex h-8 items-center rounded-md border border-border-strong bg-neutral-surface px-3 text-body-sm text-ink-2">
-              [LOGO]
-            </p> */}
-            <div className="mx-auto inline-flex h-8 items-center rounded-md px-3 text-body-sm">
-              <img src="../../../public/logo/logo-web-bawaslu.png" alt="Logo Bawaslu lengkap" />
+            <div className="mx-auto flex h-8 items-center justify-center">
+              <img
+                src="/logo/logo-bawaslu.png"
+                alt="Logo Bawaslu Kota Pasuruan"
+                width={360}
+                height={96}
+                className="h-8 w-auto"
+              />
             </div>
             <h1 className="mt-4 text-h1">Portal Manajemen Penugasan &amp; Dokumen Divisi</h1>
             <p className="mt-1 text-body-sm text-ink-3">Bawaslu Kota Pasuruan. Akses terbatas untuk pegawai.</p>

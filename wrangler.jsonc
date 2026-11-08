@@ -161,7 +161,12 @@
 				// Domain sendiri belum tersedia (pengguna belum membeli); URL
 				// workers.dev dipakai dulu untuk tautan notifikasi (§7.6).
 				// Saat domain sudah aktif, ganti nilai ini lalu deploy ulang.
-				"APP_BASE_URL": "https://penugasan-divisi.sdmbawaslupas-e2d.workers.dev"
+				"APP_BASE_URL": "https://penugasan-divisi.sdmbawaslupas-e2d.workers.dev",
+				// Alamat pengirim kanal surel (keputusan instansi §12 #13).
+				// Catatan Resend: FROM di luar domain terverifikasi ditolak;
+				// sementara ini kanal surel boleh gagal graceful, kanal in-app
+				// tidak dipengaruhi.
+				"MAIL_FROM": "sdmbawaslupas@gmail.com"
 			}
 		}
 	}

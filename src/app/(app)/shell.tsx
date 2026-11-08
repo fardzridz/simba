@@ -160,7 +160,8 @@ export default function Shell({
     <div className="min-h-screen bg-background desktop:pl-[220px]">
       <aside className="fixed inset-y-0 left-0 z-[var(--z-sidebar)] hidden w-[220px] flex-col bg-sidebar desktop:flex">
         <div className="flex h-14 items-center px-5">
-          <span className="text-body-sm font-medium text-on-dark-muted">[LOGO]</span>
+          {/* <span className="text-body-sm font-medium text-on-dark-muted">[LOGO]</span> */}
+          <img src="../../../public/logo/logo-web-bawaslu_versi icon aja.png" alt="logo bawaslu versi icon aja" />
         </div>
         <nav aria-label="Navigasi utama" className="flex-1 overflow-y-auto px-3 pb-4">
           {renderNav()}

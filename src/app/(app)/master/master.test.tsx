@@ -25,6 +25,7 @@ const USERS: MasterUser[] = [
     fullName: "Super Admin",
     username: "super.admin",
     email: "super.admin@contoh.local",
+    nip: "199805212006041002",
     divisionId: "div_sek",
     divisionName: "Sekretariat",
     divisionCode: "SEK",
@@ -38,6 +39,7 @@ const USERS: MasterUser[] = [
     fullName: "Admin Hukum",
     username: "admin.hukum",
     email: "admin.hukum@contoh.local",
+    nip: null,
     divisionId: "div_hukum",
     divisionName: "Hukum & Sengketa",
     divisionCode: "HUK",
@@ -51,6 +53,7 @@ const USERS: MasterUser[] = [
     fullName: "Staf Hukum",
     username: "staf.hukum",
     email: "staf.hukum@contoh.local",
+    nip: null,
     divisionId: "div_hukum",
     divisionName: "Hukum & Sengketa",
     divisionCode: "HUK",
@@ -228,8 +231,29 @@ describe("Kelola Master L17", () => {
     expect(html).toContain("Nama Lengkap *");
     expect(html).toContain("Nama Pengguna *");
     expect(html).toContain("Email *");
+    // NIP opsional: label jujur menandai sifatnya supaya tidak diasumsikan wajib.
+    expect(html).toContain("NIP");
+    expect(html).toContain("(opsional)");
+    expect(html).toContain("18 digit angka");
     expect(html).toContain("dibuat otomatis sekali pakai");
     expect(html).not.toContain("Bawaslu#2026");
     expect(html).toContain("Simpan Pengguna");
+  });
+
+  it("mengisi ulang NIP yang sudah tersimpan saat mengubah pengguna", () => {
+    const user = USERS[0]!; // Super Admin dengan NIP
+    const html = renderToStaticMarkup(
+      <UserFormModal
+        isOpen={true}
+        onClose={() => {}}
+        user={user}
+        divisions={DIVISIONS}
+        onSave={async () => ({})}
+      />,
+    );
+
+    expect(html).toContain("Ubah Pengguna");
+    expect(html).toContain(user.nip!);
+    expect(html).toContain("tidak mengubah kata sandi");
   });
 });

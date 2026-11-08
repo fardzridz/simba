@@ -14,6 +14,8 @@ export type MasterUser = {
   fullName: string;
   username: string;
   email: string;
+  /** Bisa kosong: NIP opsional menurut §D9, unik bila diisi. */
+  nip: string | null;
   divisionId: string;
   divisionName: string;
   divisionCode: string;
@@ -68,6 +70,7 @@ export async function getMasterUsers(db: Db, scope: Scope): Promise<MasterUser[]
       fullName: users.fullName,
       username: users.username,
       email: users.email,
+      nip: users.nip,
       divisionId: users.divisionId,
       divisionName: divisions.name,
       divisionCode: divisions.code,
@@ -85,6 +88,7 @@ export async function getMasterUsers(db: Db, scope: Scope): Promise<MasterUser[]
     fullName: row.fullName,
     username: row.username,
     email: row.email ?? "",
+    nip: row.nip,
     divisionId: row.divisionId,
     divisionName: row.divisionName,
     divisionCode: row.divisionCode,

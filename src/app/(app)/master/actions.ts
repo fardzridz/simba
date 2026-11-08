@@ -78,10 +78,26 @@ const usernameSchema = z
   .toLowerCase()
   .regex(/^[a-z][a-z0-9._-]{2,31}$/, "Nama pengguna memakai huruf kecil, angka, titik, garis bawah atau hubung, 3 sampai 32 karakter.");
 
+/**
+ * NIP pegawai opsional (§D9): kosong berarti tanpa NIP; bila diisi wajib 18
+ * digit angka setelah spasi pemeriksa dibuang, dan unik antar akun
+ * (users_nip_uq). Tersimpan sebagai angka murni tanpa pemisah.
+ */
+const nipSchema = z
+  .string()
+  .trim()
+  .transform((value) => value.replace(/\s+/g, ""))
+  .refine(
+    (value) => value === "" || /^\d{18}$/.test(value),
+    "NIP diisi 18 digit angka (spasi boleh sebagai pemisah) atau dibiarkan kosong.",
+  )
+  .transform((value) => (value === "" ? null : value));
+
 const userFieldsSchema = z.object({
   fullName: z.string().trim().min(1, "Nama lengkap wajib diisi.").max(100, "Nama lengkap maksimal 100 karakter."),
   username: usernameSchema,
   email: z.email("Format surel tidak sah.").trim().toLowerCase().max(254),
+  nip: nipSchema,
   divisionId: z.string().trim().min(1, "Divisi wajib dipilih."),
   role: z.enum(["USER", "ADMIN", "SUPER_ADMIN"]),
 });
@@ -135,12 +151,23 @@ export async function createUser(input: unknown): Promise<MasterActionResult> {
   if (emailTaken.length > 0) {
     return { error: `Surel ${fields.email} sudah dipakai.` };
   }
+  if (fields.nip) {
+    const nipTaken = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.nip, fields.nip))
+      .limit(1);
+    if (nipTaken.length > 0) {
+      return { error: `NIP ${fields.nip} sudah dipakai akun lain.` };
+    }
+  }
 
   try {
     await db.batch([
       db.insert(users).values({
         id: userId,
         divisionId: fields.divisionId,
+        nip: fields.nip,
         username: fields.username,
         email: fields.email,
         fullName: fields.fullName,
@@ -156,6 +183,7 @@ export async function createUser(input: unknown): Promise<MasterActionResult> {
         logEntry(manager.actor.id, "user.created", userId, null, {
           username: fields.username,
           fullName: fields.fullName,
+          nip: fields.nip,
           divisionId: fields.divisionId,
           role: fields.role,
         }, stamp),
@@ -192,6 +220,7 @@ export async function updateUser(input: unknown): Promise<MasterActionResult> {
       fullName: users.fullName,
       username: users.username,
       email: users.email,
+      nip: users.nip,
       divisionId: users.divisionId,
       role: users.role,
       isActive: users.isActive,
@@ -213,6 +242,12 @@ export async function updateUser(input: unknown): Promise<MasterActionResult> {
   if (clashingEmail.length > 0) {
     return { error: `Surel ${fields.email} sudah dipakai orang lain.` };
   }
+  const clashingNip = fields.nip && fields.nip !== physical.nip
+    ? await db.select({ id: users.id }).from(users).where(eq(users.nip, fields.nip)).limit(1)
+    : [];
+  if (clashingNip.length > 0) {
+    return { error: `NIP ${fields.nip} sudah dipakai akun lain.` };
+  }
 
   const now = nowSeconds();
   const stamp = new Date(now * 1000);
@@ -223,6 +258,7 @@ export async function updateUser(input: unknown): Promise<MasterActionResult> {
         fullName: fields.fullName,
         username: fields.username,
         email: fields.email,
+        nip: fields.nip,
         divisionId: fields.divisionId,
         role: fields.role,
         updatedAt: stamp,
@@ -232,9 +268,17 @@ export async function updateUser(input: unknown): Promise<MasterActionResult> {
           fullName: physical.fullName,
           username: physical.username,
           email: physical.email,
+          nip: physical.nip,
           divisionId: physical.divisionId,
           role: physical.role,
-        }, fields, stamp),
+        }, {
+          fullName: fields.fullName,
+          username: fields.username,
+          email: fields.email,
+          nip: fields.nip,
+          divisionId: fields.divisionId,
+          role: fields.role,
+        }, stamp),
       ),
     ]);
   } catch (error) {

@@ -11,6 +11,8 @@ export type UserFormValues = {
   fullName: string;
   username: string;
   email: string;
+  /** String mentah dari isian; kosong berarti tanpa NIP (server memvalidasi). */
+  nip: string | null;
   divisionId: string;
   role: "USER" | "ADMIN" | "SUPER_ADMIN";
 };
@@ -529,12 +531,14 @@ export function UserFormModal({
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [nip, setNip] = useState("");
   const [divisionId, setDivisionId] = useState("");
   const [role, setRole] = useState<"USER" | "ADMIN" | "SUPER_ADMIN">("USER");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const titleId = useId();
+  const nipId = useId();
 
   // Pilihan divisi: aktif dulu, divisi milik akun yang diedit tetap tampil bila nonaktif.
   const divisionOptions = divisions.filter(
@@ -547,12 +551,14 @@ export function UserFormModal({
         setFullName(user.fullName);
         setUsername(user.username);
         setEmail(user.email);
+        setNip(user.nip ?? "");
         setDivisionId(user.divisionId);
         setRole(user.role);
       } else {
         setFullName("");
         setUsername("");
         setEmail("");
+        setNip("");
         setDivisionId("");
         setRole("USER");
       }
@@ -579,7 +585,7 @@ export function UserFormModal({
     setIsSubmitting(true);
     setError(null);
     try {
-      const result = await onSave({ fullName, username, email, divisionId, role });
+      const result = await onSave({ fullName, username, email, nip, divisionId, role });
       if (result?.error) {
         setError(result.error);
         setIsSubmitting(false);
@@ -657,6 +663,25 @@ export function UserFormModal({
             </div>
           </div>
 
+          <div className="flex flex-col gap-1">
+            <div className="flex items-baseline justify-between">
+              <label htmlFor={nipId} className="text-body-sm font-medium text-ink">
+                NIP <span className="text-ink-3 font-normal">(opsional)</span>
+              </label>
+              <span className="text-body-sm text-ink-3">18 digit angka</span>
+            </div>
+            <input
+              id={nipId}
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              value={nip}
+              onChange={(e) => setNip(e.target.value)}
+              placeholder="199805212006041002"
+              className="h-9 w-full rounded-md border border-border bg-surface px-3 font-mono text-body-sm text-ink placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-body-sm font-medium text-ink">Divisi *</label>
@@ -689,8 +714,8 @@ export function UserFormModal({
 
           {isEdit ? (
             <p className="text-body-sm text-ink-3">
-              Perubahan data akun (nama, surel, divisi, peran) tidak mengubah
-              kata sandi milik pengguna.
+              Perubahan data akun (nama, surel, NIP, divisi, peran) tidak
+              mengubah kata sandi milik pengguna.
             </p>
           ) : (
             <div className="rounded-md border border-border bg-neutral-surface p-3 text-body-sm text-ink-2">

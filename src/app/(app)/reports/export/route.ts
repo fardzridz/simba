@@ -31,12 +31,16 @@ export async function GET(request: Request) {
   const { db } = appContext();
   const report = await getReport(db, scope, filters);
 
+  // Determine if custom date range is being used
+  const isCustomRange = Boolean(filters.dateFrom || filters.dateTo);
+  
   const lines: string[] = [
     "LAPORAN REKAPITULASI PENUGASAN",
-    `Periode,${report.periodLabel} (${report.rangeLabel})`,
+    `Periode${isCustomRange ? ", Tanggal Custom" : ""},${report.periodLabel} (${report.rangeLabel})`,
     `Divisi,${report.scopeLabels.division}`,
     `Status,${report.scopeLabels.status}`,
     `Kategori,${report.scopeLabels.category}`,
+    isCustomRange ? `Rentang Tanggal,${formatDateForCsv(filters.dateFrom ? new Date(filters.dateFrom) : undefined)} sampai ${formatDateForCsv(filters.dateTo ? new Date(filters.dateTo) : undefined)}` : "",
     "",
     "Ringkasan periode (satuan: penugasan)",
     "Metrik,Nilai",
@@ -67,7 +71,9 @@ export async function GET(request: Request) {
   }
 
   const csv = `\uFEFF${lines.join("\r\n")}\r\n`;
-  const filename = `laporan-penugasan-${report.period}.csv`;
+  const filename = isCustomRange 
+    ? `laporan-penugasan-custom-${new Date().toISOString().split('T')[0]}.csv`
+    : `laporan-penugasan-${report.period}.csv`;
 
   return new Response(csv, {
     headers: {
@@ -75,4 +81,11 @@ export async function GET(request: Request) {
       "Content-Disposition": `attachment; filename="${filename}"`,
     },
   });
+}
+
+/** Helper function to format date for CSV */
+function formatDateForCsv(dateObj?: Date | string): string {
+  if (!dateObj) return "";
+  const date = typeof dateObj === 'string' ? new Date(dateObj) : dateObj;
+  return date.toLocaleDateString("id-ID");
 }

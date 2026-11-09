@@ -20,6 +20,8 @@ export default async function ReportsPage(props: {
     divisi?: string;
     status?: string;
     kategori?: string;
+    dateFrom?: string;
+    dateTo?: string;
   }>;
 }) {
   const actor = await requireActor();
@@ -40,7 +42,18 @@ export default async function ReportsPage(props: {
 
   const { db } = appContext();
   const params = await props.searchParams;
-  const filters = readReportFilters(params, scope);
+  
+  // Transform date strings for compatibility with readReportFilters
+  const transformedParams: Parameters<typeof import("@/db/queries/reports").readReportFilters>[0] = 
+    params.dateFrom || params.dateTo
+      ? {
+          ...params,
+          dateFrom: params.dateFrom ?? undefined,
+          dateTo: params.dateTo ?? undefined,
+        }
+      : params as unknown as Parameters<typeof import("@/db/queries/reports").readReportFilters>[0];
+      
+  const filters = readReportFilters(transformedParams, scope);
 
   const [report, filterOptions, ownDivision] = await Promise.all([
     getReport(db, scope, filters),
@@ -64,6 +77,8 @@ export default async function ReportsPage(props: {
         divisionId: filters.divisionId,
         status: filters.status ?? "",
         categoryId: filters.categoryId ?? "",
+        dateFrom: filters.dateFrom?.toISOString().split('T')[0] ?? "",
+        dateTo: filters.dateTo?.toISOString().split('T')[0] ?? "",
       }}
       periodOptions={REPORT_PERIODS}
       divisionOptions={filterOptions.divisionOptions}

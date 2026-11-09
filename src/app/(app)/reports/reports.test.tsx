@@ -21,6 +21,8 @@ const EMPTY_FILTERS: ReportsFilterState = {
   divisionId: null,
   status: "",
   categoryId: "",
+  dateFrom: "",
+  dateTo: "",
 };
 
 function makeReport(overrides: Partial<ReportView> = {}): ReportView {
@@ -145,7 +147,7 @@ describe("Laporan & Ekspor L14", () => {
       <ReportsClient
         role="SUPER_ADMIN"
         report={makeReport()}
-        filters={{ period: "bulan_lalu", divisionId: "div_hukum", status: "", categoryId: "" }}
+        filters={{ period: "bulan_lalu", divisionId: "div_hukum", status: "", categoryId: "", dateFrom: "", dateTo: "" }}
         ownDivisionName=""
         {...baseProps()}
       />,

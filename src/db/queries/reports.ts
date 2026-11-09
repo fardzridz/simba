@@ -85,6 +85,9 @@ export type ReportFilters = {
   divisionId: string | null;
   status: AssignmentStatus | null;
   categoryId: string | null;
+  /** Custom date range overrides period if provided */
+  dateFrom?: Date | null;
+  dateTo?: Date | null;
 };
 
 export type ReportSummary = {
@@ -124,7 +127,7 @@ export type ReportView = {
  * fungsi yang sama agar filter layar tidak pernah beda dengan filter ekspor.
  */
 export function readReportFilters(
-  input: URLSearchParams | { period?: string; divisi?: string; status?: string; kategori?: string },
+  input: URLSearchParams | { period?: string; divisi?: string; status?: string; kategori?: string; dateFrom?: string; dateTo?: string },
   scope: Scope,
 ): ReportFilters {
   const values =
@@ -134,6 +137,8 @@ export function readReportFilters(
           divisi: input.get("divisi") ?? undefined,
           status: input.get("status") ?? undefined,
           kategori: input.get("kategori") ?? undefined,
+          dateFrom: input.get("dateFrom") ?? undefined,
+          dateTo: input.get("dateTo") ?? undefined,
         }
       : input;
 
@@ -153,11 +158,47 @@ export function readReportFilters(
 
   const categoryId = values.kategori?.trim() || null;
 
-  return { period, divisionId, status, categoryId };
+  // Parse custom date range if provided
+  let dateFrom: Date | null = null;
+  let dateTo: Date | null = null;
+  
+  if (values.dateFrom) {
+    try {
+      dateFrom = new Date(values.dateFrom);
+      // Normalize to midnight WIB
+      dateFrom.setHours(0, 0, 0, 0);
+    } catch (e) {
+      console.error("Invalid dateFrom:", values.dateFrom);
+    }
+  }
+  
+  if (values.dateTo) {
+    try {
+      dateTo = new Date(values.dateTo);
+      // Add one day to include full end date
+      dateTo.setHours(23, 59, 59, 999);
+    } catch (e) {
+      console.error("Invalid dateTo:", values.dateTo);
+    }
+  }
+
+  return { period, divisionId, status, categoryId, dateFrom, dateTo };
 }
 
 function reportWhere(scope: Scope, filters: ReportFilters): SQL {
-  const { from, to } = reportPeriodRange(filters.period, nowSeconds());
+  let from: number;
+  let to: number;
+  
+  // If custom date range is provided, use it; otherwise use period-based range
+  if (filters.dateFrom && filters.dateTo) {
+    from = Math.floor(filters.dateFrom.getTime() / 1000);
+    to = Math.ceil(filters.dateTo.getTime() / 1000) + 1;
+  } else {
+    const periodRange = reportPeriodRange(filters.period, nowSeconds());
+    from = periodRange.from;
+    to = periodRange.to;
+  }
+  
   const conditions: SQL[] = [
     gte(tasks.createdAt, new Date(from * 1000)),
     lt(tasks.createdAt, new Date(to * 1000)),

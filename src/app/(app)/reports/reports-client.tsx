@@ -3,8 +3,21 @@
 import { useRouter } from "next/navigation";
 import { Icon } from "@/app/icons";
 import type { ReportDivisionRow, ReportPeriod, ReportView } from "@/db/queries/reports";
+import { useState } from "react";
+import * as React from "react";
 
 export type Role = "ADMIN" | "SUPER_ADMIN";
+
+/** Helper function to format date for display */
+function formatDateForDisplay(dateStr: string): string {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("id-ID", { 
+    day: "numeric", 
+    month: "short", 
+    year: "numeric" 
+  });
+}
 
 export type ReportsFilterState = {
   period: ReportPeriod;
@@ -12,6 +25,9 @@ export type ReportsFilterState = {
   divisionId: string | null;
   status: string;
   categoryId: string;
+  /** Custom date range for filtering */
+  dateFrom: string;
+  dateTo: string;
 };
 
 export interface ReportsClientProps {
@@ -34,6 +50,8 @@ function buildReportsUrl(state: ReportsFilterState, forExport: boolean): string 
   if (state.divisionId) params.set("divisi", state.divisionId);
   if (state.status) params.set("status", state.status);
   if (state.categoryId) params.set("kategori", state.categoryId);
+  if (state.dateFrom) params.set("dateFrom", state.dateFrom);
+  if (state.dateTo) params.set("dateTo", state.dateTo);
   const qs = params.toString();
   return `${forExport ? "/reports/export" : "/reports"}${qs ? `?${qs}` : ""}`;
 }
@@ -48,12 +66,19 @@ export default function ReportsClient({
   ownDivisionName,
 }: ReportsClientProps) {
   const router = useRouter();
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+
+  const toggleRowExpansion = (divisionId: string) => {
+    setExpandedRow(expandedRow === divisionId ? null : divisionId);
+  };
 
   const current: ReportsFilterState = {
     period: filters.period,
     divisionId: filters.divisionId,
     status: filters.status ?? "",
     categoryId: filters.categoryId ?? "",
+    dateFrom: filters.dateFrom ?? "",
+    dateTo: filters.dateTo ?? "",
   };
 
   const update = (patch: Partial<ReportsFilterState>) => {
@@ -64,6 +89,8 @@ export default function ReportsClient({
     current.period !== DEFAULT_PERIOD ||
       current.status ||
       current.categoryId ||
+      current.dateFrom ||
+      current.dateTo ||
       (role === "SUPER_ADMIN" && current.divisionId),
   );
 
@@ -75,6 +102,8 @@ export default function ReportsClient({
           divisionId: role === "SUPER_ADMIN" ? null : current.divisionId,
           status: "",
           categoryId: "",
+          dateFrom: "",
+          dateTo: "",
         },
         false,
       ),
@@ -113,6 +142,46 @@ export default function ReportsClient({
             </option>
           ))}
         </select>
+
+        {/* Toggle ke Custom Date Range */}
+        <button
+          type="button"
+          onClick={() => {
+            // Simple toggle between default period and custom dates
+            const isCustom = Boolean(current.dateFrom || current.dateTo);
+            if (isCustom) {
+              // Reset to default period
+              update({ period: DEFAULT_PERIOD, dateFrom: "", dateTo: "" });
+            } else {
+              // Switch to custom mode
+              update({ period: "bulan_ini", dateFrom: new Date().toISOString().split('T')[0] });
+            }
+          }}
+          className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink hover:bg-neutral-surface active:bg-border transition-colors"
+        >
+          {current.dateFrom || current.dateTo ? "Gunakan Periode Default" : "Custom Tanggal"}
+        </button>
+
+        {/* Input Tanggal Mulai untuk Custom Date Range */}
+        {(current.dateFrom || Boolean(filters.dateFrom)) && (
+          <>
+            <input
+              type="date"
+              value={current.dateFrom || new Date().toISOString().split('T')[0]}
+              onChange={(e) => update({ dateFrom: e.target.value })}
+              aria-label="Tanggal mulai"
+              className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+            />
+            <span className="text-body-sm text-ink-2">s/d</span>
+            <input
+              type="date"
+              value={current.dateTo || new Date().toISOString().split('T')[0]}
+              onChange={(e) => update({ dateTo: e.target.value })}
+              aria-label="Tanggal selesai"
+              className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+            />
+          </>
+        )}
 
         {/* Pemilih Divisi */}
         {role === "SUPER_ADMIN" ? (
@@ -185,6 +254,13 @@ export default function ReportsClient({
               <h2 className="text-h2 font-semibold text-ink">Ringkasan Periode</h2>
               <span className="text-body-sm text-ink-3">satuan: penugasan</span>
             </div>
+
+            <p className="mt-4 text-body-sm text-ink-2">
+              {current.dateFrom || current.dateTo ? 
+                `Tanggal ${formatDateForDisplay(current.dateFrom)} s/d ${formatDateForDisplay(current.dateTo)}` :
+                report.periodLabel
+              } ({report.rangeLabel})
+            </p>
 
             <div className="mt-4 grid grid-cols-2 gap-4 tablet:grid-cols-5">
               <div className="flex flex-col">
@@ -288,6 +364,7 @@ export default function ReportsClient({
             <table className="w-full text-left text-body">
               <thead>
                 <tr className="border-b border-border text-body-sm font-semibold text-ink-2 print:border-ink print:text-ink">
+                  <th scope="col" className="py-2.5 w-12"></th>
                   <th scope="col" className="py-2.5">
                     Divisi
                   </th>
@@ -303,34 +380,138 @@ export default function ReportsClient({
                   <th scope="col" className="py-2.5 text-right">
                     Dokumen Final
                   </th>
+                  <th scope="col" className="py-2.5 text-center"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border print:divide-ink">
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-6 text-center text-body-sm text-ink-3">
+                    <td colSpan={7} className="py-6 text-center text-body-sm text-ink-3">
                       0 penugasan pada periode ini.
                     </td>
                   </tr>
                 ) : (
                   rows.map((row) => (
-                    <tr key={row.divisionId} className="hover:bg-neutral-surface/40">
-                      <td className="py-3 font-medium text-ink">
-                        {row.divisionName}
-                      </td>
-                      <td className="py-3 text-right font-mono text-body text-ink">
-                        {row.totalAssignments}
-                      </td>
-                      <td className="py-3 text-right font-mono text-body text-ink">
-                        {row.completed}
-                      </td>
-                      <td className="py-3 text-right font-mono text-body font-semibold text-error">
-                        {row.overdue}
-                      </td>
-                      <td className="py-3 text-right font-mono text-body text-ink">
-                        {row.finalDocuments}
-                      </td>
-                    </tr>
+                    <React.Fragment key={row.divisionId}>
+                      <tr key={row.divisionId} className="hover:bg-neutral-surface/40">
+                        <td className="py-3">
+                          <button
+                            onClick={() => toggleRowExpansion(row.divisionId)}
+                            className="text-body-sm text-ink-3 hover:text-primary transition-colors"
+                            aria-label={expandedRow === row.divisionId ? "Collapse" : "Expand"}
+                          >
+                            {expandedRow === row.divisionId ? "▼" : "▶"}
+                          </button>
+                        </td>
+                        <td className="py-3 font-medium text-ink">
+                          {row.divisionName}
+                        </td>
+                        <td className="py-3 text-right font-mono text-body text-ink">
+                          {row.totalAssignments}
+                        </td>
+                        <td className="py-3 text-right font-mono text-body text-ink">
+                          {row.completed}
+                        </td>
+                        <td className="py-3 text-right font-mono text-body font-semibold text-error">
+                          {row.overdue}
+                        </td>
+                        <td className="py-3 text-right font-mono text-body text-ink">
+                          {row.finalDocuments}
+                        </td>
+                        <td className="py-3 text-center">
+                          <button
+                            onClick={() => toggleRowExpansion(row.divisionId)}
+                            className="text-body-sm text-primary hover:underline"
+                          >
+                            Lihat Detail
+                          </button>
+                        </td>
+                      </tr>
+
+                      {/* Expandable Detail Section */}
+                      {expandedRow === row.divisionId && (
+                        <tr>
+                          <td colSpan={7} className="bg-neutral-surface/30 p-4">
+                            <div className="flex flex-col gap-4">
+                              <div className="border-l-4 border-primary pl-4">
+                                <h3 className="font-semibold text-h3 text-ink mb-2">
+                                  Ringkasan {row.divisionName}
+                                </h3>
+                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                  <div className="flex flex-col">
+                                    <span className="text-body-xs text-ink-3">Total Tugas</span>
+                                    <span className="text-h4 font-semibold text-ink">
+                                      {row.totalAssignments}
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-body-xs text-ink-3">Selesai</span>
+                                    <span className="text-h4 font-semibold text-success">
+                                      {row.completed}
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-body-xs text-ink-3">Tepat Waktu</span>
+                                    <span className="text-h4 font-semibold text-green-600">
+                                      {Math.round((row.completed / row.totalAssignments) * 100)}%
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-body-xs text-ink-3">Terlambat</span>
+                                    <span className="text-h4 font-semibold text-red-600">
+                                      {row.overdue}
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-body-xs text-ink-3">Dokumen Final</span>
+                                    <span className="text-h4 font-semibold text-ink">
+                                      {row.finalDocuments}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="mt-4">
+                                <h4 className="font-semibold text-body-sm text-ink-2 mb-2">
+                                  Status Tasks di {row.divisionName}:
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
+                                  <span className="px-3 py-1 rounded-md bg-gray-100 text-body-xs text-ink-2">
+                                    Belum Dikerjakan: --
+                                  </span>
+                                  <span className="px-3 py-1 rounded-md bg-blue-100 text-body-xs text-ink-2">
+                                    Sedang Dikerjakan: --
+                                  </span>
+                                  <span className="px-3 py-1 rounded-md bg-yellow-100 text-body-xs text-ink-2">
+                                    Menunggu Verifikasi: --
+                                  </span>
+                                  <span className="px-3 py-1 rounded-md bg-green-100 text-body-xs text-ink-2">
+                                    Selesai: {row.completed}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="mt-4 flex items-center gap-3">
+                                <a
+                                  href={`/tasks?division=${encodeURIComponent(row.divisionCode)}`}
+                                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-primary px-4 text-body font-semibold text-on-dark hover:bg-primary-hover active:bg-primary-hover transition-colors shadow-sm"
+                                >
+                                  <Icon name="lihat" size={16} />
+                                  Buka Daftar Task Divisi
+                                </a>
+                                <a
+                                  href={`${buildReportsUrl({ ...current, divisionId: row.divisionId }, true)}`}
+                                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-border-strong bg-surface px-4 text-body font-semibold text-ink hover:bg-neutral-surface active:bg-border transition-colors"
+                                >
+                                  <Icon name="unduh" size={16} />
+                                  Export Excel
+                                </a>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))
                 )}
               </tbody>

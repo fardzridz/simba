@@ -12,6 +12,8 @@ const TITLE_PREFIX: Record<NotificationType, string> = {
   TASK_CANCELLED: "Tugas dibatalkan",
   DUE_SOON: "Tenggat dekat",
   TASK_DUE_EXTENDED: "Tenggat diperpanjang",
+  TASK_SELF_CREATED: "Tugas mandiri dibuat",
+  SUBMISSION_WITHDRAWN: "Pengumpulan ditarik",
 };
 
 export type NotificationTone = "error" | "warning" | "neutral";
@@ -31,7 +33,8 @@ export function notificationTone(
   if (
     type === "DUE_SOON" ||
     type === "SUBMISSION_RECEIVED" ||
-    type === "TASK_DUE_EXTENDED"
+    type === "TASK_DUE_EXTENDED" ||
+    type === "SUBMISSION_WITHDRAWN"
   ) {
     return "warning";
   }

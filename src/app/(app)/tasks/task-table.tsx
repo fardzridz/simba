@@ -5,8 +5,9 @@ import Link from "next/link";
 import StatusChip from "../status-chip";
 import { Icon } from "@/app/icons";
 import { LoadingButton } from "../loading-state";
-import { startTask, cancelTask, deleteTask } from "./actions";
+import { startTask, cancelTask, deleteTask, withdrawSubmission } from "./actions";
 import { CancelTaskModal, DeleteTaskModal } from "./[id]/task-admin-dialogs";
+import WithdrawSubmissionModal from "./withdraw-submission-modal";
 import type { TaskListItem } from "@/db/queries/tasks";
 import type { Priority } from "@/db/schema";
 import { humanizeRemaining, isDueSoon, isOverdue, nowSeconds } from "@/lib/time";
@@ -71,6 +72,7 @@ export default function TaskTable({
   const now = nowSeconds();
   const [cancellingTask, setCancellingTask] = useState<TaskListItem | null>(null);
   const [deletingTask, setDeletingTask] = useState<TaskListItem | null>(null);
+  const [withdrawingTask, setWithdrawingTask] = useState<TaskListItem | null>(null);
 
   const detailHref = (item: TaskListItem) =>
     `/tasks/${item.taskId}?assignment=${encodeURIComponent(item.assignmentId)}`;
@@ -95,6 +97,25 @@ export default function TaskTable({
         ),
       );
     });
+  }
+
+  async function handleWithdraw(assignmentId: string) {
+    const result = await withdrawSubmission(assignmentId);
+    if (result.error) {
+      setActionError(result.error);
+      return result;
+    }
+    setActionError(null);
+    // Pengumpulan kembali menjadi draf; daftar menampilkan status dikerjakan
+    // lagi dan sisa waktu diperhitungkan ulang dari tenggat yang sama.
+    setLocalItems((prev) =>
+      prev.map((it) =>
+        it.assignmentId === assignmentId
+          ? { ...it, status: "SEDANG_DIKERJAKAN", needsRevision: false, submittedAt: null }
+          : it,
+      ),
+    );
+    return result;
   }
 
   return (
@@ -293,12 +314,22 @@ export default function TaskTable({
                           Kumpulkan Tugas
                         </Link>
                       ) : item.status === "MENUNGGU_VERIFIKASI" ? (
-                        <Link
-                          href={detailHref(item)}
-                          className="inline-flex h-8 items-center rounded-md border border-border px-3 text-body-sm text-ink-3 hover:text-ink hover:bg-neutral-surface"
-                        >
-                          Lihat Berkas
-                        </Link>
+                        <div className="inline-flex items-center gap-2">
+                          <Link
+                            href={detailHref(item)}
+                            className="inline-flex h-8 items-center rounded-md border border-border px-3 text-body-sm text-ink-3 hover:text-ink hover:bg-neutral-surface"
+                          >
+                            Lihat Berkas
+                          </Link>
+                          <span className="text-body-sm text-ink-3">·</span>
+                          <button
+                            type="button"
+                            onClick={() => setWithdrawingTask(item)}
+                            className="text-body-sm font-semibold text-error hover:underline cursor-pointer"
+                          >
+                            Batalkan Pengumpulan
+                          </button>
+                        </div>
                       ) : item.status === "SELESAI" ? (
                         <Link
                           href={detailHref(item)}
@@ -400,6 +431,21 @@ export default function TaskTable({
                 ),
               );
             }
+            return result;
+          }}
+        />
+      ) : null}
+
+      {withdrawingTask ? (
+        <WithdrawSubmissionModal
+          isOpen={Boolean(withdrawingTask)}
+          onClose={() => setWithdrawingTask(null)}
+          taskNumber={withdrawingTask.taskNumber}
+          taskTitle={withdrawingTask.title}
+          onWithdraw={async () => {
+            const item = withdrawingTask;
+            if (!item) return { error: "Tugas tidak ditemukan." };
+            const result = await handleWithdraw(item.assignmentId);
             return result;
           }}
         />

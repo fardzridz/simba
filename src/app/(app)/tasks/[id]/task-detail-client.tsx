@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/app/icons";
 import StatusChip from "../../status-chip";
-import { startTask } from "../actions";
+import { startTask, withdrawSubmission } from "../actions";
 import SubmitModal from "../submit-modal";
+import WithdrawSubmissionModal from "../withdraw-submission-modal";
 import type { TaskDetail } from "@/db/queries/task-detail";
 import { createSubmissionOrchestrator } from "../submit-orchestrator";
 
@@ -31,9 +32,23 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
   const [task, setTask] = useState<TaskDetail>(initialTask);
   const [isStarting, setIsStarting] = useState(false);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [draftFiles, setDraftFiles] = useState(initialTask.draft?.files ?? []);
 
   const nextVersionNumber = task.currentVersion + 1;
+  const draftVersion = task.draft?.version ?? null;
+
+  // Kunci idempotensi mengikuti draf yang ada supaya unggahan baru menempel ke
+  // submission PENDING yang sama; dibuat ulang hanya bila tugas atau drafnya berganti.
+  const submitAction = useMemo(
+    () =>
+      createSubmissionOrchestrator(
+        task.assignmentId,
+        task.draft?.idempotencyKey ?? null,
+      ),
+    [task.assignmentId, task.draft?.idempotencyKey],
+  );
 
   const handleStartTask = async () => {
     setIsStarting(true);
@@ -58,6 +73,37 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
   const handleSubmissionSuccess = () => {
     // Data riwayat lengkap dimuat ulang dari server, bukan disintesis di klien.
     window.location.reload();
+  };
+
+  const handleDeleteDraft = async (attachmentId: string): Promise<boolean> => {
+    setActionError(null);
+    try {
+      const response = await fetch(
+        `/api/submissions/${encodeURIComponent(task.assignmentId)}/files/${encodeURIComponent(attachmentId)}`,
+        { method: "DELETE" },
+      );
+      if (!response.ok) {
+        const payload = (await response
+          .json()
+          .catch(() => null)) as { error?: string } | null;
+        setActionError(payload?.error ?? "Berkas draf gagal dihapus.");
+        return false;
+      }
+      setDraftFiles((prev) => prev.filter((file) => file.id !== attachmentId));
+      return true;
+    } catch {
+      setActionError("Berkas draf gagal dihapus. Coba lagi.");
+      return false;
+    }
+  };
+
+  const handleWithdraw = async () => {
+    const result = await withdrawSubmission(task.assignmentId);
+    if (result.error) {
+      return result;
+    }
+    window.location.reload();
+    return result;
   };
 
   return (
@@ -142,6 +188,56 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
               <p className="text-body text-ink-2 leading-relaxed">
                 {task.description}
               </p>
+            </section>
+          ) : null}
+
+          {/* Kartu Draf Pengumpulan: sisa penarikan atau sesi unggah terputus */}
+          {draftFiles.length > 0 ? (
+            <section
+              aria-labelledby="draft-heading"
+              className="card p-6 flex flex-col gap-4"
+            >
+              <div className="border-b border-border pb-3">
+                <h2 id="draft-heading" className="text-h2 font-semibold text-ink">
+                  Draf Pengumpulan
+                </h2>
+                <p className="mt-0.5 text-body-sm text-ink-3">
+                  Berkas berikut tersimpan sebagai draf Versi {draftVersion} dan
+                  ikut terkirim saat Anda menekan Kumpulkan Tugas. Hapus berkas
+                  yang tidak ingin dikumpulkan.
+                </p>
+              </div>
+
+              <ul className="divide-y divide-border rounded-md border border-border bg-surface-sunken">
+                {draftFiles.map((file) => (
+                  <li
+                    key={file.id}
+                    className="flex items-center justify-between p-2.5 text-body-sm gap-3"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Icon name="dokumen" size={16} className="text-ink-3 shrink-0" />
+                      <span className="font-medium text-ink truncate">
+                        {file.name}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="font-mono text-body-sm text-ink-3">
+                        {file.sizeFormatted} · {file.checksum}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteDraft(file.id)}
+                        aria-label={`Hapus draf ${file.name}`}
+                        className="inline-flex items-center gap-1 text-body-sm font-semibold text-error hover:underline"
+                      >
+                        <Icon name="tutup" size={13} />
+                        Hapus
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </section>
           ) : null}
 
@@ -284,9 +380,16 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
 
             {/* Catatan Edukasi Kearsipan Sesuai Wireframe L07 */}
             <div className="border-t border-border pt-3 text-body-sm text-ink-3 space-y-1">
-              <p>
-                Setelah dikumpulkan ulang, pengumpulan berikutnya otomatis tercatat sebagai Versi {nextVersionNumber}.
-              </p>
+              {draftVersion !== null ? (
+                <p>
+                  Pengumpulan ulang memperbarui draf Versi {draftVersion}; nomor
+                  versi tidak naik.
+                </p>
+              ) : (
+                <p>
+                  Setelah dikumpulkan ulang, pengumpulan berikutnya otomatis tercatat sebagai Versi {nextVersionNumber}.
+                </p>
+              )}
               <p>
                 Berkas versi sebelumnya tetap tersimpan untuk jejak audit; unduhan belum tersedia pada versi ini.
               </p>
@@ -328,10 +431,23 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
                   </p>
                 </div>
               ) : task.status === "MENUNGGU_VERIFIKASI" ? (
-                <div className="rounded-md border border-border bg-surface-sunken p-3 text-body-sm text-ink-2">
-                  <span className="font-semibold text-ink">Menunggu Verifikasi</span>
-                  <p className="mt-0.5 text-body-sm text-ink-3">
-                    Pengumpulan Anda sedang diperiksa oleh Admin Divisi. Anda akan menerima notifikasi jika disetujui atau memerlukan revisi.
+                <div className="flex flex-col gap-2">
+                  <div className="rounded-md border border-border bg-surface-sunken p-3 text-body-sm text-ink-2">
+                    <span className="font-semibold text-ink">Menunggu Verifikasi</span>
+                    <p className="mt-0.5 text-body-sm text-ink-3">
+                      Pengumpulan Anda sedang diperiksa oleh Admin Divisi. Anda akan menerima notifikasi jika disetujui atau memerlukan revisi.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsWithdrawOpen(true)}
+                    className="inline-flex h-10 w-full items-center justify-center rounded-md border border-border-strong bg-surface px-4 text-body font-semibold text-error transition-colors hover:bg-error-surface active:bg-error-active/10"
+                  >
+                    Batalkan Pengumpulan
+                  </button>
+                  <p className="text-body-sm text-ink-3">
+                    Menarik pengumpulan mengembalikan status ke Sedang Dikerjakan
+                    dan berkas menjadi draf yang bisa Anda hapus atau perbarui.
                   </p>
                 </div>
               ) : task.status === "BELUM_DIKERJAKAN" ? (
@@ -353,7 +469,9 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
                     Kumpulkan Tugas
                   </button>
                   <p className="text-body-sm text-ink-3">
-                    Mengirim ulang setelah revisi menaikkan versi pengumpulan menjadi Versi {nextVersionNumber}.
+                    {draftVersion !== null
+                      ? `Pengumpulan ulang memperbarui draf Versi ${draftVersion}; nomor versi tidak naik.`
+                      : `Mengirim ulang setelah revisi menaikkan versi pengumpulan menjadi Versi ${nextVersionNumber}.`}
                   </p>
                 </div>
               )}
@@ -405,7 +523,17 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
           version: task.currentVersion,
         }}
         onSuccess={handleSubmissionSuccess}
-        onSubmitAction={createSubmissionOrchestrator(task.assignmentId)}
+        onSubmitAction={submitAction}
+        draftFiles={draftFiles}
+        onDeleteDraft={handleDeleteDraft}
+      />
+
+      <WithdrawSubmissionModal
+        isOpen={isWithdrawOpen}
+        onClose={() => setIsWithdrawOpen(false)}
+        taskNumber={task.taskNumber}
+        taskTitle={task.title}
+        onWithdraw={handleWithdraw}
       />
     </div>
   );

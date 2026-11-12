@@ -11,6 +11,8 @@ export type TransitionContext = {
   hasCommittedAttachment: boolean;
   note?: string | null;
   reason?: string | null;
+  /** Benar bila MENUNGGU_VERIFIKASI → SEDANG_DIKERJAKAN oleh USER adalah penarikan pengumpulan sendiri. */
+  isWithdrawal?: boolean;
 };
 
 export type TransitionCheck = { ok: true } | { ok: false; reason: string };
@@ -80,6 +82,14 @@ export function checkTransition(
   }
 
   if (from === "MENUNGGU_VERIFIKASI" && to === "SEDANG_DIKERJAKAN") {
+    if (actor === "USER") {
+      // Satu-satunya jalur USER keluar dari Menunggu Verifikasi: menarik
+      // pengumpulannya sendiri sebelum Admin menilai, tanpa catatan (§3.2).
+      if (!context.isWithdrawal) {
+        return { ok: false, reason: "Pengumpulan hanya dapat ditarik melalui pembatalan pengumpulan." };
+      }
+      return { ok: true };
+    }
     if (actor !== "ADMIN") return { ok: false, reason: "Hanya Admin divisi yang dapat meminta revisi." };
     if (!hasText(context.note)) return { ok: false, reason: "Catatan revisi wajib diisi." };
     return { ok: true };

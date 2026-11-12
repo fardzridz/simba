@@ -32,6 +32,21 @@ describe("checkTransition", () => {
     expect(checkTransition("MENUNGGU_VERIFIKASI", "SEDANG_DIKERJAKAN", "ADMIN", ready).ok).toBe(true);
   });
 
+  it("mengizinkan pelaksana menarik pengumpulannya sendiri tanpa catatan", () => {
+    expect(
+      checkTransition("MENUNGGU_VERIFIKASI", "SEDANG_DIKERJAKAN", "USER", {
+        hasCommittedAttachment: true,
+        isWithdrawal: true,
+      }).ok,
+    ).toBe(true);
+  });
+
+  it("menolak jalur keluar Menunggu Verifikasi oleh pelaksana selain penarikan", () => {
+    expect(
+      checkTransition("MENUNGGU_VERIFIKASI", "SELESAI", "USER", ready).ok,
+    ).toBe(false);
+  });
+
   it("mewajibkan alasan saat membatalkan", () => {
     const withoutReason = checkTransition("BELUM_DIKERJAKAN", "DIBATALKAN", "ADMIN", {
       hasCommittedAttachment: false,

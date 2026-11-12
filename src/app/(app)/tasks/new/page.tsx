@@ -17,8 +17,9 @@ export default async function NewTaskPage() {
   const scope = resolveScope(actor);
   const { db } = appContext();
 
-  // Saat ini pembuatan tugas hanya dapat Admin divisi; UI mengikuti aturan §2.
-  if (scope.role !== "ADMIN") {
+  // Tugas diterbitkan Admin divisi; Staf Pelaksana hanya dapat mencatat tugas
+  // mandiri untuk dirinya sendiri (permintaan pengguna Fase 6).
+  if (scope.role !== "ADMIN" && scope.role !== "USER") {
     return (
       <ForbiddenState
         title="Hanya Admin Divisi"
@@ -29,6 +30,8 @@ export default async function NewTaskPage() {
       />
     );
   }
+
+  const isSelfMode = scope.role === "USER";
 
   const [division] = await db
     .select({
@@ -53,8 +56,11 @@ export default async function NewTaskPage() {
     );
   }
 
+  // Mode mandiri tidak memilih penerima, jadi daftar anggota tidak diambil.
   const [members, activeCategories] = await Promise.all([
-    getDivisionMembers(db, scope.divisionId),
+    isSelfMode
+      ? Promise.resolve([])
+      : getDivisionMembers(db, scope.divisionId),
     getActiveCategories(db),
   ]);
 
@@ -88,6 +94,7 @@ export default async function NewTaskPage() {
       defaultCategoryName={defaultCategoryName}
       defaultCategoryInactive={defaultCategoryInactive}
       defaultPriority={division.defaultPriority}
+      isSelfMode={isSelfMode}
     />
   );
 }

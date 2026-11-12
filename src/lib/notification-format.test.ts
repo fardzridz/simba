@@ -49,11 +49,15 @@ describe("formatNotificationBlock", () => {
         "TASK_CANCELLED",
         "DUE_SOON",
         "TASK_DUE_EXTENDED",
+        "TASK_SELF_CREATED",
+        "SUBMISSION_WITHDRAWN",
       ] as NotificationType[]
     ).map((type) => block(type).headline);
     expect(new Set(headlines).size).toBe(headlines.length);
     expect(block("SUBMISSION_RECEIVED").headline).toBe("Pengumpulan masuk");
     expect(block("TASK_DUE_EXTENDED").headline).toBe("Tenggat diperpanjang");
+    expect(block("TASK_SELF_CREATED").headline).toBe("Tugas mandiri dibuat");
+    expect(block("SUBMISSION_WITHDRAWN").headline).toBe("Pengumpulan ditarik");
   });
 
   it("melewati baris yang kosong tanpa menyisakan spasi", () => {

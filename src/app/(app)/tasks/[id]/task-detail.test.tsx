@@ -55,6 +55,58 @@ describe("TaskDetailClient L07", () => {
     expect(html).not.toContain("Mulai Kerjakan");
   });
 
+  it("merender kartu Draf Pengumpulan beserta tombol hapus per berkas", () => {
+    const task = {
+      ...getMockTaskDetail("tsk_huk_1"),
+      status: "SEDANG_DIKERJAKAN" as const,
+      draft: {
+        version: 2,
+        idempotencyKey: "sub_abcd1234abcd1234",
+        files: [
+          {
+            id: "att_draf_1",
+            name: "berkas-revisi.pdf",
+            sizeFormatted: "512,0 KB",
+            checksum: "a91f4c0e",
+          },
+        ],
+      },
+    };
+    const html = renderToStaticMarkup(<TaskDetailClient initialTask={task} />);
+
+    expect(html).toContain("Draf Pengumpulan");
+    expect(html).toContain("draf Versi 2");
+    expect(html).toContain("berkas-revisi.pdf");
+    expect(html).toContain('aria-label="Hapus draf berkas-revisi.pdf"');
+    // Draf tidak diberi tautan unduh: route unduhan hanya melayani COMMITTED.
+    expect(html).not.toContain("/api/attachments/att_draf_1/download");
+    // Catatan versi mengikuti draf, bukan menaikkan nomor versi.
+    expect(html).toContain("nomor versi tidak naik");
+    expect(html).not.toContain("Versi 3");
+  });
+
+  it("menawarkan Batalkan Pengumpulan hanya saat status Menunggu Verifikasi", () => {
+    const task = {
+      ...getMockTaskDetail("tsk_huk_1"),
+      status: "MENUNGGU_VERIFIKASI" as const,
+      needsRevision: false,
+    };
+    const html = renderToStaticMarkup(<TaskDetailClient initialTask={task} />);
+
+    expect(html).toContain("Batalkan Pengumpulan");
+    expect(html).toContain("Pengumpulan Anda sedang diperiksa oleh Admin Divisi");
+
+    const selesaiTask = {
+      ...getMockTaskDetail("tsk_huk_2"),
+      status: "SEDANG_DIKERJAKAN" as const,
+      needsRevision: false,
+    };
+    const selesaiHtml = renderToStaticMarkup(
+      <TaskDetailClient initialTask={selesaiTask} />,
+    );
+    expect(selesaiHtml).not.toContain("Batalkan Pengumpulan");
+  });
+
   it("menghasilkan data fallback yang aman untuk id tugas acak", () => {
     const task = getMockTaskDetail("tsk_acak_999");
     expect(task.id).toBe("tsk_acak_999");

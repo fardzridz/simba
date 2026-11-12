@@ -80,6 +80,13 @@ export interface SubmitModalProps {
     files: File[];
     onProgress: (fileIndex: number, percent: number) => void;
   }) => Promise<{ success: boolean; version?: number; error?: string }>;
+  /**
+   * Berkas draf (PENDING) yang sudah terunggah sebelumnya, misalnya sisa
+   * penarikan pengumpulan. Ikut terkirim bersama pengumpulan ini.
+   */
+  draftFiles?: Array<{ id: string; name: string; sizeFormatted: string }>;
+  /** Hapus satu berkas draf di server; kembalikan true bila sukses. */
+  onDeleteDraft?: (attachmentId: string) => Promise<boolean>;
 }
 
 export function formatFileSize(bytes: number): string {
@@ -109,6 +116,8 @@ export default function SubmitModal({
   task,
   onSuccess,
   onSubmitAction,
+  draftFiles = [],
+  onDeleteDraft,
 }: SubmitModalProps) {
   const [phase, setPhase] = useState<ModalPhase>("idle");
   const [notes, setNotes] = useState("");
@@ -206,11 +215,14 @@ export default function SubmitModal({
   // dalamnya akan menggandakan berkas terpilih.
   const filesRef = useRef<SelectedFileItem[]>(files);
   filesRef.current = files;
+  const draftFilesRef = useRef(draftFiles);
+  draftFilesRef.current = draftFiles;
 
   const processFiles = useCallback((incomingFiles: File[]) => {
     const rejected: Array<{ name: string; size: number; reason: string }> = [];
     const combined = [...filesRef.current];
     const accepted: SelectedFileItem[] = [];
+    const draftCount = draftFilesRef.current.length;
 
     for (const file of incomingFiles) {
       // Cek ekstensi
@@ -243,8 +255,8 @@ export default function SubmitModal({
         continue;
       }
 
-      // Cek batas total jumlah berkas
-      if (combined.length + accepted.length >= MAX_FILE_COUNT) {
+      // Cek batas total jumlah berkas (draf tersimpan ikut dihitung)
+      if (combined.length + accepted.length + draftCount >= MAX_FILE_COUNT) {
         rejected.push({
           name: file.name,
           size: file.size,
@@ -302,9 +314,24 @@ export default function SubmitModal({
     setFiles((prev) => prev.filter((item) => item.id !== id));
   };
 
+  // Hapus berkas draf di server; state daftar draf dimiliki induk agar kartu
+  // draf di halaman detail ikut sinkron.
+  const [deletingDraftId, setDeletingDraftId] = useState<string | null>(null);
+  const handleDeleteDraft = async (attachmentId: string) => {
+    if (phase !== "idle" || !onDeleteDraft) return;
+    setDeletingDraftId(attachmentId);
+    try {
+      await onDeleteDraft(attachmentId);
+    } finally {
+      setDeletingDraftId(null);
+    }
+  };
+
   // Eksekusi pengumpulan tugas
   const handleSubmit = async () => {
-    if (!task || files.length === 0 || phase !== "idle") return;
+    const draftCount = draftFiles.length;
+    if (!task || phase !== "idle") return;
+    if (files.length === 0 && draftCount === 0) return;
 
     setPhase("uploading");
     setErrorMessage(null);
@@ -371,7 +398,9 @@ export default function SubmitModal({
   if (!isOpen || !task) return null;
 
   const isLocked = phase === "uploading" || phase === "committing";
-  const canSubmit = files.length > 0 && phase === "idle";
+  const draftCount = draftFiles.length;
+  const canSubmit =
+    (files.length > 0 || draftCount > 0) && phase === "idle";
   const uploadedCount = files.filter((f) => f.progress === 100).length;
 
   return (
@@ -457,6 +486,11 @@ export default function SubmitModal({
                   </li>
                 ))}
               </ul>
+              {draftCount > 0 ? (
+                <p className="text-body-sm text-ink-3">
+                  Termasuk {draftCount} berkas draf yang sudah terunggah sebelumnya.
+                </p>
+              ) : null}
               <p className="text-body-sm text-ink-3">
                 Pemberitahuan otomatis terkirim ke Admin Divisi untuk diperiksa.
               </p>
@@ -560,7 +594,9 @@ export default function SubmitModal({
             {/* Dropzone Unggah Berkas */}
             <div className="flex flex-col gap-2">
               <span className="text-body-sm font-medium text-ink-2">
-                Lampiran Berkas (Wajib)
+                {draftCount > 0
+                  ? "Tambah Berkas (opsional, draf sudah ada)"
+                  : "Lampiran Berkas (Wajib)"}
               </span>
 
               <div
@@ -625,9 +661,9 @@ export default function SubmitModal({
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between text-body-sm">
                 <span className="font-medium text-ink-2">
-                  Daftar Berkas Terpilih ({files.length}/{MAX_FILE_COUNT})
+                  Daftar Berkas Terpilih ({files.length + draftCount}/{MAX_FILE_COUNT})
                 </span>
-                {files.length === 0 ? (
+                {files.length === 0 && draftCount === 0 ? (
                   <span className="text-ink-3">Belum ada berkas terpilih</span>
                 ) : null}
               </div>
@@ -678,6 +714,51 @@ export default function SubmitModal({
                     </li>
                   ))}
                 </ul>
+              ) : null}
+
+              {/* Berkas draf yang sudah terunggah di server (sisa penarikan
+                  pengumpulan atau sesi terputus) */}
+              {draftCount > 0 ? (
+                <ul className="divide-y divide-border rounded-md border border-border bg-surface">
+                  {draftFiles.map((draft) => (
+                    <li
+                      key={draft.id}
+                      className="flex items-center justify-between gap-3 p-3 text-body-sm"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Icon name="dokumen" size={16} className="text-ink-3 shrink-0" />
+                        <span className="truncate font-medium text-ink">
+                          {draft.name}
+                        </span>
+                        <span className="shrink-0 text-ink-3 text-body-sm">
+                          ({draft.sizeFormatted})
+                        </span>
+                        <span className="shrink-0 rounded bg-neutral-surface px-1.5 py-0.5 text-body-sm font-medium text-ink-2">
+                          Draf tersimpan
+                        </span>
+                      </div>
+
+                      {onDeleteDraft && !isLocked ? (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteDraft(draft.id)}
+                          disabled={deletingDraftId !== null}
+                          aria-label={`Hapus draf ${draft.name}`}
+                          className="text-ink-3 transition-colors hover:text-error disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <Icon name="tutup" size={14} />
+                        </button>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+
+              {draftCount > 0 ? (
+                <p className="text-body-sm text-ink-3">
+                  Berkas draf di atas sudah terunggah sebelumnya dan ikut terkirim
+                  bersama pengumpulan ini; hapus yang tidak ingin dikumpulkan.
+                </p>
               ) : null}
             </div>
 

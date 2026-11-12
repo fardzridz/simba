@@ -22,6 +22,12 @@ describe("notificationTitle", () => {
     expect(notificationTitle("TASK_DUE_EXTENDED", "Dokumen E")).toBe(
       "Tenggat diperpanjang: Dokumen E",
     );
+    expect(notificationTitle("TASK_SELF_CREATED", "Catatan F")).toBe(
+      "Tugas mandiri dibuat: Catatan F",
+    );
+    expect(notificationTitle("SUBMISSION_WITHDRAWN", "Dokumen G")).toBe(
+      "Pengumpulan ditarik: Dokumen G",
+    );
   });
 });
 
@@ -33,6 +39,8 @@ describe("notificationTone", () => {
     expect(notificationTone("TASK_CANCELLED")).toBe("neutral");
     expect(notificationTone("TASK_ASSIGNED")).toBeNull();
     expect(notificationTone("TASK_DUE_EXTENDED")).toBe("warning");
+    expect(notificationTone("TASK_SELF_CREATED")).toBeNull();
+    expect(notificationTone("SUBMISSION_WITHDRAWN")).toBe("warning");
   });
 });
 

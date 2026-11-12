@@ -131,3 +131,21 @@ describe("TaskFormClient L10", () => {
     expect(html).toContain('value="MENDESAK"');
   });
 });
+
+describe("TaskFormClient mode mandiri Staf Pelaksana", () => {
+  it("menyembunyikan pilihan penerima dan menetapkan pelaksana itu sendiri", () => {
+    const html = renderForm({ isSelfMode: true, members: [] });
+
+    expect(html).toContain("Buat Tugas Mandiri");
+    expect(html).toContain("Kembali ke Tugas Saya");
+    expect(html).toContain("Anda sendiri");
+    expect(html).toContain("Tugas langsung berstatus Sedang Dikerjakan setelah disimpan.");
+
+    // Bidang delegasi tidak boleh tampil dalam mode mandiri.
+    expect(html).not.toContain("Pilih semua");
+    expect(html).not.toContain("Cari nama anggota divisi");
+    expect(html).not.toContain("Simpan &amp; Tugaskan");
+    expect(html).toContain("Simpan &amp; Mulai Kerjakan");
+    expect(html).toContain("Menyimpan membuat satu penugasan untuk Anda sendiri");
+  });
+});

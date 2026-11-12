@@ -42,6 +42,17 @@ export type TaskDetailSubmission = {
   files: TaskDetailFile[];
 };
 
+/**
+ * Draf pengumpulan (submission PENDING): unggahan yang belum dikomit, baik sisa
+ * penarikan pengumpulan maupun sisa sesi unggah yang terputus. Berkasnya belum
+ * COMMITTED sehingga tidak punya tautan unduh.
+ */
+export type TaskDetailDraft = {
+  version: number;
+  idempotencyKey: string;
+  files: TaskDetailFile[];
+};
+
 export type TaskDetail = {
   id: string;
   assignmentId: string;
@@ -64,6 +75,8 @@ export type TaskDetail = {
   cancelReason?: string | null;
   currentVersion: number;
   submissionHistory: TaskDetailSubmission[];
+  /** Ada bila status SEDANG_DIKERJAKAN dan ada unggahan PENDING milik pelaksana. */
+  draft?: TaskDetailDraft | null;
 };
 
 const REVIEW_LABEL = {
@@ -248,6 +261,58 @@ export async function getTaskDetail(
   const dueEpoch = Math.floor(task.dueAt.getTime() / 1000);
   const overdue = isOverdue({ dueAt: dueEpoch, status: selected.status, now });
 
+  // Draf hanya relevan bagi pemilik penugasan saat tugas berstatus dikerjakan;
+  // saat Menunggu Verifikasi berkas berlaku COMMITTED dan draf sisa tidak ditampilkan.
+  let draft: TaskDetailDraft | null = null;
+  if (scope.role === "USER" && selected.status === "SEDANG_DIKERJAKAN") {
+    const [pendingSubmission] = await db
+      .select({
+        id: taskSubmissions.id,
+        version: taskSubmissions.version,
+        idempotencyKey: taskSubmissions.idempotencyKey,
+      })
+      .from(taskSubmissions)
+      .where(
+        and(
+          eq(taskSubmissions.assignmentId, selected.id),
+          eq(taskSubmissions.state, "PENDING"),
+        ),
+      )
+      .orderBy(desc(taskSubmissions.version))
+      .limit(1);
+
+    if (pendingSubmission) {
+      const draftFileRows = await db
+        .select({
+          id: attachments.id,
+          originalName: attachments.originalName,
+          sizeBytes: attachments.sizeBytes,
+          checksumSha256: attachments.checksumSha256,
+        })
+        .from(attachments)
+        .where(
+          and(
+            eq(attachments.submissionId, pendingSubmission.id),
+            eq(attachments.state, "PENDING"),
+          ),
+        )
+        .orderBy(asc(attachments.createdAt), asc(attachments.id));
+
+      if (draftFileRows.length > 0) {
+        draft = {
+          version: pendingSubmission.version,
+          idempotencyKey: pendingSubmission.idempotencyKey,
+          files: draftFileRows.map((file) => ({
+            id: file.id,
+            name: file.originalName,
+            sizeFormatted: formatBytes(file.sizeBytes),
+            checksum: file.checksumSha256.slice(0, 8),
+          })),
+        };
+      }
+    }
+  }
+
   let remainingFormatted: string;
   if (selected.status === "SELESAI") {
     remainingFormatted = "Selesai";
@@ -287,5 +352,6 @@ export async function getTaskDetail(
     cancelReason: task.cancelReason,
     currentVersion: submissionRows[0]?.version ?? 0,
     submissionHistory,
+    draft,
   };
 }

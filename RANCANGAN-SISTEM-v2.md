@@ -2,8 +2,8 @@
 
 | Informasi | Keterangan |
 |---|---|
-| Versi | 2.2 |
-| Tanggal | 19 Oktober 2026 |
+| Versi | 2.3 |
+| Tanggal | 12 November 2026 |
 | Status | Acuan implementasi (menggantikan v1) |
 | Menggantikan | "Portal Pengarsipan & Manajemen Penugasan Divisi" (v1) |
 | Cakupan | RBAC, status & transisi, use case, alur operasional, skema data, metrik dashboard, pola modal, kanal notifikasi, pengaturan operasional, arsitektur & NFR, siklus Agile |
@@ -82,6 +82,21 @@ Nilai awal form tugas per divisi (kategori dan prioritas) juga dipindahkan dari 
 
 Setiap simpan menulis `activity_logs` dengan nilai lama dan baru. Setelan dibaca per permintaan, tanpa cache, karena satu baris primary key lebih murah daripada risiko nilai basi yang mengubah validasi unggah.
 
+### 0.4 Perubahan pada v2.3: tugas mandiri dan penarikan pengumpulan
+
+Permintaan pemilik produk November 2026: Staf Pelaksana dapat mencatat pekerjaannya sendiri, dan dapat menarik pengumpulannya selama Admin belum menilai.
+
+| Aspek | v2.2 | v2.3 | Alasan |
+|---|---|---|---|
+| Tugas mandiri | USER tidak dapat membuat tugas apa pun | USER dapat membuat tugas untuk dirinya sendiri (form tanpa penerima, satu assignment miliknya, langsung `SEDANG_DIKERJAKAN` + `started_at`) | Pekerjaan rutin yang dicatat sendiri tidak perlu menunggu Admin menerbitkan surat perintah; verifikasi pengumpulannya tetap lewat Admin |
+| Notifikasi tugas mandiri | tidak ada | tipe baru `TASK_SELF_CREATED` ke Admin divisi | Admin tetap tahu tugas apa yang dicatat anggotanya; kolom `notifications.type` tanpa CHECK sehingga tidak perlu migrasi D1 |
+| Penarikan pengumpulan | tidak ada | transisi `MENUNGGU_VERIFIKASI → SEDANG_DIKERJAKAN` oleh Pelaksana lewat aksi "Batalkan Pengumpulan", hanya sebelum ada review | Kesalahan berkas (salah lampiran, versi lama) tidak perlu menunggu Admin meminta revisi |
+| Berkas draf | attachment PENDING hanya sisa sesi gagal | draf juga sisa penarikan; tampil di detail dan modal, dapat dihapus per berkas lewat endpoint DELETE milik pemiliknya | Pemilik pengumpulan harus bisa memilih berkas mana yang dikumpulkan ulang |
+| Versi saat mengumpulkan ulang | selalu `version+1` | unggahan dengan kunci idempotensi draf menempel ke submission PENDING yang sama; nomor versi draf tidak naik | Penarikan bukan pengumpulan baru; riwayat tidak menumpuk versi yang tidak pernah dinilai |
+| Notifikasi penarikan | tidak ada | tipe baru `SUBMISSION_WITHDRAWN` ke Admin divisi | Admin tidak mencari berkas yang sudah tidak ada |
+
+Batas yang tetap: tugas mandiri tidak dapat diubah, dibatalkan, atau dihapus oleh USER (masih lewat Admin divisi); USER tidak dapat menilai pengumpulannya sendiri; pengumpulan yang sudah direview Admin tidak dapat ditarik; label status tidak berubah.
+
 ---
 
 ## 1. Batas sistem & keputusan desain
@@ -136,13 +151,16 @@ Cakupan data (**scope**) membatasi setiap query, bukan hanya tampilan:
 | Kelola divisi (CRUD) | ❌ | ❌ | ✅ |
 | Kelola pengguna (CRUD, assign divisi & peran, NIP, jabatan, reset sandi, aktif/nonaktif) | ❌ | ❌ | ✅ |
 | Kelola kategori (CRUD master) | ❌ | Lihat | ✅ |
-| Buat / ubah tugas | ❌ | ✅ (divisinya) | ❌ (baca-saja) |
+| Buat / ubah tugas | ❌ (kecuali tugas mandiri untuk dirinya sendiri) | ✅ (divisinya) | ❌ (baca-saja) |
+| Buat tugas mandiri untuk dirinya sendiri | ✅ | ❌ | ❌ |
 | Tugaskan tugas ke pegawai (1 atau banyak) | ❌ | ✅ (anggota divisinya) | ❌ |
 | Batalkan tugas (wajib alasan) | ❌ | ✅ (divisinya) | ❌ |
 | Perpanjang tenggat (wajib alasan) | ❌ | ✅ (divisinya) | ❌ |
 | Lihat daftar & detail tugas | Milik sendiri | Seluruh divisinya | Seluruh divisi, dengan filter |
 | Kumpulkan tugas via modal (unggah berkas) | ✅ (assignment miliknya) | ❌ | ❌ |
 | Ajukan ulang setelah revisi | ✅ | ❌ | ❌ |
+| Tarik pengumpulan sendiri (sebelum Admin menilai) | ✅ | ❌ | ❌ |
+| Hapus berkas draf milik sendiri | ✅ | ❌ | ❌ |
 | Review / verifikasi / minta revisi | ❌ | ✅ (divisinya) | ❌ |
 | Katalog dokumen final: jelajah & unduh | ✅ (divisinya) | ✅ (divisinya) | ✅ (semua) |
 | Laporan & ekspor (XLSX/PDF) | ❌ | ✅ (divisinya) | ✅ (semua) |
@@ -168,8 +186,8 @@ Cakupan data (**scope**) membatasi setiap query, bukan hanya tampilan:
 | Kode | Label UI | Arti | Yang boleh mengubah |
 |---|---|---|---|
 | `BELUM_DIKERJAKAN` | Belum Dikerjakan | Tugas terdistribusi, belum dimulai pelaksana | Pelaksana (`mulai`), Admin (`batalkan`) |
-| `SEDANG_DIKERJAKAN` | Sedang Dikerjakan | Sedang berjalan, juga kondisi setelah revisi | Pelaksana (`kirim`), Admin (`batalkan`) |
-| `MENUNGGU_VERIFIKASI` | Menunggu Verifikasi | Pengumpulan masuk, menunggu keputusan Admin | Admin (`setujui` / `minta revisi`) |
+| `SEDANG_DIKERJAKAN` | Sedang Dikerjakan | Sedang berjalan, juga kondisi setelah revisi maupun setelah pengumpulan ditarik | Pelaksana (`kirim`), Admin (`batalkan`) |
+| `MENUNGGU_VERIFIKASI` | Menunggu Verifikasi | Pengumpulan masuk, menunggu keputusan Admin | Admin (`setujui` / `minta revisi`), Pelaksana (`tarik pengumpulan`) |
 | `SELESAI` | Selesai | Disetujui Admin; dokumen final masuk katalog | - (final) |
 | `DIBATALKAN` | Dibatalkan | Dihentikan Admin dengan alasan | - (final) |
 
@@ -181,6 +199,7 @@ Cakupan data (**scope**) membatasi setiap query, bukan hanya tampilan:
 | `SEDANG_DIKERJAKAN` | `MENUNGGU_VERIFIKASI` | Pelaksana | ada ≥1 lampiran `COMMITTED` pada submission terbaru | submission `version+1`, notifikasi ke Admin divisi, log |
 | `MENUNGGU_VERIFIKASI` | `SELESAI` | Admin divisi | submission berstatus `COMMITTED` | `completed_at`, review `APPROVED`, katalog dokumen final bertambah 1, log |
 | `MENUNGGU_VERIFIKASI` | `SEDANG_DIKERJAKAN` | Admin divisi | **catatan wajib**, tidak kosong | review `REVISION_REQUIRED`, `needs_revision=true`, `revision_count+1`, notifikasi ke pelaksana, log |
+| `MENUNGGU_VERIFIKASI` | `SEDANG_DIKERJAKAN` | Pelaksana | assignment miliknya, melalui aksi **tarik pengumpulan**, belum ada review pada submission | submission terbaru kembali `PENDING`, attachment `COMMITTED → PENDING` (menjadi draf), `submitted_at` null, notifikasi `SUBMISSION_WITHDRAWN` ke Admin divisi, log |
 | `BELUM_DIKERJAKAN` / `SEDANG_DIKERJAKAN` | `DIBATALKAN` | Admin divisi | **alasan wajib** | `cancelled_at`, `cancel_reason`, notifikasi ke pelaksana, log |
 | `SELESAI` / `DIBATALKAN` | apa pun | - | ditolak server | - |
 
@@ -206,6 +225,7 @@ graph LR
     P -->|pelaksana: kirim + lampiran| M["MENUNGGU_VERIFIKASI"]
     M -->|admin: setujui| C["SELESAI"]
     M -->|admin: minta revisi + catatan| P
+    M -->|pelaksana: tarik pengumpulan| P
     B -->|admin: batalkan + alasan| X["DIBATALKAN"]
     P -->|admin: batalkan + alasan| X
     C -->|otomatis, include UC15| AR["Katalog dokumen final (1 baris per assignment)"]
@@ -235,6 +255,7 @@ graph LR
         UC07["UC07 Tugaskan tugas ke pegawai"]
         UC08["UC08 Lihat & filter daftar tugas"]
         UC09["UC09 Kumpulkan tugas via modal"]
+        UC18["UC18 Tugas mandiri & kelola draf pengumpulan"]
         UC10["UC10 Review & verifikasi pengumpulan"]
     end
 
@@ -252,8 +273,10 @@ graph LR
 
     U --> UC01
     U --> UC05
+    U --> UC06
     U --> UC08
     U --> UC09
+    U --> UC18
     U --> UC11
     U --> UC14
     U --> UC16
@@ -298,6 +321,7 @@ graph LR
 | UC07 | Tugaskan tugas ke satu atau banyak pegawai divisinya | Admin |
 | UC08 | Lihat & filter daftar tugas sesuai scope | Semua |
 | UC09 | Kumpulkan tugas via modal (unggah lampiran, ajukan ulang setelah revisi) | User |
+| UC18 | Buat tugas mandiri untuk dirinya sendiri; tarik pengumpulan sendiri; hapus berkas draf | User |
 | UC10 | Review pengumpulan: setujui atau minta revisi dengan catatan | Admin |
 | UC11 | Jelajah & unduh dokumen final sesuai scope | Semua |
 | UC12 | Susun laporan, cetak, ekspor XLSX/PDF sesuai filter | Admin, Super Admin |
@@ -347,6 +371,15 @@ graph TD
 ```
 
 Invariant: tombol terkunci setelah ditekan pertama (idempotency key) sehingga klik ganda tidak membuat dua submission. Berkas yatim dibersihkan job sweep, bukan dibiarkan permanen. Commit memakai `env.DB.batch()`: D1 tidak menerima `BEGIN`/`COMMIT` buatan aplikasi.
+
+**Penarikan pengumpulan (v2.3).** Saat status `MENUNGGU_VERIFIKASI`, kolom aksi tabel dan detail tugas menawarkan **Batalkan Pengumpulan** kepada pemilik assignment. Setelah konfirmasi:
+
+1. Server memeriksa guard §3.2: status, kepemilikan, dan ketiadaan review pada submission terbaru. Review pertama dari Admin menutup jendela penarikan.
+2. Satu `env.DB.batch()`: submission terbaru kembali `PENDING`, attachment-nya `COMMITTED → PENDING`, status assignment kembali `SEDANG_DIKERJAKAN` dengan `submitted_at` null, log `task.submit_withdrawn`, dan notifikasi `SUBMISSION_WITHDRAWN` ke Admin divisi.
+3. Detail tugas menampilkan kartu **Draf Pengumpulan** berisi berkas `PENDING` tersebut. Pelaksana dapat menghapus berkas tertentu (endpoint `DELETE /api/submissions/{assignmentId}/files/{attachmentId}`; hanya berkas `PENDING` miliknya sendiri) lalu mengumpulkan ulang.
+4. Pengumpulan ulang memakai kunci idempotensi draf yang sama sehingga unggahan menempel ke submission `PENDING` yang sama dan nomor versi draf tidak naik. Lingkaran tarik dan kumpulkan ulang boleh diulang sampai Admin memverifikasi; setelah disetujui, alur lanjut seperti biasa (katalog, arsip).
+
+Tugas mandiri (UC18): Staf Pelaksana membuat tugas untuk dirinya sendiri lewat formulir tanpa bidang penerima. Server menyimpan `tasks` + `task_assignments` miliknya dalam satu `batch()`, status langsung `SEDANG_DIKERJAKAN` dengan `started_at`, nomor tugas mengikuti pola divisi yang sama, log `task.created` bertanda `selfCreated`, dan notifikasi `TASK_SELF_CREATED` ke Admin divisi. Tugas mandiri tidak dapat diubah, dibatalkan, atau dihapus oleh pembuatnya; itu tetap ranah Admin divisi.
 
 ### C. Review, revisi & indeks dokumen final (Admin)
 
@@ -624,7 +657,7 @@ erDiagram
 | `task_assignments.status` | `BELUM_DIKERJAKAN`, `SEDANG_DIKERJAKAN`, `MENUNGGU_VERIFIKASI`, `SELESAI`, `DIBATALKAN` |
 | `task_reviews.decision` | `APPROVED`, `REVISION_REQUIRED` |
 | state berkas | `PENDING`, `COMMITTED` |
-| notifikasi `type` | `TASK_ASSIGNED`, `REVISION_REQUESTED`, `SUBMISSION_RECEIVED`, `TASK_CANCELLED`, `DUE_SOON` |
+| notifikasi `type` | `TASK_ASSIGNED`, `REVISION_REQUESTED`, `SUBMISSION_RECEIVED`, `TASK_CANCELLED`, `DUE_SOON`, `TASK_DUE_EXTENDED`, `TASK_SELF_CREATED`, `SUBMISSION_WITHDRAWN` (kolom tanpa CHECK, tipe baru tidak butuh migrasi) |
 | kanal pengiriman | `EMAIL`, `WHATSAPP` |
 | status pengiriman | `PENDING`, `SENDING`, `SENT`, `FAILED` |
 | `otp_codes.purpose` | `WA_VERIFY` |

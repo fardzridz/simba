@@ -85,13 +85,13 @@ export default async function TasksPage(props: {
           <h1 className="text-h1 font-semibold text-ink">{title}</h1>
           <p className="mt-1 text-body text-ink-3">{subtitle}</p>
         </div>
-        {scope.role === "ADMIN" ? (
+        {scope.role === "ADMIN" || scope.role === "USER" ? (
           <Link
             href="/tasks/new"
             className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-primary px-4 text-body font-semibold text-on-dark transition-colors hover:bg-primary-hover active:bg-primary-active shadow-sm"
           >
             <Icon name="tambah" size={16} />
-            Buat Tugas
+            {scope.role === "USER" ? "Buat Tugas Mandiri" : "Buat Tugas"}
           </Link>
         ) : null}
       </div>
@@ -171,7 +171,9 @@ export default async function TasksPage(props: {
             description={
               scope.role === "ADMIN"
                 ? "Buat tugas pertama lewat tombol Buat Tugas untuk menugaskan anggota tim."
-                : "Tugas yang ditugaskan oleh admin divisi akan muncul di sini."
+                : scope.role === "USER"
+                  ? "Catat pekerjaanmu lewat tombol Buat Tugas Mandiri, atau tugas dari admin divisi akan muncul di sini."
+                  : "Tugas yang ditugaskan oleh admin divisi akan muncul di sini."
             }
             reason={
               scope.role === "ADMIN"
@@ -180,11 +182,11 @@ export default async function TasksPage(props: {
             }
             illustration="tugas"
             action={
-              scope.role === "ADMIN"
+              scope.role === "ADMIN" || scope.role === "USER"
                 ? {
                     type: "link",
                     href: "/tasks/new",
-                    label: "Buat Tugas",
+                    label: scope.role === "USER" ? "Buat Tugas Mandiri" : "Buat Tugas",
                     variant: "primary",
                   }
                 : {

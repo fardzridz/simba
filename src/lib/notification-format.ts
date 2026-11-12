@@ -16,6 +16,8 @@ const HEADLINE: Record<NotificationType, string> = {
   TASK_CANCELLED: "Tugas dibatalkan",
   DUE_SOON: "Tenggat mendekat",
   TASK_DUE_EXTENDED: "Tenggat diperpanjang",
+  TASK_SELF_CREATED: "Tugas mandiri dibuat",
+  SUBMISSION_WITHDRAWN: "Pengumpulan ditarik",
 };
 
 export type NotificationBlockInput = {

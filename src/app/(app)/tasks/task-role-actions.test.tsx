@@ -92,7 +92,7 @@ const MOCK_ITEMS: TaskListItem[] = [
 ];
 
 describe("Pemisahan Hak Akses dan Aksi Tabel Tugas per Role", () => {
-  it("USER: hanya menampilkan aksi pelaksana (Mulai Kerjakan, Kumpulkan Tugas, Lihat Berkas, Unduh Bukti)", () => {
+  it("USER: hanya menampilkan aksi pelaksana (Mulai Kerjakan, Kumpulkan Tugas, Lihat Berkas, Batalkan Pengumpulan, Unduh Bukti)", () => {
     const html = renderToStaticMarkup(<TaskTable items={MOCK_ITEMS} role="USER" />);
 
     expect(html).toContain("Mulai Kerjakan");
@@ -100,10 +100,15 @@ describe("Pemisahan Hak Akses dan Aksi Tabel Tugas per Role", () => {
     expect(html).toContain("Lihat Berkas");
     expect(html).toContain("Lihat Bukti Terarsip");
 
+    // Penarikan pengumpulan (permintaan pengguna Fase 6) hanya pada baris
+    // Menunggu Verifikasi milik pelaksana; baris lain tidak menawarkannya.
+    expect(html).toContain("Batalkan Pengumpulan");
+    expect(html.split("Batalkan Pengumpulan").length - 1).toBe(1);
+
     // Pastikan tidak ada tombol aksi admin
     expect(html).not.toContain("Tinjau");
     expect(html).not.toContain("Ubah");
-    expect(html).not.toContain("Batalkan");
+    expect(html).not.toContain("Hapus");
   });
 
   it("ADMIN: menampilkan aksi pengelolaan (Tinjau, Ubah, Batalkan, Lihat)", () => {

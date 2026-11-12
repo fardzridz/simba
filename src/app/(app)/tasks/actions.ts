@@ -19,7 +19,7 @@ import {
 } from "@/db/schema";
 import { appContext } from "@/env";
 import type { Db } from "@/env";
-import { requireActor } from "@/lib/auth/current";
+import { actorWithProfile, requireActor } from "@/lib/auth/current";
 import { resolveScope } from "@/lib/auth/scope";
 import {
   buildDeliveryRows,
@@ -612,6 +612,177 @@ export async function reviewSubmission(
   return { success: true };
 }
 
+/**
+ * Menarik pengumpulan sendiri (permintaan pengguna Fase 6): USER kembali ke
+ * SEDANG_DIKERJAKAN sebelum Admin menilai. Submission COMMITTED dan berkasnya
+ * kembali PENDING sehingga bisa dihapus per berkas lalu dikumpulkan ulang
+ * dengan versi yang sama. Ditolak bila Admin sudah menulis penilaian.
+ */
+export async function withdrawSubmission(
+  assignmentId: string,
+): Promise<ActionResult> {
+  const actor = await requireActor();
+  const scope = resolveScope(actor);
+
+  if (scope.role !== "USER") {
+    return {
+      error: "Hanya staf pelaksana yang dapat menarik pengumpulannya.",
+    };
+  }
+
+  const { db } = appContext();
+
+  const [row] = await db
+    .select({
+      assignmentId: taskAssignments.id,
+      taskId: tasks.id,
+      title: tasks.title,
+      status: taskAssignments.status,
+    })
+    .from(taskAssignments)
+    .innerJoin(tasks, eq(tasks.id, taskAssignments.taskId))
+    .where(
+      and(
+        eq(taskAssignments.id, assignmentId),
+        eq(taskAssignments.userId, scope.userId),
+        eq(tasks.divisionId, scope.divisionId),
+      ),
+    )
+    .limit(1);
+
+  if (!row) {
+    return {
+      error: "Penugasan tidak ditemukan atau berada di luar akses Anda.",
+    };
+  }
+
+  if (row.status !== "MENUNGGU_VERIFIKASI") {
+    return {
+      error: "Pengumpulan hanya dapat dibatalkan saat status Menunggu Verifikasi.",
+    };
+  }
+
+  const [submission] = await db
+    .select({
+      id: taskSubmissions.id,
+      version: taskSubmissions.version,
+    })
+    .from(taskSubmissions)
+    .where(
+      and(
+        eq(taskSubmissions.assignmentId, assignmentId),
+        eq(taskSubmissions.state, "COMMITTED"),
+      ),
+    )
+    .orderBy(desc(taskSubmissions.version))
+    .limit(1);
+
+  if (!submission) {
+    return {
+      error:
+        "Pengumpulan tersimpan tidak ditemukan untuk penugasan yang menunggu verifikasi.",
+    };
+  }
+
+  const [reviewCount] = await db
+    .select({ total: count() })
+    .from(taskReviews)
+    .where(eq(taskReviews.submissionId, submission.id));
+
+  if (Number(reviewCount?.total ?? 0) > 0) {
+    return {
+      error:
+        "Pengumpulan ini sudah dinilai Admin sehingga tidak dapat dibatalkan.",
+    };
+  }
+
+  const check = checkTransition(row.status, "SEDANG_DIKERJAKAN", "USER", {
+    hasCommittedAttachment: true,
+    isWithdrawal: true,
+  });
+  if (!check.ok) {
+    return { error: check.reason };
+  }
+
+  const now = nowSeconds();
+  const stamp = new Date(now * 1000);
+
+  const [submitter] = await db
+    .select({ fullName: users.fullName })
+    .from(users)
+    .where(eq(users.id, actor.id))
+    .limit(1);
+
+  const admins = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(
+      and(
+        eq(users.divisionId, scope.divisionId),
+        eq(users.role, "ADMIN"),
+        eq(users.isActive, true),
+      ),
+    );
+
+  const notificationValues = admins.map((admin) => ({
+    id: newId("notification"),
+    userId: admin.id,
+    type: "SUBMISSION_WITHDRAWN" as const,
+    entityType: "assignment",
+    entityId: assignmentId,
+    message: `${notificationTitle("SUBMISSION_WITHDRAWN", row.title)} · ${submitter?.fullName ?? "Pelaksana"} menarik pengumpulan versi ${submission.version}; berkas kembali menjadi draf.`,
+    createdAt: stamp,
+  }));
+  const deliveryRows = await buildDeliveryRows(db, notificationValues, stamp);
+
+  await db.batch([
+    db
+      .update(taskSubmissions)
+      .set({ state: "PENDING" })
+      .where(eq(taskSubmissions.id, submission.id)),
+    db
+      .update(attachments)
+      .set({ state: "PENDING" })
+      .where(
+        and(
+          eq(attachments.submissionId, submission.id),
+          eq(attachments.state, "COMMITTED"),
+        ),
+      ),
+    db
+      .update(taskAssignments)
+      .set({
+        status: "SEDANG_DIKERJAKAN",
+        needsRevision: false,
+        submittedAt: null,
+        updatedAt: stamp,
+      })
+      .where(eq(taskAssignments.id, assignmentId)),
+    db.insert(activityLogs).values({
+      id: newId("log"),
+      actorId: actor.id,
+      action: "task.submit_withdrawn",
+      entityType: "assignment",
+      entityId: assignmentId,
+      prevValue: "MENUNGGU_VERIFIKASI",
+      newValue: JSON.stringify({
+        status: "SEDANG_DIKERJAKAN",
+        version: submission.version,
+      }),
+      createdAt: stamp,
+    }),
+    ...buildNotificationBatch(db, notificationValues, deliveryRows),
+  ]);
+
+  revalidatePath("/tasks");
+  revalidatePath(`/tasks/${row.taskId}`);
+  revalidatePath("/notifications");
+  revalidatePath("/dashboard");
+  revalidatePath("/", "layout");
+
+  return { success: true };
+}
+
 /** Galat per kolom untuk form tugas; pesan sudah bahasa Indonesia dari zod. */
 export type TaskFieldErrors = {
   title?: string;
@@ -906,6 +1077,182 @@ export async function createTask(
           priority,
           dueAt: jakartaDateInput(dueSeconds!),
           receivers: targetIds,
+        }),
+        createdAt: stamp,
+      }),
+      ...buildNotificationBatch(db, notificationValues, deliveryRows),
+    ];
+
+    try {
+      await runTaskBatch(db, batchItems);
+    } catch (error) {
+      if (remaining - 1 > 0 && isUniqueViolation(error)) {
+        continue;
+      }
+      return {
+        error: "Pembuatan tugas gagal disimpan, coba beberapa saat lagi.",
+      };
+    }
+
+    revalidateAfterTaskMutation(taskId);
+    return { success: true, taskId };
+  }
+}
+
+const createSelfTaskSchema = z.object({
+  title: COMMON_TITLE,
+  description: COMMON_DESCRIPTION,
+  categoryId: z.string().trim().min(1, "Kategori wajib dipilih."),
+  priority: z.enum(PRIORITIES),
+  startDate: z.string().trim().optional(),
+  dueDate: z.string().trim().min(1, "Tenggat waktu wajib diisi."),
+});
+
+/**
+ * Tugas mandiri (permintaan pengguna Fase 6): USER mencatat tugas untuk dirinya
+ * sendiri tanpa bidang delegasi. Penugasan langsung berstatus SEDANG_DIKERJAKAN
+ * dengan startedAt saat dibuat; verifikasi pengumpulannya tetap melalui Admin
+ * divisi. Nomor tugas mengikuti pola divisi yang sama dengan createTask.
+ */
+export async function createSelfTask(
+  input: unknown,
+): Promise<TaskMutationResult> {
+  const actor = await actorWithProfile();
+  const scope = resolveScope(actor);
+
+  if (scope.role !== "USER") {
+    return {
+      error: "Hanya staf pelaksana yang dapat mencatat tugas mandiri.",
+    };
+  }
+
+  const parsed = createSelfTaskSchema.safeParse(input);
+  if (!parsed.success) {
+    return { fields: fieldErrorsFrom(parsed.error) };
+  }
+  const data = parsed.data;
+
+  const { db } = appContext();
+
+  const [division] = await db
+    .select({ id: divisions.id, name: divisions.name, code: divisions.code })
+    .from(divisions)
+    .where(eq(divisions.id, scope.divisionId))
+    .limit(1);
+
+  if (!division) {
+    return { error: "Divisi akun tidak ditemukan." };
+  }
+
+  const fields: TaskFieldErrors = {};
+
+  const [category] = await db
+    .select({ name: categories.name, isActive: categories.isActive })
+    .from(categories)
+    .where(eq(categories.id, data.categoryId))
+    .limit(1);
+  if (!category) {
+    fields.categoryId = "Kategori tidak ditemukan.";
+  } else if (!category.isActive) {
+    fields.categoryId = `Kategori ${category.name} sedang nonaktif dan tidak dapat dipakai.`;
+  }
+
+  const now = nowSeconds();
+  const startInput = data.startDate?.trim();
+  const startSeconds = startOfJakartaDayFromDateInput(
+    startInput ? startInput : jakartaDateInput(now),
+  );
+  const dueSeconds = endOfJakartaDayFromDateInput(data.dueDate);
+  if (startSeconds === null) {
+    fields.startDate = "Tanggal mulai tidak valid.";
+  }
+  if (dueSeconds === null) {
+    fields.dueDate = "Tanggal tenggat tidak valid.";
+  } else if (startSeconds !== null && dueSeconds < startSeconds) {
+    fields.dueDate = "Tenggat tidak boleh lebih awal daripada tanggal mulai.";
+  }
+
+  if (hasFieldErrors(fields)) {
+    return { fields };
+  }
+
+  const title = data.title;
+  const description = data.description ?? null;
+  const priority = data.priority;
+
+  const prefix = taskNumberPrefix(division.code, now);
+
+  for (let remaining = TASK_NUMBER_MAX_ATTEMPTS; ; remaining -= 1) {
+    if (remaining <= 0) {
+      return { error: "Nomor tugas tidak dapat dibuat, coba beberapa saat lagi." };
+    }
+
+    const totalExisting = await countTasksWithPrefix(db, scope.divisionId, prefix);
+    const sequence = totalExisting + 1;
+    const taskNumberValue = taskNumber(division.code, now, sequence);
+    const taskId = newId("task");
+    const stamp = new Date(now * 1000);
+
+    const admins = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(
+        and(
+          eq(users.divisionId, scope.divisionId),
+          eq(users.role, "ADMIN"),
+          eq(users.isActive, true),
+        ),
+      );
+
+    const notificationValues = admins.map((admin) => ({
+      id: newId("notification"),
+      userId: admin.id,
+      type: "TASK_SELF_CREATED" as const,
+      entityType: "task",
+      entityId: taskId,
+      message: `${notificationTitle("TASK_SELF_CREATED", title)} · Dibuat sendiri oleh ${actor.fullName} · Tenggat ${formatJakartaNotification(dueSeconds!)}`,
+      createdAt: stamp,
+    }));
+    const deliveryRows = await buildDeliveryRows(db, notificationValues, stamp);
+
+    const batchItems: BatchItem[] = [
+      db.insert(tasks).values({
+        id: taskId,
+        divisionId: division.id,
+        categoryId: data.categoryId,
+        taskNumber: taskNumberValue,
+        title,
+        description,
+        priority,
+        createdBy: actor.id,
+        startAt: new Date(startSeconds! * 1000),
+        dueAt: new Date(dueSeconds! * 1000),
+        createdAt: stamp,
+        updatedAt: stamp,
+      }),
+      db.insert(taskAssignments).values({
+        id: newId("assignment"),
+        taskId,
+        userId: actor.id,
+        status: "SEDANG_DIKERJAKAN",
+        startedAt: stamp,
+        createdAt: stamp,
+        updatedAt: stamp,
+      }),
+      db.insert(activityLogs).values({
+        id: newId("log"),
+        actorId: actor.id,
+        action: "task.created",
+        entityType: "task",
+        entityId: taskId,
+        prevValue: null,
+        newValue: JSON.stringify({
+          taskNumber: taskNumberValue,
+          title,
+          priority,
+          dueAt: jakartaDateInput(dueSeconds!),
+          receivers: [actor.id],
+          selfCreated: true,
         }),
         createdAt: stamp,
       }),

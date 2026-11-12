@@ -63,4 +63,27 @@ describe("SubmitModal L08", () => {
 
     expect(html).toBe("");
   });
+
+  it("menampilkan berkas draf tersimpan dengan tombol hapus dan kirim tanpa berkas baru", () => {
+    const html = renderToStaticMarkup(
+      <SubmitModal
+        isOpen={true}
+        onClose={() => {}}
+        task={MOCK_TASK}
+        draftFiles={[
+          { id: "att_draf_1", name: "berkas-revisi.pdf", sizeFormatted: "512,0 KB" },
+        ]}
+        onDeleteDraft={() => Promise.resolve(true)}
+      />,
+    );
+
+    expect(html).toContain("Draf tersimpan");
+    expect(html).toContain("berkas-revisi.pdf");
+    expect(html).toContain('aria-label="Hapus draf berkas-revisi.pdf"');
+    expect(html).toContain("(1/5)");
+    // Berkas draf ikut terkirim; pengguna dapat mengirim tanpa memilih berkas baru.
+    expect(html).toContain("Tambah Berkas (opsional, draf sudah ada)");
+    expect(html).toContain("Berkas draf di atas sudah terunggah sebelumnya");
+    expect(html).not.toContain("Belum ada berkas terpilih");
+  });
 });

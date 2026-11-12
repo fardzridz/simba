@@ -24,6 +24,8 @@ export const NOTIFICATION_TYPES = [
   "TASK_CANCELLED",
   "DUE_SOON",
   "TASK_DUE_EXTENDED",
+  "TASK_SELF_CREATED",
+  "SUBMISSION_WITHDRAWN",
 ] as const;
 
 export const categories = sqliteTable(

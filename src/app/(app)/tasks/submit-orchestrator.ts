@@ -18,10 +18,15 @@ type OrchestratorInput = {
 /**
  * Menjembatani SubmitModal dengan dua endpoint server: unggah per berkas
  * (`PENDING`) lalu commit atomik. Idempotency key dibuat sekali per pengumpulan
- * dan dipakai ulang saat "Coba Lagi" (§8.3).
+ * dan dipakai ulang saat "Coba Lagi" (§8.3). `initialIdempotencyKey` dipakai
+ * bila ada draf pengumpulan yang sudah berjalan (sisa penarikan atau sesi
+ * terputus) supaya unggahan baru menempel ke submission PENDING yang sama.
  */
-export function createSubmissionOrchestrator(assignmentId: string) {
-  let idempotencyKey: string | null = null;
+export function createSubmissionOrchestrator(
+  assignmentId: string,
+  initialIdempotencyKey?: string | null,
+) {
+  let idempotencyKey: string | null = initialIdempotencyKey ?? null;
   let lastFileCount = 0;
 
   function getKey(): string {

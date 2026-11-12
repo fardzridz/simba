@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/app/icons";
 import { LoadingButton } from "../../loading-state";
 import { PRIORITY_OPTIONS } from "@/lib/task-options";
-import { createTask, type TaskFieldErrors } from "../actions";
+import { createSelfTask, createTask, type TaskFieldErrors } from "../actions";
 import type {
   CategoryOption,
   DivisionMemberOption,
@@ -39,6 +39,8 @@ export interface TaskFormClientProps {
   defaultCategoryName: string | null;
   defaultCategoryInactive: boolean | null;
   defaultPriority: Priority;
+  /** Staf Pelaksana mencatat tugas untuk dirinya sendiri; tanpa pilihan penerima. */
+  isSelfMode?: boolean;
 }
 
 export default function TaskFormClient({
@@ -50,6 +52,7 @@ export default function TaskFormClient({
   defaultCategoryName,
   defaultCategoryInactive,
   defaultPriority,
+  isSelfMode = false,
 }: TaskFormClientProps) {
   const router = useRouter();
 
@@ -135,7 +138,7 @@ export default function TaskFormClient({
     } else if (startDate && dueDate < startDate) {
       newErrors.dueDate = "Tenggat tidak boleh lebih awal daripada tanggal mulai.";
     }
-    if (selectedStaffIds.length === 0) {
+    if (!isSelfMode && selectedStaffIds.length === 0) {
       newErrors.staffIds = "Pilih minimal satu penerima penugasan.";
     }
 
@@ -149,15 +152,17 @@ export default function TaskFormClient({
     setIsSubmitting(true);
 
     try {
-      const result = await createTask({
+      const payload = {
         title,
         description: description.trim() || undefined,
         categoryId: category,
         priority,
         startDate: startDate || undefined,
         dueDate,
-        staffIds: selectedStaffIds,
-      });
+      };
+      const result = isSelfMode
+        ? await createSelfTask(payload)
+        : await createTask({ ...payload, staffIds: selectedStaffIds });
 
       if (result.fields) {
         setErrors(result.fields);
@@ -189,15 +194,19 @@ export default function TaskFormClient({
           <span className="text-body-sm" aria-hidden="true">
             ←
           </span>
-          Kembali ke Tugas Divisi
+          {isSelfMode ? "Kembali ke Tugas Saya" : "Kembali ke Tugas Divisi"}
         </Link>
       </div>
 
       {/* Header Halaman */}
       <div>
-        <h1 className="text-h1 font-semibold text-ink">Buat Tugas</h1>
+        <h1 className="text-h1 font-semibold text-ink">
+          {isSelfMode ? "Buat Tugas Mandiri" : "Buat Tugas"}
+        </h1>
         <p className="mt-1 text-body text-ink-3">
-          Terbitkan surat perintah tugas baru untuk anggota staf di Divisi {divisionName}.
+          {isSelfMode
+            ? `Catat pekerjaan Anda sendiri di Divisi ${divisionName}; pengumpulannya tetap diverifikasi Admin Divisi.`
+            : `Terbitkan surat perintah tugas baru untuk anggota staf di Divisi ${divisionName}.`}
         </p>
       </div>
 
@@ -377,7 +386,25 @@ export default function TaskFormClient({
 
             {/* Kolom Kanan: Penerima Tugas & Pratinjau Nomor (5 Kolom) */}
             <div className="flex flex-col gap-5 desktop:col-span-5 desktop:border-l desktop:border-border desktop:pl-8">
-              {/* Seksi Penerima */}
+              {isSelfMode ? (
+                /* Mode mandiri: penerima tetap satu, yaitu pembuatnya sendiri. */
+                <div className="flex flex-col gap-2">
+                  <span className="text-body-sm font-medium text-ink">Penerima</span>
+                  <div className="rounded-md border border-border bg-surface-sunken p-4 flex items-center gap-3">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-surface border border-border text-[11px] font-semibold text-ink-2">
+                      Saya
+                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-body font-medium text-ink">
+                        Anda sendiri
+                      </span>
+                      <span className="text-body-sm text-ink-3">
+                        Tugas langsung berstatus Sedang Dikerjakan setelah disimpan.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between text-body-sm">
                   <span className="font-medium text-ink">
@@ -476,6 +503,7 @@ export default function TaskFormClient({
                   </>
                 )}
               </div>
+              )}
 
               {/* Seksi Pratinjau Nomor Tugas */}
               <div className="flex flex-col gap-1.5 border-t border-border pt-4">
@@ -506,7 +534,9 @@ export default function TaskFormClient({
           {/* Baris Tombol Aksi Bawah */}
           <div className="flex flex-col gap-3 border-t border-border pt-5 tablet:flex-row tablet:items-center tablet:justify-between">
             <p className="text-body-sm text-ink-3">
-              Menyimpan menambah satu penugasan untuk setiap penerima yang dipilih.
+              {isSelfMode
+                ? "Menyimpan membuat satu penugasan untuk Anda sendiri dan langsung dihitung sedang dikerjakan."
+                : "Menyimpan menambah satu penugasan untuk setiap penerima yang dipilih."}
             </p>
 
             <div className="flex items-center justify-end gap-3">
@@ -521,10 +551,10 @@ export default function TaskFormClient({
                 type="submit"
                 variant="primary"
                 loading={isSubmitting}
-                loadingText="Menerbitkan..."
+                loadingText={isSelfMode ? "Menyimpan..." : "Menerbitkan..."}
                 className="h-10 px-5 text-body"
               >
-                Simpan &amp; Tugaskan
+                {isSelfMode ? "Simpan & Mulai Kerjakan" : "Simpan & Tugaskan"}
               </LoadingButton>
             </div>
           </div>

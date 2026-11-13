@@ -110,7 +110,11 @@ export default async function DashboardPage() {
           unit="tugas"
           icon="menunggu"
           tone={counts.awaitingReview > 0 ? "warning" : "normal"}
-          hint="antrean review pengumpulan"
+          hint={
+            scope.role === "USER"
+              ? "pengumpulan Anda yang belum diverifikasi"
+              : "antrean review pengumpulan"
+          }
         />
         <StatCard
           label="Perlu revisi"

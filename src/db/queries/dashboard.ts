@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { documentArchive, taskAssignments, tasks } from "@/db/schema";
 import type { Db } from "@/env";
 import type { Scope } from "@/lib/auth/scope";
@@ -7,6 +7,8 @@ import { isDueSoon, isOverdue, nowSeconds } from "@/lib/time";
 /**
  * Agregasi dashboard yang sudah dibatasi cakupan peran (§7.1).
  * Cakupan diterapkan di klausa WHERE, bukan dengan menyaring hasil di memori.
+ * Lingkup per peran (§2): Super Admin lintas divisi, USER hanya penugasannya
+ * sendiri, Admin seluruh tugas divisinya.
  */
 export type DashboardCounts = {
   assignments: number;
@@ -28,8 +30,9 @@ export type ReviewQueueItem = {
   submittedAt: number | null;
 };
 
-export async function dashboardCounts(db: Db, scope: Scope): Promise<DashboardCounts> {
-  const rows = await db
+/** Baris penugasan untuk agregasi kartu; kondisi cakupan dibangun di SQL (§2). */
+export function dashboardRowsQuery(db: Db, scope: Scope) {
+  return db
     .select({
       status: taskAssignments.status,
       needsRevision: taskAssignments.needsRevision,
@@ -38,7 +41,37 @@ export async function dashboardCounts(db: Db, scope: Scope): Promise<DashboardCo
     })
     .from(taskAssignments)
     .innerJoin(tasks, eq(tasks.id, taskAssignments.taskId))
-    .where(scope.allDivisions ? sql`1 = 1` : eq(tasks.divisionId, scope.divisionId));
+    .where(
+      scope.allDivisions
+        ? sql`1 = 1`
+        : scope.role === "USER"
+          ? and(eq(tasks.divisionId, scope.divisionId), eq(taskAssignments.userId, scope.userId))
+          : eq(tasks.divisionId, scope.divisionId),
+    );
+}
+
+/** Jumlah judul tugas: USER menghitung dari penugasannya sendiri, bukan seluruh divisinya. */
+export function taskCountQuery(db: Db, scope: Scope) {
+  return db
+    .select({ total: sql<number>`count(*)` })
+    .from(tasks)
+    .where(
+      scope.allDivisions
+        ? sql`1 = 1`
+        : scope.role === "USER"
+          ? inArray(
+              tasks.id,
+              db
+                .select({ id: taskAssignments.taskId })
+                .from(taskAssignments)
+                .where(eq(taskAssignments.userId, scope.userId)),
+            )
+          : eq(tasks.divisionId, scope.divisionId),
+    );
+}
+
+export async function dashboardCounts(db: Db, scope: Scope): Promise<DashboardCounts> {
+  const rows = await dashboardRowsQuery(db, scope);
 
   const now = nowSeconds();
   const byStatus: Record<string, number> = {};
@@ -59,13 +92,7 @@ export async function dashboardCounts(db: Db, scope: Scope): Promise<DashboardCo
     }
   }
 
-  const taskScope = scope.allDivisions
-    ? sql`1 = 1`
-    : sql`${tasks.divisionId} = ${scope.divisionId}`;
-  const [taskRow] = await db
-    .select({ total: sql<number>`count(*)` })
-    .from(tasks)
-    .where(taskScope);
+  const [taskRow] = await taskCountQuery(db, scope);
 
   return {
     assignments: rows.length,
@@ -81,11 +108,27 @@ export async function dashboardCounts(db: Db, scope: Scope): Promise<DashboardCo
 }
 
 /** Jumlah dokumen final dalam cakupan: satu baris per penugasan yang disahkan. */
-export async function archiveCount(db: Db, scope: Scope): Promise<number> {
-  const [row] = await db
+export function archiveCountQuery(db: Db, scope: Scope) {
+  return db
     .select({ total: sql<number>`count(*)` })
     .from(documentArchive)
-    .where(scope.allDivisions ? sql`1 = 1` : eq(documentArchive.divisionId, scope.divisionId));
+    .where(
+      scope.role === "USER"
+        ? inArray(
+            documentArchive.assignmentId,
+            db
+              .select({ id: taskAssignments.id })
+              .from(taskAssignments)
+              .where(eq(taskAssignments.userId, scope.userId)),
+          )
+        : scope.allDivisions
+          ? sql`1 = 1`
+          : eq(documentArchive.divisionId, scope.divisionId),
+    );
+}
+
+export async function archiveCount(db: Db, scope: Scope): Promise<number> {
+  const [row] = await archiveCountQuery(db, scope);
   return Number(row?.total ?? 0);
 }
 

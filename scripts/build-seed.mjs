@@ -13,6 +13,7 @@ import { createHash } from "node:crypto";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { hashPassword } from "../src/lib/auth/password.ts";
+import { minimalPdf } from "./lib/minimal-pdf.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "..");
@@ -230,39 +231,6 @@ const monthKey = new Date(now * 1000).toISOString().slice(0, 7).replace("-", "")
 
 function sha256Hex(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
-}
-
-/** PDF sungsit deterministik untuk demo seed; tanpa stempel waktu di dalamnya. */
-function minimalPdf(titleLines) {
-  const esc = (s) =>
-    s.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
-  const content =
-    "BT\n/F1 18 Tf\n54 760 Td\n" +
-    titleLines
-      .map(
-        (l, i) => (i === 0 ? "0 -18 Td\n" : "0 -24 Td\n") + `(${esc(l)}) Tj\n`,
-      )
-      .join("") +
-    "ET";
-  const objects = [
-    "/Type /Catalog /Pages 2 0 R",
-    "/Type /Pages /Kids [3 0 R] /Count 1",
-    "/Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R",
-    `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
-    "/Type /Font /Subtype /Type1 /BaseFont /Helvetica",
-  ];
-  let body = "%PDF-1.4\n";
-  const offsets = [];
-  for (const [i, obj] of objects.entries()) {
-    offsets.push(body.length);
-    body += `${i + 1} 0 obj\n${obj}\nendobj\n`;
-  }
-  const startxref = body.length;
-  body +=
-    `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n` +
-    offsets.map((o) => `${String(o).padStart(10, "0")} 00000 n \n`).join("") +
-    `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${startxref}\n%%EOF`;
-  return Buffer.from(body, "latin1");
 }
 
 const seedFilesDir = resolve(root, "seed/files");

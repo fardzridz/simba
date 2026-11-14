@@ -30,3 +30,7 @@ __pycache__/
 .tmp-smoke/
 ~$*
 
+# antislop installer artifacts (block di dalamnya di-replace tiap update)
+CLAUDE.md
+.tmp-antislop-backup-*/
+

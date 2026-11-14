@@ -47,3 +47,59 @@
     letter-spacing: var(--text-label--letter-spacing);
   }
 }
+
+/*
+ * Cetak laporan (§8 DESIGN-SYSTEM.md).
+ *
+ * Aturan ini sengaja diletakkan di CSS, bukan hanya di kelas Tailwind, karena
+ * ukuran kertas dan margin halaman tidak punya padanan utility yang dapat
+ * dijamin konsisten antar peramban.
+ */
+@media print {
+  /* A4 LANDSCAPE, bukan portrait.
+     Laporan kini berupa tabel 11 kolom dengan total lebar 259mm. A4 portrait
+     hanya menyisakan 180mm bersih (210mm dikurangi margin 2x15mm), sehingga
+     kolom terakhir akan terpotong. A4 landscape menyisakan 267mm dan
+     memuatnya. Kop dan blok tanda tangan sudah dihapus, jadi tidak ada lagi
+     kebutuhan tata letak tegak. */
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+
+  /* Blok yang tidak boleh terpotong antar halaman. Properti lama
+     (`page-break-inside`) tetap ditulis untuk mesin cetak yang belum mengenal
+     `break-inside`. */
+  .print-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Baris tabel tidak boleh terbelah dua halaman: baris yang terpotong membuat
+     pembaca kehilangan kaitan antara nomor tugas dan statusnya. */
+  .print-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Kepala tabel diulang di setiap halaman cetak. Tanpa ini, halaman kedua dan
+     seterusnya berisi kolom tanpa judul. */
+  .print-table thead {
+    display: table-header-group;
+  }
+
+  /* Tautan tidak lagi biru saat dicetak. */
+  .print-table a {
+    color: #000;
+    text-decoration: none;
+  }
+
+  /* Tabel laporan: border 0.5pt hitam, tanpa warna latar. Warna latar status
+     tidak dicetak karena pada kertas hitam-putih ia hanya menjadi abu-abu yang
+     menyamarkan teks. */
+  .print-table th,
+  .print-table td {
+    border: 0.5pt solid #000;
+    background: transparent !important;
+  }
+}

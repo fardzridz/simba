@@ -1,100 +1,119 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useId, useState } from "react";
 import { Icon } from "@/app/icons";
-import type { ReportDivisionRow, ReportPeriod, ReportView } from "@/db/queries/reports";
-import { useState } from "react";
-import * as React from "react";
+import {
+  REPORT_DATE_BASES,
+  REPORT_PAGE_SIZES,
+  REPORT_STATUS_OPTIONS,
+  type ReportDateBasis,
+  type ReportPageSize,
+  type ReportPeriod,
+  type ReportRowsResult,
+} from "@/db/queries/reports";
+import {
+  DEFAULT_DATE_BASIS,
+  DEFAULT_PERIOD,
+  buildExportHref,
+  buildPrintHref,
+  buildReportsUrl,
+  describeScope,
+  pageItems,
+  type ReportsFilterState,
+  type ReportsPaging,
+} from "./report-actions";
+import ReportTable from "./report-table";
 
 export type Role = "ADMIN" | "SUPER_ADMIN";
-
-/** Helper function to format date for display */
-function formatDateForDisplay(dateStr: string): string {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("id-ID", { 
-    day: "numeric", 
-    month: "short", 
-    year: "numeric" 
-  });
-}
-
-export type ReportsFilterState = {
-  period: ReportPeriod;
-  /** null berarti semua divisi (Super Admin); Admin terikat divisinya sendiri. */
-  divisionId: string | null;
-  status: string;
-  categoryId: string;
-  /** Custom date range for filtering */
-  dateFrom: string;
-  dateTo: string;
-};
+export type { ReportsFilterState };
 
 export interface ReportsClientProps {
   role: Role;
-  report: ReportView;
+  report: ReportRowsResult;
   filters: ReportsFilterState;
+  paging: ReportsPaging;
   periodOptions: { id: ReportPeriod; label: string }[];
   divisionOptions: { id: string; name: string }[];
   categoryOptions: { id: string; name: string }[];
-  ownDivisionName: string;
+  staffOptions: { id: string; name: string }[];
 }
 
-const DEFAULT_PERIOD: ReportPeriod = "bulan_ini";
+const CONTROL =
+  "h-9 w-full rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light";
 
-/** Susun URL laporan dari filter; default tidak dikirim agar bersih. */
-function buildReportsUrl(state: ReportsFilterState, forExport: boolean): string {
-  const params = new URLSearchParams();
-  if (state.period !== DEFAULT_PERIOD) params.set("period", state.period);
-  if (forExport) params.set("period", state.period);
-  if (state.divisionId) params.set("divisi", state.divisionId);
-  if (state.status) params.set("status", state.status);
-  if (state.categoryId) params.set("kategori", state.categoryId);
-  if (state.dateFrom) params.set("dateFrom", state.dateFrom);
-  if (state.dateTo) params.set("dateTo", state.dateTo);
-  const qs = params.toString();
-  return `${forExport ? "/reports/export" : "/reports"}${qs ? `?${qs}` : ""}`;
+/** Label kecil di atas kontrol filter. */
+function Field({
+  label,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={htmlFor} className="label text-ink-3">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
 }
+
+/** Tombol sekunder yang dipakai ketiga tombol ekspor dan cetak. */
+const SECONDARY =
+  "inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-border-strong bg-surface px-3.5 text-body-sm font-semibold text-ink transition-colors hover:bg-neutral-surface active:bg-border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light";
 
 export default function ReportsClient({
   role,
   report,
   filters,
+  paging,
   periodOptions,
   divisionOptions,
   categoryOptions,
-  ownDivisionName,
+  staffOptions,
 }: ReportsClientProps) {
   const router = useRouter();
-  const [expandedRow, setExpandedRow] = useState<string | null>(null);
-
-  const toggleRowExpansion = (divisionId: string) => {
-    setExpandedRow(expandedRow === divisionId ? null : divisionId);
-  };
+  const statusId = useId();
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const current: ReportsFilterState = {
     period: filters.period,
     divisionId: filters.divisionId,
     status: filters.status ?? "",
     categoryId: filters.categoryId ?? "",
+    userId: filters.userId ?? "",
+    dateBasis: filters.dateBasis,
     dateFrom: filters.dateFrom ?? "",
     dateTo: filters.dateTo ?? "",
   };
 
-  const update = (patch: Partial<ReportsFilterState>) => {
-    router.push(buildReportsUrl({ ...current, ...patch }, false));
+  const go = (patch: Partial<ReportsFilterState>, nextPage = 1) => {
+    const merged = { ...current, ...patch };
+    // Setiap perubahan filter kembali ke halaman 1. Tanpa ini, pengguna yang
+    // sedang di halaman 5 lalu mempersempit filter akan melihat halaman kosong
+    // padahal hasilnya ada di halaman 1.
+    router.push(
+      buildReportsUrl(merged, { page: nextPage, pageSize: paging.pageSize }, false),
+    );
   };
 
   const hasActiveFilters = Boolean(
     current.period !== DEFAULT_PERIOD ||
       current.status ||
       current.categoryId ||
+      current.userId ||
+      current.dateBasis !== DEFAULT_DATE_BASIS ||
       current.dateFrom ||
       current.dateTo ||
       (role === "SUPER_ADMIN" && current.divisionId),
   );
 
   const resetFilters = () => {
+    setStatusMessage("Filter dikembalikan ke awal.");
     router.push(
       buildReportsUrl(
         {
@@ -102,488 +121,394 @@ export default function ReportsClient({
           divisionId: role === "SUPER_ADMIN" ? null : current.divisionId,
           status: "",
           categoryId: "",
+          userId: "",
+          dateBasis: DEFAULT_DATE_BASIS,
           dateFrom: "",
           dateTo: "",
         },
+        { page: 1, pageSize: paging.pageSize },
         false,
       ),
     );
   };
 
-  const rows: ReportDivisionRow[] = report.rows;
+  const exportCsv = buildExportHref(current, paging, "csv");
+  const exportXlsx = buildExportHref(current, paging, "xlsx");
+  const printHref = buildPrintHref(current, paging);
+  const rows = report.rows;
+  const firstRow = report.total === 0 ? 0 : (report.page - 1) * report.pageSize + 1;
+  const lastRow = Math.min(report.page * report.pageSize, report.total);
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header Halaman (Disembunyikan saat cetak kertas) */}
-      <div className="print:hidden">
+    <div className="flex flex-col gap-4">
+      {/* Judul halaman */}
+      <div>
         <h1 className="text-h1 font-semibold text-ink">Laporan &amp; Ekspor</h1>
         <p className="mt-1 text-body text-ink-3">
-          Periode {report.rangeLabel},{" "}
-          {role === "SUPER_ADMIN"
-            ? current.divisionId
-              ? `divisi ${report.scopeLabels.division}.`
-              : "seluruh divisi instansi."
-            : `divisi ${ownDivisionName}.`}
+          {describeScope({
+            rangeLabel: report.rangeLabel,
+            divisionName: report.scopeLabels.division,
+            statusLabel: report.scopeLabels.status,
+            categoryLabel: report.scopeLabels.category,
+            staffLabel: report.scopeLabels.staff,
+          })}
         </p>
       </div>
 
-      {/* Baris Filter Laporan (Disembunyikan saat cetak kertas) */}
-      <div className="card p-3 flex flex-wrap items-center gap-3 bg-surface print:hidden">
-        {/* Pemilih Periode */}
-        <select
-          value={current.period}
-          onChange={(e) => update({ period: e.target.value as ReportPeriod })}
-          aria-label="Pilih rentang periode"
-          className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm font-medium text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
-        >
-          {periodOptions.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+      {/* Baris filter */}
+      <section
+        aria-labelledby={`${statusId}-filter`}
+        className="card flex flex-col gap-3 p-4 print:hidden"
+      >
+        <h2 id={`${statusId}-filter`} className="sr-only">
+          Filter laporan
+        </h2>
 
-        {/* Toggle ke Custom Date Range */}
-        <button
-          type="button"
-          onClick={() => {
-            // Simple toggle between default period and custom dates
-            const isCustom = Boolean(current.dateFrom || current.dateTo);
-            if (isCustom) {
-              // Reset to default period
-              update({ period: DEFAULT_PERIOD, dateFrom: "", dateTo: "" });
-            } else {
-              // Switch to custom mode
-              update({ period: "bulan_ini", dateFrom: new Date().toISOString().split('T')[0] });
-            }
-          }}
-          className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink hover:bg-neutral-surface active:bg-border transition-colors"
-        >
-          {current.dateFrom || current.dateTo ? "Gunakan Periode Default" : "Custom Tanggal"}
-        </button>
+        <div className="grid grid-cols-2 gap-3 tablet:grid-cols-3 desktop:grid-cols-4">
+          <Field label="Periode" htmlFor={`${statusId}-period`}>
+            <select
+              id={`${statusId}-period`}
+              value={current.period}
+              onChange={(e) => go({ period: e.target.value as ReportPeriod })}
+              className={CONTROL}
+            >
+              {periodOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </Field>
 
-        {/* Input Tanggal Mulai untuk Custom Date Range */}
-        {(current.dateFrom || Boolean(filters.dateFrom)) && (
-          <>
+          <Field label="Acuan tanggal" htmlFor={`${statusId}-basis`}>
+            <select
+              id={`${statusId}-basis`}
+              value={current.dateBasis}
+              onChange={(e) => go({ dateBasis: e.target.value as ReportDateBasis })}
+              className={CONTROL}
+            >
+              {REPORT_DATE_BASES.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Tanggal mulai" htmlFor={`${statusId}-from`}>
             <input
+              id={`${statusId}-from`}
               type="date"
-              value={current.dateFrom || new Date().toISOString().split('T')[0]}
-              onChange={(e) => update({ dateFrom: e.target.value })}
-              aria-label="Tanggal mulai"
-              className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+              value={current.dateFrom}
+              onChange={(e) => go({ dateFrom: e.target.value })}
+              className={CONTROL}
             />
-            <span className="text-body-sm text-ink-2">s/d</span>
+          </Field>
+
+          <Field label="Tanggal selesai" htmlFor={`${statusId}-to`}>
             <input
+              id={`${statusId}-to`}
               type="date"
-              value={current.dateTo || new Date().toISOString().split('T')[0]}
-              onChange={(e) => update({ dateTo: e.target.value })}
-              aria-label="Tanggal selesai"
-              className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+              // Nilai dikendalikan sepenuhnya oleh state: kolom ini tidak boleh
+              // menampilkan tanggal hari ini saat nilainya masih kosong, karena
+              // pengguna akan mengira tanggal itu berlaku untuk laporannya.
+              value={current.dateTo}
+              onChange={(e) => go({ dateTo: e.target.value })}
+              className={CONTROL}
             />
-          </>
-        )}
+          </Field>
 
-        {/* Pemilih Divisi */}
-        {role === "SUPER_ADMIN" ? (
-          <select
-            value={current.divisionId ?? ""}
-            onChange={(e) => update({ divisionId: e.target.value || null })}
-            aria-label="Filter divisi laporan"
-            className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+          <Field label="Divisi" htmlFor={`${statusId}-division`}>
+            {role === "SUPER_ADMIN" ? (
+              <select
+                id={`${statusId}-division`}
+                value={current.divisionId ?? ""}
+                onChange={(e) => go({ divisionId: e.target.value || null, userId: "" })}
+                className={CONTROL}
+              >
+                <option value="">Semua divisi</option>
+                {divisionOptions.map((division) => (
+                  <option key={division.id} value={division.id}>
+                    {division.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="flex h-9 items-center rounded-md border border-border bg-neutral-surface px-2.5 text-body-sm text-ink-2">
+                {report.scopeLabels.division}
+              </p>
+            )}
+          </Field>
+
+          <Field label="Petugas" htmlFor={`${statusId}-staff`}>
+            <select
+              id={`${statusId}-staff`}
+              value={current.userId}
+              onChange={(e) => go({ userId: e.target.value })}
+              className={CONTROL}
+            >
+              <option value="">Semua petugas</option>
+              {staffOptions.map((staff) => (
+                <option key={staff.id} value={staff.id}>
+                  {staff.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Status" htmlFor={`${statusId}-status`}>
+            <select
+              id={`${statusId}-status`}
+              value={current.status}
+              onChange={(e) => go({ status: e.target.value })}
+              className={CONTROL}
+            >
+              <option value="">Semua status</option>
+              {REPORT_STATUS_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Kategori" htmlFor={`${statusId}-category`}>
+            <select
+              id={`${statusId}-category`}
+              value={current.categoryId}
+              onChange={(e) => go({ categoryId: e.target.value })}
+              className={CONTROL}
+            >
+              <option value="">Semua kategori</option>
+              {categoryOptions.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        {/* Alasan rentang tanggal tidak diterapkan, bukan dibiarkan diam-diam */}
+        {report.rangeIssue ? (
+          <p
+            role="status"
+            className="rounded-md bg-warning-surface px-3 py-2 text-body-sm text-warning"
           >
-            <option value="">Divisi: Semua</option>
-            {divisionOptions.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <div className="h-8 rounded-md border border-border bg-neutral-surface px-3 flex items-center text-body-sm text-ink-2">
-            <span>Divisi: {ownDivisionName}</span>
-          </div>
-        )}
-
-        {/* Pemilih Status */}
-        <select
-          value={current.status}
-          onChange={(e) => update({ status: e.target.value })}
-          aria-label="Filter status laporan"
-          className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
-        >
-          <option value="">Status: semua</option>
-          <option value="SELESAI">Selesai</option>
-          <option value="MENUNGGU_VERIFIKASI">Menunggu Verifikasi</option>
-          <option value="SEDANG_DIKERJAKAN">Sedang Dikerjakan</option>
-          <option value="BELUM_DIKERJAKAN">Belum Dikerjakan</option>
-        </select>
-
-        {/* Pemilih Kategori */}
-        <select
-          value={current.categoryId}
-          onChange={(e) => update({ categoryId: e.target.value })}
-          aria-label="Filter kategori laporan"
-          className="h-8 rounded-md border border-border bg-surface px-2.5 text-body-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
-        >
-          <option value="">Kategori: semua</option>
-          {categoryOptions.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
-
-        {/* Tombol Hapus Filter */}
-        {hasActiveFilters ? (
-          <button
-            type="button"
-            onClick={resetFilters}
-            className="ml-auto text-body-sm font-semibold text-primary hover:underline"
-          >
-            Hapus filter
-          </button>
+            {report.rangeIssue === "partial"
+              ? "Rentang tanggal belum lengkap. Isi tanggal mulai dan tanggal selesai; selama salah satu kosong, laporan memakai periode preset di atas."
+              : "Tanggal mulai melewati tanggal selesai, jadi rentang ini tidak dipakai. Laporan memakai periode preset di atas."}
+          </p>
         ) : null}
-      </div>
 
-      {/* Bagian Atas: Ringkasan Periode + Ekspor (Swiss Grid 2 Kolom) */}
-      <div className="grid grid-cols-1 gap-6 desktop:grid-cols-12 print:hidden">
-        {/* Kolom Kiri: Ringkasan Periode (8 Kolom) */}
-        <div className="card p-6 flex flex-col justify-between desktop:col-span-8">
-          <div>
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <h2 className="text-h2 font-semibold text-ink">Ringkasan Periode</h2>
-              <span className="text-body-sm text-ink-3">satuan: penugasan</span>
-            </div>
+        <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3">
+          {hasActiveFilters ? (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="text-body-sm font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+            >
+              Hapus filter
+            </button>
+          ) : (
+            <span className="text-body-sm text-ink-3">
+              {report.dateBasisLabel === "Tanggal selesai"
+                ? "Menampilkan tugas yang selesai pada rentang ini."
+                : `Menampilkan tugas menurut ${report.dateBasisLabel.toLowerCase()}.`}
+            </span>
+          )}
 
-            <p className="mt-4 text-body-sm text-ink-2">
-              {current.dateFrom || current.dateTo ? 
-                `Tanggal ${formatDateForDisplay(current.dateFrom)} s/d ${formatDateForDisplay(current.dateTo)}` :
-                report.periodLabel
-              } ({report.rangeLabel})
-            </p>
-
-            <div className="mt-4 grid grid-cols-2 gap-4 tablet:grid-cols-5">
-              <div className="flex flex-col">
-                <span className="text-body-sm text-ink-3">Penugasan</span>
-                <span className="font-display-kpi text-[28px] font-semibold text-ink mt-1">
-                  {report.summary.totalAssignments}
-                </span>
-              </div>
-
-              <div className="flex flex-col">
-                <span className="text-body-sm text-ink-3">Selesai</span>
-                <span className="font-display-kpi text-[28px] font-semibold text-ink mt-1">
-                  {report.summary.completed}
-                </span>
-              </div>
-
-              <div className="flex flex-col">
-                <span className="text-body-sm text-ink-3">Tepat Waktu</span>
-                <span className="font-display-kpi text-[28px] font-semibold text-ink mt-1">
-                  {report.summary.onTime}
-                </span>
-                <span className="text-[11px] text-ink-3">
-                  dari {report.summary.completed} selesai
-                </span>
-              </div>
-
-              <div className="flex flex-col">
-                <span className="text-body-sm text-ink-3">Terlambat</span>
-                <span className="font-display-kpi text-[28px] font-semibold text-error mt-1">
-                  {report.summary.overdue}
-                </span>
-              </div>
-
-              <div className="flex flex-col">
-                <span className="text-body-sm text-ink-3">Dokumen Final</span>
-                <span className="font-display-kpi text-[28px] font-semibold text-ink mt-1">
-                  {report.summary.finalDocuments}
-                </span>
-              </div>
-            </div>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {/*
+              Tautan, bukan tombol: tidak ada lagi yang perlu diperiksa sebelum
+              mengunduh. `download` dipakai agar peramban tidak menavigasi
+              halaman saat berkas disajikan.
+            */}
+            <a
+              href={exportCsv}
+              download
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-primary px-3.5 text-body-sm font-semibold text-on-dark shadow-sm transition-colors hover:bg-primary-hover active:bg-primary-active focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-light"
+            >
+              <Icon name="unduh" size={16} />
+              Ekspor CSV
+            </a>
+            <a href={exportXlsx} download className={SECONDARY}>
+              <Icon name="unduh" size={16} />
+              Ekspor Excel
+            </a>
+            {/*
+              Cetak membuka halaman tersendiri, bukan `window.print()` di sini.
+              Halaman ini hanya memuat satu halaman data (25 baris); mencetaknya
+              langsung akan menghasilkan laporan terpotong tanpa peringatan.
+            */}
+            <a href={printHref} target="_blank" rel="noopener" className={SECONDARY}>
+              <Icon name="lihat" size={16} />
+              Cetak / PDF
+            </a>
           </div>
+        </div>
 
-          <p className="mt-4 text-body-sm text-ink-3 border-t border-border pt-3">
-            Angka dihitung dari database {report.periodLabel.toLowerCase()} ({report.rangeLabel}); ekspor memakai rumus yang sama.
+        <p className="text-body-sm text-ink-3">
+          Ketiga tombol memakai filter yang sedang aktif dan memuat seluruh{" "}
+          <span className="tabular-nums">{report.summary.total}</span> baris hasil
+          filter, bukan hanya halaman ini.
+        </p>
+      </section>
+
+      {statusMessage ? (
+        <p role="status" className="text-body-sm text-ink-2">
+          {statusMessage}
+        </p>
+      ) : null}
+
+      {/* Tabel */}
+      <section aria-labelledby={`${statusId}-table`} className="card overflow-hidden">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border px-4 py-3">
+          <h2 id={`${statusId}-table`} className="text-h2 font-semibold text-ink">
+            Daftar Penugasan
+          </h2>
+          <p className="text-body-sm text-ink-3">
+            <span className="tabular-nums">{report.summary.total}</span> baris
+            <span aria-hidden="true"> · </span>
+            selesai <span className="tabular-nums">{report.summary.completed}</span>
+            <span aria-hidden="true"> · </span>
+            terlambat <span className="tabular-nums">{report.summary.late}</span>
+            <span aria-hidden="true"> · </span>
+            lewat tenggat <span className="tabular-nums">{report.summary.overdue}</span>
           </p>
         </div>
 
-        {/* Kolom Kanan: Panel Aksi Ekspor (4 Kolom) */}
-        <div className="card p-6 flex flex-col justify-between desktop:col-span-4">
-          <div>
-            <h2 className="text-h2 font-semibold text-ink border-b border-border pb-3">
-              Ekspor
-            </h2>
+        {/*
+          Peringatan ini hanya muncul saat dicetak. Halaman layar memuat satu
+          halaman data (25 baris); mencetaknya langsung lewat Ctrl+P akan
+          menghasilkan laporan terpotong tanpa satu pun tanda. Menyebutkannya
+          lebih baik daripada membiarkan pengguna mengira laporannya lengkap.
+        */}
+        <p className="hidden bg-warning-surface px-4 py-2 text-body-sm text-warning print:block">
+          Halaman ini hanya memuat {rows.length} dari {report.total} penugasan.
+          Untuk mencetak seluruh hasil filter, tutup dialog cetak lalu tekan
+          tombol &quot;Cetak / PDF&quot;.
+        </p>
 
-            <div className="mt-4 flex flex-col gap-3">
-              <span className="text-body-sm font-medium text-ink-2">
-                Pilih format berkas laporan:
-              </span>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <a
-                  href={buildReportsUrl(current, true)}
-                  className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-md bg-primary px-4 text-body font-semibold text-on-dark hover:bg-primary-hover active:bg-primary-active transition-colors shadow-sm"
-                >
-                  <Icon name="unduh" size={16} />
-                  Ekspor CSV
-                </a>
-
+        <div className="overflow-x-auto">
+          <ReportTable
+            rows={rows}
+            startNumber={firstRow}
+            linked
+            emptyMessage="Tidak ada penugasan yang cocok dengan filter ini."
+            emptyAction={
+              hasActiveFilters ? (
                 <button
                   type="button"
-                  onClick={() => window.print()}
-                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-md border border-border-strong bg-surface px-4 text-body font-semibold text-ink hover:bg-neutral-surface active:bg-border transition-colors"
+                  onClick={resetFilters}
+                  className="font-semibold text-primary hover:underline"
                 >
-                  Cetak / PDF
+                  Hapus filter
                 </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 text-body-sm text-ink-3 border-t border-border pt-3 space-y-1">
-            <p>
-              CSV menyajikan angka yang identik dengan angka di layar untuk filter aktif ini.
-            </p>
-            <p>Baris pertama berkas memuat periode dan daftar filter aktif.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Bagian Bawah: Pratinjau Tabel + Pratinjau Cetak A4 */}
-      <div className="grid grid-cols-1 gap-6 desktop:grid-cols-12 print:block">
-        {/* Kolom Kiri: Tabel Pratinjau Rekapitulasi (8 Kolom) */}
-        <div className="card p-6 flex flex-col gap-4 desktop:col-span-8 print:shadow-none print:border-none print:p-0">
-          <div className="flex items-center justify-between border-b border-border pb-3 print:border-ink">
-            <h2 className="text-h2 font-semibold text-ink">Pratinjau</h2>
-            <span className="text-body-sm text-ink-3 print:hidden">
-              {rows.length} divisi ditampilkan dari {report.summary.totalAssignments} penugasan
-            </span>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-body">
-              <thead>
-                <tr className="border-b border-border text-body-sm font-semibold text-ink-2 print:border-ink print:text-ink">
-                  <th scope="col" className="py-2.5 w-12"></th>
-                  <th scope="col" className="py-2.5">
-                    Divisi
-                  </th>
-                  <th scope="col" className="py-2.5 text-right">
-                    Penugasan
-                  </th>
-                  <th scope="col" className="py-2.5 text-right">
-                    Selesai
-                  </th>
-                  <th scope="col" className="py-2.5 text-right">
-                    Terlambat
-                  </th>
-                  <th scope="col" className="py-2.5 text-right">
-                    Dokumen Final
-                  </th>
-                  <th scope="col" className="py-2.5 text-center"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border print:divide-ink">
-                {rows.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="py-6 text-center text-body-sm text-ink-3">
-                      0 penugasan pada periode ini.
-                    </td>
-                  </tr>
-                ) : (
-                  rows.map((row) => (
-                    <React.Fragment key={row.divisionId}>
-                      <tr key={row.divisionId} className="hover:bg-neutral-surface/40">
-                        <td className="py-3">
-                          <button
-                            onClick={() => toggleRowExpansion(row.divisionId)}
-                            className="text-body-sm text-ink-3 hover:text-primary transition-colors"
-                            aria-label={expandedRow === row.divisionId ? "Collapse" : "Expand"}
-                          >
-                            {expandedRow === row.divisionId ? "▼" : "▶"}
-                          </button>
-                        </td>
-                        <td className="py-3 font-medium text-ink">
-                          {row.divisionName}
-                        </td>
-                        <td className="py-3 text-right font-mono text-body text-ink">
-                          {row.totalAssignments}
-                        </td>
-                        <td className="py-3 text-right font-mono text-body text-ink">
-                          {row.completed}
-                        </td>
-                        <td className="py-3 text-right font-mono text-body font-semibold text-error">
-                          {row.overdue}
-                        </td>
-                        <td className="py-3 text-right font-mono text-body text-ink">
-                          {row.finalDocuments}
-                        </td>
-                        <td className="py-3 text-center">
-                          <button
-                            onClick={() => toggleRowExpansion(row.divisionId)}
-                            className="text-body-sm text-primary hover:underline"
-                          >
-                            Lihat Detail
-                          </button>
-                        </td>
-                      </tr>
-
-                      {/* Expandable Detail Section */}
-                      {expandedRow === row.divisionId && (
-                        <tr>
-                          <td colSpan={7} className="bg-neutral-surface/30 p-4">
-                            <div className="flex flex-col gap-4">
-                              <div className="border-l-4 border-primary pl-4">
-                                <h3 className="font-semibold text-h3 text-ink mb-2">
-                                  Ringkasan {row.divisionName}
-                                </h3>
-                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                  <div className="flex flex-col">
-                                    <span className="text-body-xs text-ink-3">Total Tugas</span>
-                                    <span className="text-h4 font-semibold text-ink">
-                                      {row.totalAssignments}
-                                    </span>
-                                  </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-body-xs text-ink-3">Selesai</span>
-                                    <span className="text-h4 font-semibold text-success">
-                                      {row.completed}
-                                    </span>
-                                  </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-body-xs text-ink-3">Tepat Waktu</span>
-                                    <span className="text-h4 font-semibold text-green-600">
-                                      {Math.round((row.completed / row.totalAssignments) * 100)}%
-                                    </span>
-                                  </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-body-xs text-ink-3">Terlambat</span>
-                                    <span className="text-h4 font-semibold text-red-600">
-                                      {row.overdue}
-                                    </span>
-                                  </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-body-xs text-ink-3">Dokumen Final</span>
-                                    <span className="text-h4 font-semibold text-ink">
-                                      {row.finalDocuments}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="mt-4">
-                                <h4 className="font-semibold text-body-sm text-ink-2 mb-2">
-                                  Status Tasks di {row.divisionName}:
-                                </h4>
-                                <div className="flex flex-wrap gap-2">
-                                  <span className="px-3 py-1 rounded-md bg-gray-100 text-body-xs text-ink-2">
-                                    Belum Dikerjakan: --
-                                  </span>
-                                  <span className="px-3 py-1 rounded-md bg-blue-100 text-body-xs text-ink-2">
-                                    Sedang Dikerjakan: --
-                                  </span>
-                                  <span className="px-3 py-1 rounded-md bg-yellow-100 text-body-xs text-ink-2">
-                                    Menunggu Verifikasi: --
-                                  </span>
-                                  <span className="px-3 py-1 rounded-md bg-green-100 text-body-xs text-ink-2">
-                                    Selesai: {row.completed}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="mt-4 flex items-center gap-3">
-                                <a
-                                  href={`/tasks?division=${encodeURIComponent(row.divisionCode)}`}
-                                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-primary px-4 text-body font-semibold text-on-dark hover:bg-primary-hover active:bg-primary-hover transition-colors shadow-sm"
-                                >
-                                  <Icon name="lihat" size={16} />
-                                  Buka Daftar Task Divisi
-                                </a>
-                                <a
-                                  href={`${buildReportsUrl({ ...current, divisionId: row.divisionId }, true)}`}
-                                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-border-strong bg-surface px-4 text-body font-semibold text-ink hover:bg-neutral-surface active:bg-border transition-colors"
-                                >
-                                  <Icon name="unduh" size={16} />
-                                  Export Excel
-                                </a>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="border-t border-border pt-3 text-body-sm text-ink-3 space-y-1 print:hidden">
-            <p className="text-ink-2 font-medium">
-              Hasil ekspor identik dengan filter di layar.
-            </p>
-            <p>
-              {report.summary.cancelled} penugasan berstatus Dibatalkan dikeluarkan dari penyebut progres.
-            </p>
-          </div>
+              ) : null
+            }
+          />
         </div>
 
-        {/* Kolom Kanan: Pratinjau Lembar Cetak A4 (4 Kolom) */}
-        <div className="card p-6 flex flex-col gap-4 desktop:col-span-4 print:hidden">
-          <div className="flex items-center justify-between border-b border-border pb-3">
-            <h2 className="text-h2 font-semibold text-ink">Tampilan Cetak A4</h2>
-            <span className="text-[11px] font-mono text-ink-3">A4 Portrait</span>
-          </div>
-
-          {/* Kotak Lembar Pratinjau Kertas KOP Instansi */}
-          <div className="border border-border-strong rounded-md p-4 bg-surface shadow-xs flex flex-col gap-3 font-sans text-xs">
-            <div className="text-center border-b border-ink pb-2">
-              <span className="font-mono text-[10px] text-ink-3 block">
-                [KOP INSTANSI PENYELENGGARA PEMILU]
-              </span>
-              <h3 className="font-semibold text-ink text-sm mt-0.5">
-                Laporan Rekapitulasi Penugasan
-              </h3>
-              <p className="text-ink-3 text-[11px]">Periode: {report.rangeLabel}</p>
-              <p className="text-[10px] text-ink-3 mt-0.5">
-                Filter: {report.scopeLabels.division}, {report.scopeLabels.status.toLowerCase()}, {report.scopeLabels.category.toLowerCase()}
-              </p>
-            </div>
-
-            {/* Tabel Mini Pratinjau Cetak */}
-            <table className="w-full text-left text-[11px] border-collapse">
-              <thead>
-                <tr className="border-b border-ink font-semibold text-ink">
-                  <th className="py-1">Divisi</th>
-                  <th className="py-1 text-right">Tugas</th>
-                  <th className="py-1 text-right">Selesai</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {rows.slice(0, 3).map((r) => (
-                  <tr key={r.divisionId}>
-                    <td className="py-1 text-ink">{r.divisionName}</td>
-                    <td className="py-1 text-right font-mono">{r.totalAssignments}</td>
-                    <td className="py-1 text-right font-mono">{r.completed}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* Kolom Tanda Tangan Resmi */}
-            <div className="mt-3 flex flex-col items-center text-center text-[10px] text-ink border-t border-border pt-3">
-              <span>Mengetahui,</span>
-              <span className="font-semibold">{role === "SUPER_ADMIN" ? "Kepala Instansi" : "Kepala Divisi"}</span>
-              <div className="w-24 border-b border-ink mt-8 mb-1" />
-              <span className="text-ink-3 font-mono">Nama &amp; NIP Pejabat</span>
-            </div>
-          </div>
-
-          <p className="text-body-sm text-ink-3 border-t border-border pt-3">
-            Sidebar, tombol, dan filter disembunyikan otomatis saat mencetak lewat fitur cetak peramban.
+        {/* Paginasi */}
+        <div className="flex flex-wrap items-center gap-3 border-t border-border px-4 py-3 print:hidden">
+          <p className="text-body-sm text-ink-3">
+            Menampilkan <span className="tabular-nums">{firstRow}</span> sampai{" "}
+            <span className="tabular-nums">{lastRow}</span> dari{" "}
+            <span className="tabular-nums">{report.total}</span> penugasan
           </p>
+
+          <div className="ml-auto flex items-center gap-2">
+            <label htmlFor={`${statusId}-pagesize`} className="label text-ink-3">
+              Per halaman
+            </label>
+            <select
+              id={`${statusId}-pagesize`}
+              value={paging.pageSize}
+              onChange={(e) =>
+                router.push(
+                  buildReportsUrl(
+                    current,
+                    { page: 1, pageSize: Number(e.target.value) as ReportPageSize },
+                    false,
+                  ),
+                )
+              }
+              className="h-8 rounded-md border border-border bg-surface px-2 text-body-sm text-ink"
+            >
+              {REPORT_PAGE_SIZES.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+
+            <nav aria-label="Halaman laporan" className="flex items-center gap-1">
+              <button
+                type="button"
+                disabled={report.page <= 1}
+                onClick={() =>
+                  router.push(
+                    buildReportsUrl(
+                      current,
+                      { page: report.page - 1, pageSize: paging.pageSize },
+                      false,
+                    ),
+                  )
+                }
+                className="h-8 rounded-md border border-border px-2 text-body-sm text-ink hover:bg-neutral-surface disabled:opacity-40"
+              >
+                Sebelumnya
+              </button>
+              {pageItems(report.page, report.totalPages).map((item, index) =>
+                item === "gap" ? (
+                  <span key={`gap-${index}`} className="px-1 text-body-sm text-ink-3">
+                    …
+                  </span>
+                ) : (
+                  <button
+                    key={item}
+                    type="button"
+                    aria-current={item === report.page ? "page" : undefined}
+                    onClick={() =>
+                      router.push(
+                        buildReportsUrl(
+                          current,
+                          { page: item, pageSize: paging.pageSize },
+                          false,
+                        ),
+                      )
+                    }
+                    className={
+                      item === report.page
+                        ? "h-8 min-w-8 rounded-md bg-primary px-2 text-body-sm font-semibold tabular-nums text-on-dark"
+                        : "h-8 min-w-8 rounded-md border border-border px-2 text-body-sm tabular-nums text-ink hover:bg-neutral-surface"
+                    }
+                  >
+                    {item}
+                  </button>
+                ),
+              )}
+              <button
+                type="button"
+                disabled={report.page >= report.totalPages}
+                onClick={() =>
+                  router.push(
+                    buildReportsUrl(
+                      current,
+                      { page: report.page + 1, pageSize: paging.pageSize },
+                      false,
+                    ),
+                  )
+                }
+                className="h-8 rounded-md border border-border px-2 text-body-sm text-ink hover:bg-neutral-surface disabled:opacity-40"
+              >
+                Berikutnya
+              </button>
+            </nav>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

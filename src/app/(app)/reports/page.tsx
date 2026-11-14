@@ -1,9 +1,9 @@
-import { eq } from "drizzle-orm";
-import { divisions } from "@/db/schema";
 import {
-  getReport,
   getReportFilterOptions,
+  getReportRows,
   readReportFilters,
+  readReportPage,
+  readReportPageSize,
   REPORT_PERIODS,
 } from "@/db/queries/reports";
 import { appContext } from "@/env";
@@ -20,8 +20,12 @@ export default async function ReportsPage(props: {
     divisi?: string;
     status?: string;
     kategori?: string;
+    petugas?: string;
+    acuan?: string;
     dateFrom?: string;
     dateTo?: string;
+    page?: string;
+    perPage?: string;
   }>;
 }) {
   const actor = await requireActor();
@@ -32,7 +36,7 @@ export default async function ReportsPage(props: {
     return (
       <ForbiddenState
         title="Akses Laporan Ditolak"
-        message="Laporan rekapitulasi penugasan dan ekspor hanya dapat diakses oleh Admin Divisi dan Super Admin."
+        message="Laporan penugasan dan ekspor hanya dapat diakses oleh Admin Divisi dan Super Admin."
         supportHint="Hubungi Admin Divisimu jika Anda membutuhkan rekapitulasi dokumen pekerjaan."
         backHref="/tasks"
         backLabel="Kembali ke Tugas Saya"
@@ -42,30 +46,16 @@ export default async function ReportsPage(props: {
 
   const { db } = appContext();
   const params = await props.searchParams;
-  
-  // Transform date strings for compatibility with readReportFilters
-  const transformedParams: Parameters<typeof import("@/db/queries/reports").readReportFilters>[0] = 
-    params.dateFrom || params.dateTo
-      ? {
-          ...params,
-          dateFrom: params.dateFrom ?? undefined,
-          dateTo: params.dateTo ?? undefined,
-        }
-      : params as unknown as Parameters<typeof import("@/db/queries/reports").readReportFilters>[0];
-      
-  const filters = readReportFilters(transformedParams, scope);
 
-  const [report, filterOptions, ownDivision] = await Promise.all([
-    getReport(db, scope, filters),
-    getReportFilterOptions(db, scope),
-    scope.allDivisions
-      ? Promise.resolve(null)
-      : db
-          .select({ name: divisions.name })
-          .from(divisions)
-          .where(eq(divisions.id, scope.divisionId))
-          .limit(1)
-          .then((rows) => rows[0] ?? null),
+  const filters = readReportFilters(params, scope);
+  const paging = {
+    page: readReportPage(params.page),
+    pageSize: readReportPageSize(params.perPage),
+  };
+
+  const [report, filterOptions] = await Promise.all([
+    getReportRows(db, scope, filters, paging),
+    getReportFilterOptions(db, scope, filters.divisionId),
   ]);
 
   return (
@@ -77,13 +67,18 @@ export default async function ReportsPage(props: {
         divisionId: filters.divisionId,
         status: filters.status ?? "",
         categoryId: filters.categoryId ?? "",
-        dateFrom: filters.dateFrom?.toISOString().split('T')[0] ?? "",
-        dateTo: filters.dateTo?.toISOString().split('T')[0] ?? "",
+        userId: filters.userId ?? "",
+        dateBasis: filters.dateBasis,
+        // Tanggal dikirim balik sebagai YYYY-MM-DD apa adanya dari URL, bukan
+        // diturunkan dari objek Date: konversi bolak-balik lewat UTC bisa
+        // menggeser tanggal satu hari terhadap yang dipilih pengguna.
+        dateFrom: params.dateFrom ?? "",
+        dateTo: params.dateTo ?? "",
       }}
-      periodOptions={REPORT_PERIODS}
+      paging={{ page: report.page, pageSize: report.pageSize }}      periodOptions={REPORT_PERIODS}
       divisionOptions={filterOptions.divisionOptions}
       categoryOptions={filterOptions.categoryOptions}
-      ownDivisionName={ownDivision?.name ?? "Divisi Anda"}
+      staffOptions={filterOptions.staffOptions}
     />
   );
 }

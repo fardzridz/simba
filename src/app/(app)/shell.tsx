@@ -157,8 +157,10 @@ export default function Shell({
   }
 
   return (
-    <div className="min-h-screen bg-background desktop:pl-[220px]">
-      <aside className="fixed inset-y-0 left-0 z-[var(--z-sidebar)] hidden w-[220px] flex-col bg-sidebar desktop:flex">
+    <div className="min-h-screen bg-background desktop:pl-[220px] print:pl-0">
+      {/* Sidebar dan top bar disembunyikan saat mencetak (§8 DESIGN-SYSTEM.md):
+          keduanya bukan bagian laporan dan akan memakan ruang kertas A4. */}
+      <aside className="fixed inset-y-0 left-0 z-[var(--z-sidebar)] hidden w-[220px] flex-col bg-sidebar desktop:flex print:hidden">
         <div className="flex h-14 items-center px-5">
           <img
             src="/logo/logo-bawaslu-ikon.png"
@@ -173,7 +175,7 @@ export default function Shell({
         </nav>
       </aside>
 
-      <header className="sticky top-0 z-[var(--z-sticky-header)] flex h-14 items-center gap-2 border-b border-border bg-surface px-4 tablet:gap-3 tablet:px-6">
+      <header className="sticky top-0 z-[var(--z-sticky-header)] flex h-14 items-center gap-2 border-b border-border bg-surface px-4 tablet:gap-3 tablet:px-6 print:hidden">
         <div className="flex w-24 shrink-0 items-center desktop:w-auto">
           <button
             ref={drawerButtonRef}
@@ -258,7 +260,7 @@ export default function Shell({
         </div>
       </header>
 
-      <main className="mx-auto max-w-page px-4 py-6 tablet:px-6">{children}</main>
+      <main className="mx-auto max-w-page px-4 py-6 tablet:px-6 print:max-w-none print:p-0">{children}</main>
 
       {drawerOpen ? (
         <>

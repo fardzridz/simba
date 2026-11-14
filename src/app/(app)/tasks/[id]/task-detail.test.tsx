@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import TaskDetailClient from "./task-detail-client";
-import { getMockTaskDetail } from "@/lib/mock-task-detail";
+import {
+  TASK_DETAIL_BELUM_DIMULAI,
+  TASK_DETAIL_MENUNGGU_VERIFIKASI,
+  TASK_DETAIL_REVISI,
+} from "./task-detail.fixture";
 
 describe("TaskDetailClient L07", () => {
   it("merender informasi kepala tugas, nomor tugas mono, dan status", () => {
-    const task = getMockTaskDetail("tsk_huk_1");
-    const html = renderToStaticMarkup(<TaskDetailClient initialTask={task} />);
+    const html = renderToStaticMarkup(
+      <TaskDetailClient initialTask={TASK_DETAIL_REVISI} />,
+    );
 
     expect(html).toContain("HUK/2026/10/007");
     expect(html).toContain("Laporan Hasil Pengawasan Wilayah A");
@@ -16,8 +21,9 @@ describe("TaskDetailClient L07", () => {
   });
 
   it("merender riwayat pengumpulan versi 1 beserta berkas dan catatan revisi admin", () => {
-    const task = getMockTaskDetail("tsk_huk_1");
-    const html = renderToStaticMarkup(<TaskDetailClient initialTask={task} />);
+    const html = renderToStaticMarkup(
+      <TaskDetailClient initialTask={TASK_DETAIL_REVISI} />,
+    );
 
     expect(html).toContain("Riwayat Pengumpulan");
     expect(html).toContain("Versi 1");
@@ -30,8 +36,9 @@ describe("TaskDetailClient L07", () => {
   });
 
   it("merender kartu aksi dengan tombol Kumpulkan Tugas dan ketentuan berkas", () => {
-    const task = getMockTaskDetail("tsk_huk_1");
-    const html = renderToStaticMarkup(<TaskDetailClient initialTask={task} />);
+    const html = renderToStaticMarkup(
+      <TaskDetailClient initialTask={TASK_DETAIL_REVISI} />,
+    );
 
     expect(html).toContain("Kumpulkan Tugas");
     expect(html).toContain("Ketentuan Berkas");
@@ -41,10 +48,9 @@ describe("TaskDetailClient L07", () => {
     expect(html).toContain("Kembali ke Tugas Saya");
   });
 
-
   it("menampilkan status batal dan alasan dari data tugas, bukan kartu selesai", () => {
     const task = {
-      ...getMockTaskDetail("tsk_huk_2"),
+      ...TASK_DETAIL_BELUM_DIMULAI,
       status: "DIBATALKAN" as const,
       cancelReason: "Penerima pindah unit kerja.",
     };
@@ -57,8 +63,7 @@ describe("TaskDetailClient L07", () => {
 
   it("merender kartu Draf Pengumpulan beserta tombol hapus per berkas", () => {
     const task = {
-      ...getMockTaskDetail("tsk_huk_1"),
-      status: "SEDANG_DIKERJAKAN" as const,
+      ...TASK_DETAIL_REVISI,
       draft: {
         version: 2,
         idempotencyKey: "sub_abcd1234abcd1234",
@@ -86,20 +91,16 @@ describe("TaskDetailClient L07", () => {
   });
 
   it("menawarkan Batalkan Pengumpulan hanya saat status Menunggu Verifikasi", () => {
-    const task = {
-      ...getMockTaskDetail("tsk_huk_1"),
-      status: "MENUNGGU_VERIFIKASI" as const,
-      needsRevision: false,
-    };
-    const html = renderToStaticMarkup(<TaskDetailClient initialTask={task} />);
+    const html = renderToStaticMarkup(
+      <TaskDetailClient initialTask={TASK_DETAIL_MENUNGGU_VERIFIKASI} />,
+    );
 
     expect(html).toContain("Batalkan Pengumpulan");
     expect(html).toContain("Pengumpulan Anda sedang diperiksa oleh Admin Divisi");
 
     const selesaiTask = {
-      ...getMockTaskDetail("tsk_huk_2"),
+      ...TASK_DETAIL_BELUM_DIMULAI,
       status: "SEDANG_DIKERJAKAN" as const,
-      needsRevision: false,
     };
     const selesaiHtml = renderToStaticMarkup(
       <TaskDetailClient initialTask={selesaiTask} />,
@@ -107,10 +108,18 @@ describe("TaskDetailClient L07", () => {
     expect(selesaiHtml).not.toContain("Batalkan Pengumpulan");
   });
 
-  it("menghasilkan data fallback yang aman untuk id tugas acak", () => {
-    const task = getMockTaskDetail("tsk_acak_999");
-    expect(task.id).toBe("tsk_acak_999");
-    expect(task.taskNumber).toContain("HUK/2026/10/999");
-    expect(task.title).toBeDefined();
+  it("menampilkan keadaan kosong yang jujur saat tugas belum pernah dikumpulkan", () => {
+    // Menggantikan tes lama "data fallback untuk id tugas acak": perilaku itu
+    // milik modul mock yang sudah dihapus, bukan milik komponen. Yang perlu
+    // dikunci di sini adalah keadaan nyata yang mungkin terjadi: tugas tanpa
+    // pengumpulan menampilkan kartu kosong yang menjelaskan keadaannya, bukan
+    // kartu yang hilang tanpa penjelasan.
+    const html = renderToStaticMarkup(
+      <TaskDetailClient initialTask={TASK_DETAIL_BELUM_DIMULAI} />,
+    );
+
+    expect(html).toContain("Penyusunan Berita Acara Pleno Rekapitulasi");
+    expect(html).toContain("Riwayat Pengumpulan");
+    expect(html).toContain("Belum ada berkas pengumpulan");
   });
 });

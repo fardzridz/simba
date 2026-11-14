@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import TaskReviewClient from "./task-review-client";
-import { getMockTaskDetail } from "@/lib/mock-task-detail";
+import { TASK_DETAIL_MENUNGGU_VERIFIKASI } from "./task-detail.fixture";
 
 describe("TaskReviewClient L11", () => {
   it("merender informasi kepala tugas admin, tombol tindakan, dan durasi antrean reviu", () => {
-    const task = getMockTaskDetail("tsk_huk_3");
     const html = renderToStaticMarkup(
-      <TaskReviewClient initialTask={task} isSuperAdmin={false} />,
+      <TaskReviewClient
+        initialTask={TASK_DETAIL_MENUNGGU_VERIFIKASI}
+        isSuperAdmin={false}
+      />,
     );
 
     expect(html).toContain("HUK/2026/10/003");
@@ -21,9 +23,11 @@ describe("TaskReviewClient L11", () => {
   });
 
   it("merender berkas pengumpulan terbaru dan panel keputusan dengan aksi Setujui & Arsipkan", () => {
-    const task = getMockTaskDetail("tsk_huk_3");
     const html = renderToStaticMarkup(
-      <TaskReviewClient initialTask={task} isSuperAdmin={false} />,
+      <TaskReviewClient
+        initialTask={TASK_DETAIL_MENUNGGU_VERIFIKASI}
+        isSuperAdmin={false}
+      />,
     );
 
     expect(html).toContain("Pengumpulan Terbaru");
@@ -36,9 +40,11 @@ describe("TaskReviewClient L11", () => {
   });
 
   it("merender pita baca-saja khusus ketika dibuka oleh Super Admin", () => {
-    const task = getMockTaskDetail("tsk_huk_3");
     const html = renderToStaticMarkup(
-      <TaskReviewClient initialTask={task} isSuperAdmin={true} />,
+      <TaskReviewClient
+        initialTask={TASK_DETAIL_MENUNGGU_VERIFIKASI}
+        isSuperAdmin={true}
+      />,
     );
 
     expect(html).toContain("Akses Baca-Saja");
